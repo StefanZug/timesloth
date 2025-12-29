@@ -112,6 +112,7 @@ def get_entries():
     return jsonify({
         "entries": result,
         "holidays": holiday_map
+        "settings": user_settings
     })
 
 @main.route('/api/save_entry', methods=['POST'])

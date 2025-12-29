@@ -24,7 +24,6 @@
             display: flex; align-items: center; justify-content: center;
             font-weight: bold; font-size: 1.1rem;
         }
-        /* Der sarkastische Footer ist zurück! */
         .footer-sarcasm { 
             font-size: 0.75rem; 
             color: #888; 
@@ -82,8 +81,8 @@
         {% block content %}{% endblock %}
         
         <div class="footer-sarcasm">
-            TimeSloth &copy; 2025 - Wir speichern Daten, meistens.<br>
-            Keine Haftung für verpasste SAP-Einträge, Eheprobleme oder Boreout.
+            TimeSloth Inc. &copy; 2025 - Wir speichern Daten, meistens.<br>
+            Keine Haftung für verpasste SAP-Einträge, Eheprobleme oder Burnout.
         </div>
     </div>
 
@@ -96,13 +95,23 @@
                 </div>
                 <div class="modal-body">
                     <form id="globalSettingsForm">
-                        <div class="mb-3">
-                            <label class="form-label">Wochenstunden (Soll)</label>
-                            <input type="number" class="form-control" id="setSoll" value="38.5" step="0.1">
-                        </div>
-                         <div class="mb-3">
-                            <label class="form-label">Monats-Soll Büro (Stunden)</label>
-                            <input type="number" class="form-control" id="setOfficeTarget" value="66.67" step="0.1">
+                        <div class="mb-4">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>Beschäftigungsausmaß</span>
+                                <span class="fw-bold text-primary" id="lblPercent">100%</span>
+                            </label>
+                            <input type="range" class="form-range" id="rangePercent" min="10" max="100" step="5" value="100">
+                            
+                            <div class="card bg-light border-0 mt-3">
+                                <div class="card-body py-2 small text-muted d-flex justify-content-between">
+                                    <span>Wochenstunden:</span>
+                                    <strong id="lblWeekHours">38.50 h</strong>
+                                </div>
+                                <div class="card-body py-2 small text-muted d-flex justify-content-between border-top">
+                                    <span>Täglich (Soll):</span>
+                                    <strong id="lblDayHours">7.70 h</strong>
+                                </div>
+                            </div>
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">Speichern</button>
@@ -146,7 +155,34 @@
             });
         }
 
+        // --- NEUE SETTINGS LOGIK ---
+        const rangePercent = document.getElementById('rangePercent');
+        const lblPercent = document.getElementById('lblPercent');
+        const lblWeekHours = document.getElementById('lblWeekHours');
+        const lblDayHours = document.getElementById('lblDayHours');
+        
+        // Basis: 100% = 38.5h Woche = 7.7h Tag
+        const BASE_WEEKLY = 38.5;
+        
+        function updateCalc() {
+            const pct = parseInt(rangePercent.value);
+            lblPercent.textContent = pct + '%';
+            
+            const weekly = (BASE_WEEKLY * (pct / 100));
+            const daily = weekly / 5;
+            
+            lblWeekHours.textContent = weekly.toFixed(2) + ' h';
+            lblDayHours.textContent = daily.toFixed(2) + ' h';
+        }
+
+        if(rangePercent) {
+            rangePercent.addEventListener('input', updateCalc);
+            updateCalc();
+        }
+
         window.openSettings = function() {
+            // Optional: Hier könnte man den aktuellen Wert vom User laden.
+            // Fürs erste nehmen wir den Default oder was im DOM steht.
             new bootstrap.Modal(document.getElementById('settingsModal')).show();
         };
         window.openPwChange = function() {
@@ -155,11 +191,16 @@
 
         document.getElementById('globalSettingsForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const modalEl = document.getElementById('settingsModal');
-            bootstrap.Modal.getInstance(modalEl).hide();
-            // Hier müsste man noch die Werte per API speichern
-            // Da das global ist, machen wir einen Mock-Reload
-            location.reload(); 
+            
+            const pct = parseInt(rangePercent.value);
+            const daily = (BASE_WEEKLY * (pct / 100)) / 5;
+            
+            axios.post('/api/settings', { 
+                sollStunden: daily.toFixed(2),
+                percent: pct
+            }).then(() => {
+                location.reload(); 
+            }).catch(err => alert("Fehler beim Speichern"));
         });
 
         document.getElementById('pwChangeForm').addEventListener('submit', function(e) {

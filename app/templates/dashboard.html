@@ -10,16 +10,14 @@
         --sloth-bg-body: #f8f9fa;
         --sloth-text-muted: #6c757d;
         --sloth-border-color: #dee2e6;
-        --sloth-table-hover: rgba(0,0,0,0.02);
     }
     
     /* DARK MODE - High Contrast Fixes */
     [data-bs-theme="dark"] {
         --sloth-bg-card: #1e1e1e;
         --sloth-bg-body: #121212;
-        --sloth-text-muted: #adb5bd; /* Helleres Grau für Text */
+        --sloth-text-muted: #adb5bd; 
         --sloth-border-color: #333;
-        --sloth-table-hover: rgba(255,255,255,0.05);
     }
 
     body { background-color: var(--sloth-bg-body); color: var(--bs-body-color); }
@@ -75,6 +73,18 @@
     .st-k.active { background-color: #dc3545; }
 
     /* Layout Elements */
+    /* STICKY HEADER FIX */
+    .sticky-header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background-color: var(--sloth-bg-body);
+        padding-top: 15px;
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+        box-shadow: 0 10px 10px -10px rgba(0,0,0,0.1); 
+    }
+    
     .sloth-header-card {
         background-color: var(--sloth-bg-card); 
         border: 1px solid var(--sloth-border-color);
@@ -83,20 +93,20 @@
     }
     
     .quota-card {
-        background: var(--sloth-bg-card); border-radius: 12px; padding: 15px; margin-bottom: 20px;
+        background: var(--sloth-bg-card); border-radius: 12px; padding: 15px;
         border: 1px solid var(--sloth-border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     .progress-sloth { height: 10px; border-radius: 5px; background-color: rgba(128,128,128,0.1); margin-top: 5px; overflow: hidden; }
     .progress-bar-sloth { background-color: #ffc107; height: 100%; transition: width 0.5s; }
     
-    .type-office { border-left: 5px solid #28a745; }
-    .type-home { border-left: 5px solid #17a2b8; }
-    .type-doctor { border-left: 5px solid #dc3545; }
     .bg-office { background-color: #28a745 !important; color: white; }
     .bg-home { background-color: #17a2b8 !important; color: white; }
     .bg-doctor { background-color: #dc3545 !important; color: white; }
+    .type-office { border-left: 5px solid #28a745; }
+    .type-home { border-left: 5px solid #17a2b8; }
+    .type-doctor { border-left: 5px solid #dc3545; }
     
-    .view-switcher { background: rgba(128,128,128,0.1); border-radius: 20px; padding: 4px; display: inline-flex; margin-bottom: 20px; }
+    .view-switcher { background: rgba(128,128,128,0.1); border-radius: 20px; padding: 4px; display: inline-flex; }
     .view-btn { border: none; background: transparent; padding: 5px 15px; border-radius: 16px; font-size: 0.9rem; color: var(--sloth-text-muted); transition: all 0.2s; }
     .view-btn.active { background: var(--sloth-bg-card); color: var(--sloth-primary); font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     [data-bs-theme="dark"] .view-btn.active { color: white; background: #444; }
@@ -104,44 +114,44 @@
     .comment-input { background: transparent; border: none; width: 100%; color: inherit; font-size: 0.9rem; padding: 2px 5px; border-bottom: 1px solid transparent; }
     .comment-input:focus { outline: none; border-bottom: 1px solid var(--sloth-text-muted); }
     
-    /* Footer Fix */
     .footer-sarcasm { color: var(--sloth-text-muted) !important; opacity: 0.6; }
-
     .cursor-pointer { cursor: pointer; }
 </style>
 
 <div id="app" class="container mt-3 mb-5" v-cloak>
 
-    <div class="quota-card">
-        <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="text-muted small fw-bold text-uppercase">Büro-Quote (40%)</span>
-            <span class="text-danger fw-bold fs-5">[[ quota.needed ]] h</span>
+    <div class="sticky-header">
+        
+        <div class="quota-card mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-muted small fw-bold text-uppercase">Büro-Quote (40%)</span>
+                <span class="text-danger fw-bold fs-5">[[ quota.needed ]] h</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-1 text-muted">
+                <span>Ist: [[ quota.current ]] h</span>
+                <span>Ziel (dynamisch): [[ quota.target ]] h</span>
+            </div>
+            <div class="progress-sloth">
+                <div class="progress-bar-sloth" :style="{ width: quota.percent + '%' }"></div>
+            </div>
+            <div class="text-end mt-2">
+                <span class="badge bg-secondary opacity-75 fw-normal" style="font-size: 0.7rem;">
+                    Abzüge (F/U/K): [[ quota.deduction ]] h
+                </span>
+            </div>
         </div>
-        <div class="d-flex justify-content-between small mb-1 text-muted">
-            <span>Ist: [[ quota.current ]] h</span>
-            <span>Ziel (dynamisch): [[ quota.target ]] h</span>
-        </div>
-        <div class="progress-sloth">
-            <div class="progress-bar-sloth" :style="{ width: quota.percent + '%' }"></div>
-        </div>
-        <div class="text-end mt-2">
-            <span class="badge bg-secondary opacity-75 fw-normal" style="font-size: 0.7rem;">
-                Abzüge (F/U/K): [[ quota.deduction ]] h
-            </span>
+
+        <div class="text-center">
+            <div class="view-switcher">
+                <button class="view-btn" :class="{active: viewMode === 'day'}" @click="viewMode = 'day'">
+                    <i class="bi bi-calendar-day"></i> Tag
+                </button>
+                <button class="view-btn" :class="{active: viewMode === 'month'}" @click="viewMode = 'month'">
+                    <i class="bi bi-table"></i> Liste
+                </button>
+            </div>
         </div>
     </div>
-
-    <div class="text-center">
-        <div class="view-switcher">
-            <button class="view-btn" :class="{active: viewMode === 'day'}" @click="viewMode = 'day'">
-                <i class="bi bi-calendar-day"></i> Tag
-            </button>
-            <button class="view-btn" :class="{active: viewMode === 'month'}" @click="viewMode = 'month'">
-                <i class="bi bi-table"></i> Liste
-            </button>
-        </div>
-    </div>
-
     <div v-show="viewMode === 'day'" class="animate-fade">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <button class="btn btn-outline-secondary btn-sm rounded-circle shadow-sm" @click="shiftDay(-1)"><i class="bi bi-chevron-left"></i></button>
@@ -149,10 +159,10 @@
             <button class="btn btn-outline-secondary btn-sm rounded-circle shadow-sm" @click="shiftDay(1)"><i class="bi bi-chevron-right"></i></button>
         </div>
 
-        <div v-if="!isNonWorkDay && prediction.target !== '--:--'" class="card mb-3 border-0 shadow-sm" style="background: var(--sloth-bg-card);">
+        <div v-if="!isNonWorkDay && prediction.target !== '--:--'" class="card mb-3 border-0 shadow-sm">
             <div class="card-body py-2 d-flex justify-content-around align-items-center">
                 <div class="text-center">
-                    <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem">Soll (7.7h)</small>
+                    <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem">Soll ([[ settings.sollStunden ]]h)</small>
                     <strong class="text-primary">[[ prediction.target ]]</strong>
                 </div>
                 <div class="vr opacity-25"></div>
@@ -175,7 +185,7 @@
                     <div class="card-body p-2 d-flex align-items-center gap-2">
                         <div class="dropdown">
                             <button class="btn btn-sm dropdown-toggle text-white shadow-sm" :class="'bg-' + block.type" type="button" data-bs-toggle="dropdown" style="width: 40px;">
-                                <i :key="block.type + index" class="bi" :class="getTypeIcon(block.type)"></i>
+                                <i class="bi" :class="getTypeIcon(block.type)"></i>
                             </button>
                             <ul class="dropdown-menu shadow">
                                 <li><a class="dropdown-item" @click="changeBlockType(index, 'office')"><i class="bi bi-building me-2 text-success"></i>Büro</a></li>
@@ -236,33 +246,25 @@
                 </thead>
                 <tbody>
                     <tr v-for="day in monthDays" :key="day.iso" :class="getRowClass(day)">
-                        
                         <td class="text-start ps-3 cursor-pointer" @click="jumpToDay(day.iso)">
                             <div class="fw-bold" :class="{'text-primary': day.isToday}">
                                 [[ day.dayShort ]]., [[ day.dateNum ]].
                             </div>
                             <div class="opacity-75" style="font-size: 0.7rem;">KW [[ day.kw ]]</div>
                         </td>
-
                         <td>
-                            <input type="text" class="table-input" 
-                                   :value="day.firstStart" 
-                                   placeholder="-"
+                            <input type="text" class="table-input" :value="day.firstStart" placeholder="-"
                                    @input="updateListTime(day, 'start', $event.target.value)"
                                    @blur="formatListTime(day, 'start', $event.target.value)">
                         </td>
                         <td>
-                            <input type="text" class="table-input" 
-                                   :value="day.firstEnd" 
-                                   placeholder="-"
+                            <input type="text" class="table-input" :value="day.firstEnd" placeholder="-"
                                    @input="updateListTime(day, 'end', $event.target.value)"
                                    @blur="formatListTime(day, 'end', $event.target.value)">
                         </td>
-                        
                         <td class="cursor-pointer" @click="jumpToDay(day.iso)" class="fw-bold" style="color: inherit;">
                             [[ day.sapTime > 0 ? formatH(day.sapTime) : '0' ]]
                         </td>
-                        
                         <td>
                             <div class="d-flex justify-content-center gap-1">
                                 <div class="btn-xs-status st-f" :class="{active: day.status === 'F'}" @click.stop="quickToggle(day, 'F')">F</div>
@@ -270,12 +272,9 @@
                                 <div class="btn-xs-status st-k" :class="{active: day.status === 'K'}" @click.stop="quickToggle(day, 'K')">K</div>
                             </div>
                         </td>
-
                         <td>
-                            <input type="text" class="comment-input" 
-                                   v-model.lazy="day.comment" 
-                                   :placeholder="day.placeholder"
-                                   @change="updateComment(day)">
+                            <input type="text" class="comment-input" v-model.lazy="day.comment" 
+                                   :placeholder="day.placeholder" @change="updateComment(day)">
                         </td>
                     </tr>
                 </tbody>
@@ -295,7 +294,6 @@
 </div>
 {% endblock %}
 
-
 {% block scripts %}
 <script>
     const { createApp } = Vue;
@@ -313,8 +311,7 @@
                 saveState: 'idle', 
                 saveTimer: null,
                 settings: {
-                    sollStunden: 7.70,
-                    deductionPerDay: 3.08,
+                    sollStunden: 7.70, // Default 100%
                     arztStart: 480, arztEnde: 972
                 }
             }
@@ -323,6 +320,11 @@
             viewMode(newVal) { localStorage.setItem('viewMode', newVal); }
         },
         computed: {
+            // Dynamische Abzugs-Berechnung (immer 40% des aktuellen Solls)
+            deductionPerDay() {
+                return (this.settings.sollStunden * 0.40).toFixed(2);
+            },
+
             isoDate() { return this.formatIsoDate(this.currentDateObj); },
             isoMonth() { return this.isoDate.substring(0, 7); },
 
@@ -419,7 +421,7 @@
                     }
                 }
 
-                let deductionTotal = deductionCount * this.settings.deductionPerDay;
+                let deductionTotal = deductionCount * this.deductionPerDay;
                 let targetAdjusted = Math.max(0, dynamicTarget - deductionTotal);
                 let currentHours = officeMinSum / 60;
                 let percent = targetAdjusted > 0 ? (currentHours / targetAdjusted) * 100 : 100;
@@ -461,9 +463,8 @@
                         }
 
                         blocks.forEach(b => {
-                            // FIX: Color logic only if block has content
-                            let hasContent = (b.start && b.start.length > 3) || (b.end && b.end.length > 3);
-                            
+                            // LOGIC FIX: Color ONLY if time is present
+                            let hasContent = (b.start && b.start.length >= 3) || (b.end && b.end.length >= 3);
                             if(hasContent) {
                                 if(b.type === 'office') hasOffice = true;
                                 if(b.type === 'home') hasHome = true;
@@ -524,7 +525,7 @@
             },
             
             formatListTime(day, field, val) {
-                if(!val) { this.updateListTime(day, field, ''); return; } // Allow empty
+                if(!val) { this.updateListTime(day, field, ''); return; }
                 let clean = val.replace(/[^0-9]/g, '');
                 let h = 0, m = 0;
                 if (clean.length <= 2) h = parseInt(clean); 
@@ -535,15 +536,12 @@
                 this.updateListTime(day, field, final);
             },
 
-            // --- DROPDOWN FIX ---
             changeBlockType(index, newType) {
-                // Ersetze das Objekt komplett für Reaktivität
                 let oldBlock = this.blocks[index];
                 this.blocks.splice(index, 1, { ...oldBlock, type: newType });
                 this.triggerAutoSave();
             },
 
-            // --- STANDARD UTILS ---
             formatIsoDate(date) {
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -689,6 +687,10 @@
                     const res = await axios.get(`/api/get_entries?month=${this.isoMonth}`);
                     this.entriesCache = res.data.entries;
                     this.holidaysMap = res.data.holidays || {};
+                    // NEU: Settings übernehmen!
+                    if(res.data.settings && res.data.settings.sollStunden) {
+                        this.settings.sollStunden = parseFloat(res.data.settings.sollStunden);
+                    }
                     this.loadFromCache();
                 } catch(e) { console.error(e); }
             },
