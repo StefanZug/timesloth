@@ -83,33 +83,23 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
     <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
     <script src="{{ url_for('static', filename='js/axios.js') }}"></script>
     
     <script>
-        // Darkmode Logic
-        document.getElementById('darkModeBtn')?.addEventListener('click', () => {
-            const current = document.documentElement.getAttribute('data-bs-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-bs-theme', next);
-            localStorage.setItem('theme', next);
-        });
-        
-        // Settings Placeholder
-        function openSettings() { 
-            // Dieser Alert sollte jetzt NICHT mehr kommen, wenn Vue lädt
-            if(typeof Vue === 'undefined') alert('Fehler: Vue.js wurde nicht geladen!');
-        }
-        
-        function openPwChange() { 
-            const newPw = prompt("Neues Passwort eingeben:");
-            if(newPw) {
-                axios.post('/change_password', {old_password: prompt("Altes Passwort:"), new_password: newPw})
-                .then(res => alert(res.data.message))
-                .catch(err => alert("Fehler: " + err.response.data.error));
-            }
+        // Globaler Darkmode Toggle (funktioniert auch ohne Vue)
+        const themeBtn = document.getElementById('darkModeBtn');
+        if(themeBtn) {
+            themeBtn.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-bs-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-bs-theme', next);
+                localStorage.setItem('theme', next);
+            });
         }
     </script>
+
+    {% block scripts %}{% endblock %}
 </body>
 </html>
