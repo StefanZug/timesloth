@@ -1,8 +1,10 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-# 1. Basics
+# 1. Installiere notwendige Pakete
 RUN apk add --no-cache python3 py3-pip curl
+
+# Arbeitsverzeichnis
 WORKDIR /app
 
 # 2. Python Dependencies (ändern sich selten -> Cache nutzen)
@@ -11,22 +13,23 @@ RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 
 # --- 3. ASSETS DOWNLOAD (NEUER PLATZ!) ---
 # Wir machen das VOR dem Code-Copy. Solange du diese Zeilen nicht änderst,
-# werden sie aus dem Cache geladen und nicht neu heruntergeladen.
+# nutzt Docker den Cache und lädt nichts neu herunter.
 RUN mkdir -p app/static/js app/static/css app/static/fonts app/static/img
 
-# JS & CSS
+# JS & CSS laden
 RUN curl -L -o app/static/js/vue.js https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js && \
     curl -L -o app/static/js/axios.js https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js && \
     curl -L -o app/static/js/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js && \
     curl -L -o app/static/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css
 
-# Icons
+# Icons laden
 RUN curl -L -o app/static/css/bootstrap-icons.css https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css && \
     curl -L -o app/static/fonts/bootstrap-icons.woff2 https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/fonts/bootstrap-icons.woff2
 
-# 4. Jetzt erst den Code kopieren (Favicon kopieren wir auch hier)
+# 4. Jetzt erst den Code kopieren
 COPY . .
-# Falls du das lokale icon.png nutzen willst (wie vorhin besprochen):
+
+# Favicon lokal kopieren (statt Download)
 COPY icon.png app/static/img/favicon.png
 
 # ENV & Berechtigungen
