@@ -2,61 +2,72 @@
 
 {% block content %}
 <style>
-    /* --- STYLES & CONTRAST FIXES --- */
+    /* --- DARK MODE & COLORS --- */
     
-    /* Hintergrund leicht abdunkeln für Kontrast im Light Mode */
     [data-bs-theme="light"] body { background-color: #f8f9fa; }
-    [data-bs-theme="light"] .card { border: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
     
-    /* Tabellen Kontraste */
-    .table-hover tbody tr:hover { background-color: rgba(92, 124, 250, 0.05); }
-    .table-striped tbody tr:nth-of-type(odd) { background-color: rgba(0,0,0,0.015); }
-    
+    /* Tabellen Zeilen Farben */
+    .tr-weekend { background-color: rgba(0,0,0,0.03) !important; color: #999; }
+    .tr-holiday { background-color: rgba(108, 117, 125, 0.2) !important; }  /* Grau */
+    .tr-vacation { background-color: rgba(255, 193, 7, 0.2) !important; }  /* Gelb */
+    .tr-sick { background-color: rgba(220, 53, 69, 0.2) !important; }      /* Rot */
+
+    /* Dark Mode Overrides für Lesbarkeit */
     [data-bs-theme="dark"] body { background-color: #121212; color: #e0e0e0; }
     [data-bs-theme="dark"] .card { background-color: #1e1e1e; border-color: #333; }
-    [data-bs-theme="dark"] .table { --bs-table-color: #e0e0e0; --bs-table-bg: #1e1e1e; --bs-table-border-color: #333; }
+    [data-bs-theme="dark"] .table { color: #e0e0e0; }
     
+    [data-bs-theme="dark"] .tr-weekend { background-color: rgba(255,255,255,0.05) !important; color: #666; }
+    [data-bs-theme="dark"] .tr-holiday { background-color: rgba(108, 117, 125, 0.4) !important; color: #fff; }
+    [data-bs-theme="dark"] .tr-vacation { background-color: rgba(255, 193, 7, 0.3) !important; color: #fff; }
+    [data-bs-theme="dark"] .tr-sick { background-color: rgba(220, 53, 69, 0.4) !important; color: #fff; }
+
+    /* Mini Buttons in der Liste */
+    .btn-xs-status {
+        width: 28px; height: 28px; 
+        border-radius: 6px; 
+        font-size: 0.75rem; font-weight: bold;
+        display: inline-flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: all 0.2s;
+        border: 1px solid transparent;
+        opacity: 0.3; /* Inaktiv */
+        color: inherit;
+    }
+    .btn-xs-status:hover { transform: scale(1.1); opacity: 0.8; }
+    
+    .btn-xs-status.active { opacity: 1; border-color: rgba(0,0,0,0.1); box-shadow: 0 2px 4px rgba(0,0,0,0.1); color: white; }
+    
+    .st-f.active { background-color: #6c757d; }
+    .st-u.active { background-color: #ffc107; color: #000 !important; }
+    .st-k.active { background-color: #dc3545; }
+    
+    /* Type Colors */
     .type-office { border-left: 5px solid #4dabf7; }
     .type-home { border-left: 5px solid #da77f2; }
     .type-doctor { border-left: 5px solid #ff6b6b; }
-    
     .bg-office { background-color: #4dabf7; color: white; }
     .bg-home { background-color: #da77f2; color: white; }
-    
-    /* Status Toggles */
-    .status-toggle {
-        cursor: pointer; opacity: 0.3; transition: all 0.2s; font-weight: bold;
-        width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;
-        border-radius: 8px; border: 1px solid #adb5bd; font-size: 0.9rem;
-        background-color: var(--bs-body-bg);
-    }
-    .status-toggle.active { opacity: 1; border-color: transparent; transform: scale(1.1); color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-    .st-holiday.active { background-color: #868e96; } 
-    .st-vacation.active { background-color: #fcc419; } 
-    .st-sick.active { background-color: #fa5252; }     
 
     /* Quota Card */
     .quota-card {
         background: var(--bs-body-bg); border-radius: 12px; padding: 15px; margin-bottom: 20px;
         border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    .progress-sloth { height: 10px; border-radius: 5px; background-color: #e9ecef; margin-top: 5px; overflow: hidden; }
-    .progress-bar-sloth { background-color: #fcc419; height: 100%; transition: width 0.5s; }
+    .progress-sloth { height: 10px; border-radius: 5px; background-color: rgba(0,0,0,0.1); margin-top: 5px; overflow: hidden; }
+    .progress-bar-sloth { background-color: #ffc107; height: 100%; transition: width 0.5s; }
 
     /* View Switcher */
     .view-switcher {
-        background: #e9ecef; border-radius: 20px; padding: 4px; display: inline-flex; margin-bottom: 20px;
-        border: 1px solid #dee2e6;
+        background: rgba(0,0,0,0.05); border-radius: 20px; padding: 4px; display: inline-flex; margin-bottom: 20px;
     }
-    [data-bs-theme="dark"] .view-switcher { background: #2d2d2d; border-color: #444; }
-    
     .view-btn {
         border: none; background: transparent; padding: 5px 15px; border-radius: 16px; 
         font-size: 0.9rem; color: #666; transition: all 0.2s;
     }
     .view-btn.active { background: var(--bs-body-bg); color: var(--sloth-primary); font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    [data-bs-theme="dark"] .view-btn.active { color: white; background: #555; }
-    
+    [data-bs-theme="dark"] .view-btn { color: #aaa; }
+    [data-bs-theme="dark"] .view-btn.active { color: #fff; background: #444; }
+
     .cursor-pointer { cursor: pointer; }
 </style>
 
@@ -93,7 +104,6 @@
     </div>
 
     <div v-show="viewMode === 'day'" class="animate-fade">
-        
         <div class="d-flex justify-content-between align-items-center mb-3">
             <button class="btn btn-outline-secondary btn-sm rounded-circle shadow-sm" @click="shiftDay(-1)"><i class="bi bi-chevron-left"></i></button>
             <h5 class="m-0 fw-bold">[[ displayDateDayView ]]</h5>
@@ -115,9 +125,9 @@
         </div>
 
         <div class="d-flex justify-content-center gap-2 mb-4">
-            <div class="status-toggle st-holiday" :class="{active: dayStatus === 'F'}" @click="toggleStatus('F')">F</div>
-            <div class="status-toggle st-vacation" :class="{active: dayStatus === 'U'}" @click="toggleStatus('U')">U</div>
-            <div class="status-toggle st-sick" :class="{active: dayStatus === 'K'}" @click="toggleStatus('K')">K</div>
+            <div class="btn-xs-status st-f" :class="{active: dayStatus === 'F'}" style="width:50px; height:40px; font-size:1rem; opacity: 1; border: 1px solid #ccc;" @click="toggleStatus('F')">F</div>
+            <div class="btn-xs-status st-u" :class="{active: dayStatus === 'U'}" style="width:50px; height:40px; font-size:1rem; opacity: 1; border: 1px solid #ccc;" @click="toggleStatus('U')">U</div>
+            <div class="btn-xs-status st-k" :class="{active: dayStatus === 'K'}" style="width:50px; height:40px; font-size:1rem; opacity: 1; border: 1px solid #ccc;" @click="toggleStatus('K')">K</div>
         </div>
 
         <div v-if="!isNonWorkDay">
@@ -164,11 +174,9 @@
         <div v-else class="alert text-center mt-3 shadow-sm border" :class="statusAlertClass">
             <h5 class="m-0">[[ getStatusText(dayStatus) ]]</h5>
         </div>
-
     </div>
 
     <div v-show="viewMode === 'month'" class="animate-fade">
-        
         <div class="d-flex justify-content-between align-items-center mb-3 bg-white p-2 rounded shadow-sm border">
             <button class="btn btn-sm btn-light" @click="shiftMonth(-1)"><i class="bi bi-chevron-left"></i></button>
             <h5 class="m-0 fw-bold">[[ displayMonthName ]]</h5>
@@ -176,38 +184,39 @@
         </div>
 
         <div class="table-responsive bg-white rounded shadow-sm border">
-            <table class="table table-hover table-striped mb-0 text-center align-middle" style="font-size: 0.9rem;">
+            <table class="table mb-0 text-center align-middle" style="font-size: 0.9rem;">
                 <thead class="table-light">
                     <tr>
                         <th class="text-start ps-3 py-3">Datum</th>
                         <th>Summe</th>
                         <th>SAP</th>
-                        <th>Info</th>
+                        <th style="min-width: 100px;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="day in monthDays" :key="day.iso" @click="jumpToDay(day.iso)" class="cursor-pointer">
-                        <td class="text-start ps-3">
+                    <tr v-for="day in monthDays" :key="day.iso" 
+                        :class="getRowClass(day)">
+                        
+                        <td class="text-start ps-3 cursor-pointer" @click="jumpToDay(day.iso)">
                             <div class="fw-bold" :class="{'text-primary': day.isToday}">
                                 [[ day.dayShort ]]., [[ day.dateNum ]].
                             </div>
-                            <div class="text-muted opacity-75" style="font-size: 0.7rem;">KW [[ day.kw ]]</div>
+                            <div class="opacity-75" style="font-size: 0.7rem;">KW [[ day.kw ]]</div>
                         </td>
                         
-                        <td :class="{'opacity-25': day.sapTime == 0, 'fw-bold': day.sapTime > 0}">
+                        <td class="cursor-pointer" @click="jumpToDay(day.iso)" :class="{'opacity-25': day.sapTime == 0, 'fw-bold': day.sapTime > 0}">
                             [[ day.sapTime > 0 ? formatH(day.sapTime) : '-' ]]
                         </td>
-                        
-                        <td class="text-primary fw-bold">
+                        <td class="cursor-pointer" @click="jumpToDay(day.iso)" class="text-primary fw-bold">
                             [[ day.sapTime > 0 ? formatH(day.sapTime) : '0' ]]
                         </td>
                         
                         <td>
-                            <span v-if="day.status" class="badge rounded-pill shadow-sm" 
-                                  :class="{'bg-secondary': day.status=='F', 'bg-warning text-dark': day.status=='U', 'bg-danger': day.status=='K'}">
-                                [[ day.status ]]
-                            </span>
-                            <span v-else-if="day.isWeekend" class="text-muted small" style="font-size: 0.7rem;">WE</span>
+                            <div class="d-flex justify-content-center gap-1">
+                                <div class="btn-xs-status st-f" :class="{active: day.status === 'F'}" @click.stop="quickToggle(day, 'F')">F</div>
+                                <div class="btn-xs-status st-u" :class="{active: day.status === 'U'}" @click.stop="quickToggle(day, 'U')">U</div>
+                                <div class="btn-xs-status st-k" :class="{active: day.status === 'K'}" @click.stop="quickToggle(day, 'K')">K</div>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -236,7 +245,7 @@
         delimiters: ['[[', ']]'], 
         data() {
             return {
-                currentDateObj: new Date(), // Aktuell gewählter Tag
+                currentDateObj: new Date(),
                 viewMode: 'day',
                 
                 dayStatus: null, 
@@ -257,17 +266,14 @@
             }
         },
         computed: {
-            // Hilfsfunktion: Datum formatieren OHNE Zeitzonen-Probleme
-            // Wir nutzen locale Komponenten und bauen den String selbst
+            // Hilfsfunktion: Datum formatieren
             isoDate() { return this.formatIsoDate(this.currentDateObj); },
             isoMonth() { return this.isoDate.substring(0, 7); },
 
             displayDateDayView() {
                 return this.currentDateObj.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
             },
-            
             displayMonthName() {
-                // Zeigt "Dezember 2025" basierend auf currentDateObj
                 return this.currentDateObj.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
             },
 
@@ -322,10 +328,17 @@
             quota() {
                 let officeMinSum = 0;
                 let deductionCount = 0;
-                // Zähle nur relevante Einträge
+                
                 this.entriesCache.forEach(e => {
-                    if(['F','U','K'].includes(e.status)) deductionCount++;
-                    else {
+                    // Check auf Wochenende (Sa=6, So=0)
+                    const d = new Date(e.date);
+                    const dayNum = d.getDay();
+                    const isWeekend = (dayNum === 0 || dayNum === 6);
+
+                    // Nur wenn KEIN Wochenende, dann zählen F/U/K als Abzug
+                    if(['F','U','K'].includes(e.status) && !isWeekend) {
+                        deductionCount++;
+                    } else {
                         (e.blocks || []).forEach(b => {
                             if(b.type === 'office') {
                                 let s = this.toMin(b.start); let e = this.toMin(b.end);
@@ -334,9 +347,18 @@
                         });
                     }
                 });
-                // Ergänze Feiertage aus Map, die noch keinen Eintrag haben
+
+                // Auch globale Feiertage aus der Map checken
                 for(let dateStr in this.holidaysMap) {
-                    if(!this.entriesCache.find(e => e.date === dateStr)) deductionCount++;
+                    // Wenn Eintrag nicht existiert (sonst oben schon gezählt)
+                    if(!this.entriesCache.find(e => e.date === dateStr)) {
+                        const d = new Date(dateStr);
+                        const dayNum = d.getDay();
+                        // Nur Werktags-Feiertage zählen als Abzug
+                        if(dayNum !== 0 && dayNum !== 6) {
+                            deductionCount++;
+                        }
+                    }
                 }
 
                 let deductionTotal = deductionCount * this.settings.deductionPerDay;
@@ -355,16 +377,13 @@
 
             monthDays() {
                 let days = [];
-                // Wir bauen die Tage basierend auf dem aktuellen Monat in currentDateObj
                 let year = this.currentDateObj.getFullYear();
                 let month = this.currentDateObj.getMonth();
-                
-                // Erster Tag des Monats
                 let date = new Date(year, month, 1);
                 const todayIso = this.formatIsoDate(new Date());
 
                 while (date.getMonth() === month) {
-                    let iso = this.formatIsoDate(date); // Sichere Methode!
+                    let iso = this.formatIsoDate(date);
                     let entry = this.entriesCache.find(e => e.date === iso);
                     let holiday = this.holidaysMap[iso];
                     let status = entry ? entry.status : (holiday ? 'F' : null);
@@ -395,21 +414,25 @@
                         isWeekend: (date.getDay()===0 || date.getDay()===6),
                         isToday: (iso === todayIso)
                     });
-                    
-                    // Nächster Tag
                     date.setDate(date.getDate() + 1);
                 }
                 return days;
             }
         },
         methods: {
-            // --- CORE DATE FIX ---
-            // Diese Funktion verhindert das "einen Tag zurück"-Problem
             formatIsoDate(date) {
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
                 return `${year}-${month}-${day}`;
+            },
+
+            getRowClass(day) {
+                if (day.status === 'F') return 'tr-holiday';
+                if (day.status === 'U') return 'tr-vacation';
+                if (day.status === 'K') return 'tr-sick';
+                if (day.isWeekend) return 'tr-weekend';
+                return '';
             },
 
             formatTimeInput(block, field) {
@@ -444,21 +467,18 @@
                 return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
             },
 
-            // --- NAVIGATION ---
             shiftDay(offset) {
                 let d = new Date(this.currentDateObj);
                 d.setDate(d.getDate() + offset);
-                // Check ob Monatswechsel
                 let oldMonth = this.currentDateObj.getMonth();
                 this.currentDateObj = d;
-                if(d.getMonth() !== oldMonth) this.loadMonthData(); // Neu laden wenn Monat wechselt
+                if(d.getMonth() !== oldMonth) this.loadMonthData();
                 else this.loadFromCache();
             },
             
             shiftMonth(offset) {
-                // Ändert nur den Monat, Tag wird auf 1. gesetzt um Überlauf zu vermeiden
                 let d = new Date(this.currentDateObj);
-                d.setDate(1); // Sicherheitshalber auf den Ersten
+                d.setDate(1); 
                 d.setMonth(d.getMonth() + offset);
                 this.currentDateObj = d;
                 this.loadMonthData();
@@ -474,6 +494,42 @@
                 this.dayStatus = (this.dayStatus === s) ? null : s;
                 this.triggerAutoSave();
             },
+
+            // --- INLINE EDITIEREN IN LISTE ---
+            async quickToggle(day, status) {
+                // Wenn schon aktiv, dann deaktivieren (null), sonst aktivieren
+                const newStatus = (day.status === status) ? null : status;
+                
+                // Wir müssen den Eintrag im Cache finden oder erstellen
+                let entry = this.entriesCache.find(e => e.date === day.iso);
+                
+                // Daten vorbereiten
+                let payload = {
+                    date: day.iso,
+                    blocks: entry ? (entry.blocks || []) : [],
+                    status: newStatus
+                };
+
+                // Sofortiges UI Update (Optimistic UI)
+                if(entry) {
+                    entry.status = newStatus;
+                } else {
+                    this.entriesCache.push(JSON.parse(JSON.stringify(payload)));
+                }
+
+                // API Call (Fire & Forget, Status Indikator zeigt Erfolg)
+                this.saveState = 'saving';
+                try {
+                    await axios.post('/api/save_entry', payload);
+                    this.saveState = 'saved';
+                    setTimeout(() => { if(this.saveState === 'saved') this.saveState = 'idle'; }, 2000);
+                } catch(e) {
+                    console.error(e);
+                    this.saveState = 'idle';
+                    alert("Fehler beim Speichern!");
+                }
+            },
+
             addBlock(type) {
                 this.blocks.push({ id: Date.now(), type: type, start: '', end: '' });
                 this.triggerAutoSave();
@@ -489,8 +545,11 @@
 
             triggerAutoSave() {
                 this.saveState = 'saving';
+                // Timer zurücksetzen, wenn man weitertippt
                 if(this.saveTimer) clearTimeout(this.saveTimer);
-                this.saveTimer = setTimeout(() => { this.saveData(); }, 1000);
+                this.saveTimer = setTimeout(() => { 
+                    this.saveData(); 
+                }, 250); 
             },
 
             async saveData() {

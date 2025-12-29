@@ -1,43 +1,36 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-# 1. Installiere notwendige Pakete
+# 1. Basics
 RUN apk add --no-cache python3 py3-pip curl
-
-# Arbeitsverzeichnis
 WORKDIR /app
 
-# Requirements
+# 2. Python Dependencies (ändern sich selten -> Cache nutzen)
 COPY requirements.txt .
-
-# PEP 668 Fix
 RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 
-# Code kopieren
-COPY . .
-
-# --- WICHTIG: ENV VAR SETZEN ---
-ENV DB_FOLDER=/data
-
-# --- ASSETS VORBEREITEN ---
+# --- 3. ASSETS DOWNLOAD (NEUER PLATZ!) ---
+# Wir machen das VOR dem Code-Copy. Solange du diese Zeilen nicht änderst,
+# werden sie aus dem Cache geladen und nicht neu heruntergeladen.
 RUN mkdir -p app/static/js app/static/css app/static/fonts app/static/img
 
-# JS laden
+# JS & CSS
 RUN curl -L -o app/static/js/vue.js https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js && \
     curl -L -o app/static/js/axios.js https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js && \
-    curl -L -o app/static/js/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js
+    curl -L -o app/static/js/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js && \
+    curl -L -o app/static/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css
 
-# CSS laden
-RUN curl -L -o app/static/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css
+# Icons
+RUN curl -L -o app/static/css/bootstrap-icons.css https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css && \
+    curl -L -o app/static/fonts/bootstrap-icons.woff2 https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/fonts/bootstrap-icons.woff2
 
-# Icons laden
-RUN curl -L -o app/static/css/bootstrap-icons.css https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css
-RUN curl -L -o app/static/fonts/bootstrap-icons.woff2 https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/fonts/bootstrap-icons.woff2
-
-# --- FAVICON ---
+# 4. Jetzt erst den Code kopieren (Favicon kopieren wir auch hier)
+COPY . .
+# Falls du das lokale icon.png nutzen willst (wie vorhin besprochen):
 COPY icon.png app/static/img/favicon.png
 
-# Berechtigungen
+# ENV & Berechtigungen
+ENV DB_FOLDER=/data
 RUN chmod +x run.sh
 
 CMD [ "/app/run.sh" ]
