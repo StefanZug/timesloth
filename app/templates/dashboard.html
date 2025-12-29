@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="app" v-cloak>
+    
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Ansicht anpassen</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" v-model="settings.showOffice">
+                        <label class="form-check-label">🏢 Büro-Zeiten anzeigen</label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" v-model="settings.showHome">
+                        <label class="form-check-label">🏠 Home-Office anzeigen</label>
+                    </div>
+                    <hr>
+                    <small class="text-muted">Daten werden lokal in deinem Browser gespeichert.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3 bg-white p-2 rounded shadow-sm">
+        <button class="btn btn-outline-secondary btn-sm" @click="changeMonth(-1)"><i class="bi bi-chevron-left"></i></button>
+        <h5 class="m-0 fw-bold" v-text="formatMonthTitle(currentMonth)"></h5>
+        <button class="btn btn-outline-secondary btn-sm" @click="changeMonth(1)"><i class="bi bi-chevron-right"></i></button>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4 bg-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="card-body p-3">
+            <div class="row text-center">
+                <div class="col border-end border-white-50">
+                    <div class="small opacity-75">Büro-Quote</div>
+                    <div class="fw-bold fs-4"><span v-text="quotaPercent.toFixed(1)"></span>%</div>
+                </div>
+                <div class="col border-end border-white-50">
+                    <div class="small opacity-75">Saldo (Ist)</div>
+                    <div class="fw-bold fs-4"><span v-text="totalWorkedHours.toFixed(2)"></span> h</div>
+                </div>
+                <div class="col">
+                    <div class="small opacity-75">Rest Soll</div>
+                    <div class="fw-bold fs-4"><span v-text="remainingQuota > 0 ? remainingQuota.toFixed(1) : 'Done'"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex flex-column gap-3 mb-5">
+        <div v-for="day in days" :key="day.date" :id="day.date === todayStr ? 'today' : ''" 
+             class="card card-sloth" 
+             :class="{'border-primary border-2': day.date === todayStr, 'bg-light': isWeekend(day.date)}">
+            
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-2">
+                <div>
+                    <span class="fw-bold" v-text="formatDateShort(day.date)"></span>
+                    <span class="badge bg-secondary ms-2" v-if="day.date === todayStr">Heute</span>
+                </div>
+                <div class="d-flex gap-1">
+                    <button class="btn btn-sm p-0 px-1 rounded" :class="day.is_holiday ? 'btn-secondary text-white' : 'btn-outline-secondary border-0'" @click="toggle(day, 'is_holiday')">F</button>
+                    <button class="btn btn-sm p-0 px-1 rounded" :class="day.is_vacation ? 'btn-success text-white' : 'btn-outline-success border-0'" @click="toggle(day, 'is_vacation')">U</button>
+                    <button class="btn btn-sm p-0 px-1 rounded" :class="day.is_sick ? 'btn-danger text-white' : 'btn-outline-danger border-0'" @click="toggle(day, 'is_sick')">K</button>
+                </div>
+            </div>
+
+            <div class="card-body py-2" v-if="!isWeekend(day.date) || hasData(day)">
+                
+                <div v-if="settings.showOffice" class="mb-2">
+                    <div class="d-flex align-items-center mb-1">
+                        <i class="bi bi-building text-primary me-2"></i> 
+                        <small class="text-muted me-auto">Büro</small>
+                        <button class="btn btn-link btn-sm p-0 text-decoration-none" @click="addBlock(day, 'office_times')">+</button>
+                    </div>
+                    <div v-for="(block, idx) in day.office_times" :key="'off'+idx" class="d-flex gap-2 mb-1">
+                        <input type="text" inputmode="numeric" class="form-control form-control-sm text-center" placeholder="0800" v-model="block.start" @blur="smartTime(block, 'start', day)">
+                        <span class="align-self-center text-muted">-</span>
+                        <input type="text" inputmode="numeric" class="form-control form-control-sm text-center" placeholder="1630" v-model="block.end" @blur="smartTime(block, 'end', day)">
+                        <button class="btn btn-close btn-sm align-self-center" style="font-size: 0.6rem;" @click="removeBlock(day, 'office_times', idx)"></button>
+                    </div>
+                </div>
+
+                <div v-if="settings.showHome" class="mb-2">
+                    <div class="d-flex align-items-center mb-1">
+                        <i class="bi bi-house-heart text-info me-2"></i> 
+                        <small class="text-muted me-auto">Home</small>
+                        <button class="btn btn-link btn-sm p-0 text-decoration-none" @click="addBlock(day, 'home_times')">+</button>
+                    </div>
+                    <div v-for="(block, idx) in day.home_times" :key="'home'+idx" class="d-flex gap-2 mb-1">
+                        <input type="text" inputmode="numeric" class="form-control form-control-sm text-center" placeholder="0700" v-model="block.start" @blur="smartTime(block, 'start', day)">
+                        <span class="align-self-center text-muted">-</span>
+                        <input type="text" inputmode="numeric" class="form-control form-control-sm text-center" placeholder="1100" v-model="block.end" @blur="smartTime(block, 'end', day)">
+                        <button class="btn btn-close btn-sm align-self-center" style="font-size: 0.6rem;" @click="removeBlock(day, 'home_times', idx)"></button>
+                    </div>
+                </div>
+                
+                <div class="mb-2 border-top pt-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-bandaid text-danger"></i>
+                        <small class="text-muted">Arzt/Amt (Min):</small>
+                        <input type="number" class="form-control form-control-sm" style="width: 80px;" v-model.number="day.doctor_minutes" @change="save(day)">
+                    </div>
+                </div>
+
+                <input type="text" class="form-control form-control-sm border-0 bg-light mt-2" placeholder="Kommentar..." v-model="day.comment" @change="save(day)">
+            </div>
+
+            <div class="card-footer bg-white d-flex justify-content-between small text-muted">
+                <div>
+                    Gesamt: <strong :class="calculateDaily(day).total > 10 ? 'text-danger' : 'text-dark'" v-text="calculateDaily(day).formatted"></strong>
+                </div>
+                <div class="text-end" v-if="calculateDaily(day).total > 0">
+                    SAP: 
+                    <span class="badge bg-primary fw-normal me-1" title="Anwesenheit">🏢 <span v-text="calculateDaily(day).sap_attendance"></span></span>
+                    <span v-if="calculateDaily(day).sap_absence > 0" class="badge bg-warning text-dark fw-normal" title="Arzt/Amt">🚑 <span v-text="calculateDaily(day).sap_absence"></span></span>
+                </div>
+                <div v-else-if="day.is_holiday || day.is_vacation || day.is_sick">
+                    SAP: <span class="badge bg-secondary fw-normal">7.70</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                currentMonth: new Date().toISOString().slice(0, 7),
+                days: [],
+                todayStr: new Date().toISOString().slice(0, 10),
+                settings: { showOffice: true, showHome: true },
+                baseQuota: 66.67, // Dein Zielwert
+            }
+        },
+        computed: {
+            // Hilfsvariable für KPI oben
+            totalWorkedHours() {
+                return this.days.reduce((acc, day) => acc + this.calculateDaily(day).total, 0);
+            },
+            // Berechnet reine Bürozeit für Quote
+            totalOfficeHours() {
+                return this.days.reduce((acc, day) => {
+                     // Nur reine Bürozeit zählt
+                     return acc + this.sumBlocks(day.office_times);
+                }, 0);
+            },
+            quotaTarget() {
+                let deduction = 0;
+                this.days.forEach(day => {
+                    // Feiertage abziehen vom Soll
+                    if (!this.isWeekend(day.date) && (day.is_holiday || day.is_sick || day.is_vacation)) {
+                        deduction += 3.08; // Dein Tagessatz
+                    }
+                });
+                return Math.max(0, this.baseQuota - deduction);
+            },
+            remainingQuota() { return Math.max(0, this.quotaTarget - this.totalOfficeHours); },
+            quotaPercent() { return this.quotaTarget === 0 ? 100 : (this.totalOfficeHours / this.quotaTarget) * 100; }
+        },
+        methods: {
+            loadData() {
+                // Lokale Settings laden
+                const localSet = localStorage.getItem('slothSettings');
+                if(localSet) this.settings = JSON.parse(localSet);
+
+                const [year, month] = this.currentMonth.split('-');
+                const daysInMonth = new Date(year, month, 0).getDate();
+                
+                // Leeres Gerüst bauen
+                let tempDays = [];
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const d = new Date(Date.UTC(year, month - 1, i));
+                    const dateStr = d.toISOString().split('T')[0];
+                    // Default Struktur (Wichtig: Arrays für Zeiten!)
+                    tempDays.push({
+                        date: dateStr, 
+                        office_times: [{start: '', end: ''}], 
+                        home_times: [{start: '', end: ''}],
+                        doctor_minutes: 0,
+                        comment: '', is_holiday: false, is_vacation: false, is_sick: false
+                    });
+                }
+                
+                // API Daten holen
+                axios.get(`api/get_entries?month=${this.currentMonth}`).then(res => {
+                    res.data.forEach(entry => {
+                        const idx = tempDays.findIndex(d => d.date === entry.date);
+                        if (idx !== -1) {
+                            // Backend Daten mergen. Falls Arrays leer sind, wieder mind. 1 Feld anzeigen
+                            if(!entry.office_times || entry.office_times.length === 0) entry.office_times = [{start: '', end: ''}];
+                            if(!entry.home_times || entry.home_times.length === 0) entry.home_times = [{start: '', end: ''}];
+                            
+                            tempDays[idx] = { ...tempDays[idx], ...entry };
+                        }
+                    });
+                    this.days = tempDays;
+                    
+                    // Zum aktuellen Tag scrollen (nach rendering)
+                    this.$nextTick(() => {
+                        const el = document.getElementById('today');
+                        if(el) el.scrollIntoView({behavior: "smooth", block: "center"});
+                    });
+                });
+            },
+            
+            // --- Die komplexe SAP Logik ---
+            calculateDaily(day) {
+                let office = this.sumBlocks(day.office_times);
+                let home = this.sumBlocks(day.home_times);
+                let doctor = (day.doctor_minutes || 0) / 60.0;
+                
+                let totalRaw = office + home + doctor;
+                
+                if (totalRaw === 0) return { total: 0, formatted: '-', sap_attendance: 0, sap_absence: 0 };
+                
+                // Pausenabzug Logik (Smart Gap)
+                // 1. Alle Zeitblöcke sammeln um Lücken zu finden
+                let allBlocks = [];
+                [...day.office_times, ...day.home_times].forEach(b => {
+                   if(b.start && b.end) allBlocks.push({s: this.timeToDec(b.start), e: this.timeToDec(b.end)});
+                });
+                // Sortieren nach Startzeit
+                allBlocks.sort((a, b) => a.s - b.s);
+                
+                // Lücken berechnen
+                let totalGap = 0;
+                for(let i=1; i < allBlocks.length; i++) {
+                    let gap = allBlocks[i].s - allBlocks[i-1].e;
+                    if(gap > 0) totalGap += gap;
+                }
+                
+                // Muss Pause abgezogen werden?
+                // Regel: Wenn > 6h Arbeit UND (Lücken + Arztzeit?) < 30min
+                // Annahme: Arztzeit zählt als Arbeitszeit, unterbricht aber nicht die "Pause" Pflicht
+                let deduction = 0;
+                if (totalRaw > 6.0) {
+                     // Wenn Lücken kleiner als 0.5h (30 min)
+                     if (totalGap < 0.5) {
+                         deduction = 0.5 - totalGap;
+                     }
+                }
+                
+                // Netto Total
+                let totalNet = Math.max(0, totalRaw - deduction);
+                
+                // SAP Aufteilung:
+                // Arzt ist immer Fix (Absence)
+                let sapAbsence = doctor;
+                
+                // Attendance (Office + Home) muss ggf. um den Pausenabzug gekürzt werden
+                // Strategie: Ziehe Pause zuerst vom Home Office ab (User Wunsch)
+                let remainingDeduction = deduction;
+                let netHome = home;
+                let netOffice = office;
+                
+                if (remainingDeduction > 0) {
+                    if (netHome >= remainingDeduction) {
+                        netHome -= remainingDeduction;
+                        remainingDeduction = 0;
+                    } else {
+                        remainingDeduction -= netHome;
+                        netHome = 0;
+                        // Rest vom Büro abziehen
+                        netOffice = Math.max(0, netOffice - remainingDeduction);
+                    }
+                }
+                
+                let sapAttendance = netOffice + netHome;
+                
+                // Formatierung HH:MM
+                let hh = Math.floor(totalNet);
+                let mm = Math.round((totalNet - hh) * 60);
+                let formatted = `${hh}:${String(mm).padStart(2,'0')}`;
+                
+                return {
+                    total: totalNet,
+                    formatted: formatted,
+                    sap_attendance: sapAttendance.toFixed(2), // SAP Format dezimal
+                    sap_absence: sapAbsence > 0 ? sapAbsence.toFixed(2) : 0
+                };
+            },
+            
+            // --- Helper ---
+            sumBlocks(blocks) {
+                if(!blocks) return 0;
+                return blocks.reduce((acc, b) => acc + this.calcDuration(b.start, b.end), 0);
+            },
+            timeToDec(t) { 
+                if (!t) return 0; 
+                const [h, m] = t.split(':').map(Number); 
+                return h + m/60.0; 
+            },
+            calcDuration(s, e) { 
+                if (!s || !e) return 0; 
+                return Math.max(0, this.timeToDec(e) - this.timeToDec(s)); 
+            },
+            smartTime(block, field, day) {
+                let val = block[field];
+                if (!val) { this.save(day); return; }
+                let clean = val.replace(/[^0-9]/g, '');
+                if (clean.length > 0) {
+                    if (clean.length <= 2) clean = clean.padStart(2, '0') + "00"; // 8 -> 0800
+                    else if (clean.length === 3) clean = "0" + clean; // 830 -> 0830
+                    if (clean.length >= 4) {
+                        let h = clean.substr(0, 2); 
+                        let m = clean.substr(2, 2);
+                        if (parseInt(h) < 24 && parseInt(m) < 60) block[field] = `${h}:${m}`;
+                    }
+                }
+                this.save(day);
+            },
+            addBlock(day, type) {
+                day[type].push({start: '', end: ''});
+            },
+            removeBlock(day, type, idx) {
+                day[type].splice(idx, 1);
+                // Immer mind. 1 leeres Feld lassen, sonst kann man nichts mehr eintragen
+                if(day[type].length === 0) day[type].push({start: '', end: ''});
+                this.save(day);
+            },
+            
+            // --- Standard Zeugs ---
+            save(day) { 
+                axios.post('api/save_entry', day); 
+            },
+            toggle(day, field) {
+                if (!day[field]) { day.is_holiday = false; day.is_vacation = false; day.is_sick = false; day[field] = true; }
+                else { day[field] = false; }
+                this.save(day);
+            },
+            changeMonth(offset) {
+                const [year, month] = this.currentMonth.split('-').map(Number);
+                const newDate = new Date(year, month - 1 + offset, 1);
+                const y = newDate.getFullYear();
+                const m = String(newDate.getMonth() + 1).padStart(2, '0');
+                this.currentMonth = `${y}-${m}`;
+                this.loadData();
+            },
+            formatDateShort(d) { return new Date(d).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month:'2-digit' }); },
+            formatMonthTitle(ym) { const [y, m] = ym.split('-'); return new Date(y, m-1, 1).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }); },
+            isWeekend(d) { const dy = new Date(d).getDay(); return dy === 0 || dy === 6; },
+            hasData(day) {
+                // Hilft um Wochenende auszublenden, außer man hat was eingetragen
+                if(day.comment || day.is_holiday || day.is_vacation || day.is_sick || day.doctor_minutes > 0) return true;
+                if(day.office_times.some(b => b.start || b.end)) return true;
+                if(day.home_times.some(b => b.start || b.end)) return true;
+                return false;
+            }
+        },
+        watch: {
+            settings: {
+                handler(val) { localStorage.setItem('slothSettings', JSON.stringify(val)); },
+                deep: true
+            }
+        },
+        mounted() { this.loadData(); }
+    }).mount('#app');
+    
+    // Kleiner Hack um die Settings zu öffnen (da Button im Header ist, außerhalb von Vue #app)
+    window.openSettings = function() {
+        const modal = new bootstrap.Modal(document.getElementById('settingsModal'));
+        modal.show();
+    }
+</script>
+{% endblock %}

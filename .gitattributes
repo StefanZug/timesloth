@@ -1,0 +1,5 @@
+# Erzwinge LF als Zeilenende für alle Dateien
+* text=auto eol=lf
+
+# (Optional) Falls du Windows Batch Files hättest, dürften die CRLF behalten
+*.bat text eol=crlf
