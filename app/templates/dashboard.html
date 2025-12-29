@@ -2,42 +2,61 @@
 
 {% block content %}
 <style>
-    /* --- COLORS & THEME --- */
+    /* --- CSS VARIABLES & THEME --- */
     
-    [data-bs-theme="light"] body { background-color: #f8f9fa; }
-    .table > :not(caption) > * > * { background-color: transparent; color: inherit; box-shadow: none; }
+    /* LIGHT MODE */
+    [data-bs-theme="light"] {
+        --sloth-bg-card: #ffffff;
+        --sloth-bg-body: #f8f9fa;
+        --sloth-text-muted: #6c757d;
+        --sloth-border-color: #dee2e6;
+        --sloth-table-hover: rgba(0,0,0,0.02);
+    }
     
-    /* Zeilen Farben */
+    /* DARK MODE - High Contrast Fixes */
+    [data-bs-theme="dark"] {
+        --sloth-bg-card: #1e1e1e;
+        --sloth-bg-body: #121212;
+        --sloth-text-muted: #adb5bd; /* Helleres Grau für Text */
+        --sloth-border-color: #333;
+        --sloth-table-hover: rgba(255,255,255,0.05);
+    }
+
+    body { background-color: var(--sloth-bg-body); color: var(--bs-body-color); }
+    .card { background-color: var(--sloth-bg-card); border-color: var(--sloth-border-color); }
+    
+    /* --- TABELLE & ZEILEN FARBEN --- */
+    
+    .table > :not(caption) > * > * { background-color: transparent; color: inherit; box-shadow: none; border-bottom-color: var(--sloth-border-color); }
+    
+    /* Leere Zeilen im Darkmode abdunkeln für Kontrast */
+    [data-bs-theme="dark"] tr { background-color: #181818; } 
+
+    /* PASTELL FARBEN (Darkmode mit SCHWARZER Schrift für Lesbarkeit) */
+    .tr-office { background-color: rgba(40, 167, 69, 0.15) !important; }
+    .tr-home { background-color: rgba(23, 162, 184, 0.15) !important; }
     .tr-holiday { background-color: rgba(108, 117, 125, 0.2) !important; }
     .tr-vacation { background-color: rgba(255, 193, 7, 0.2) !important; }
     .tr-sick { background-color: rgba(220, 53, 69, 0.2) !important; }
-    .tr-office { background-color: rgba(40, 167, 69, 0.15) !important; }
-    .tr-home { background-color: rgba(23, 162, 184, 0.15) !important; }
     .tr-weekend { background-color: rgba(0,0,0,0.05) !important; color: #888; }
 
-    /* Dark Mode Overrides */
-    [data-bs-theme="dark"] body { background-color: #121212; color: #e0e0e0; }
-    [data-bs-theme="dark"] .card { background-color: #1e1e1e; border-color: #333; }
-    [data-bs-theme="dark"] .table { color: #e0e0e0; --bs-table-border-color: #333; }
-    [data-bs-theme="dark"] .table thead th { background-color: #2c2c2c; color: #fff; border-bottom: 1px solid #444; }
-    
-    /* Dark Mode Pastell-Zeilen mit schwarzer Schrift */
     [data-bs-theme="dark"] .tr-office { background-color: #a3cfbb !important; color: #000 !important; font-weight: 500; }
     [data-bs-theme="dark"] .tr-home { background-color: #9eeaf9 !important; color: #000 !important; font-weight: 500; }
     [data-bs-theme="dark"] .tr-vacation { background-color: #fff3cd !important; color: #000 !important; font-weight: 500; }
     [data-bs-theme="dark"] .tr-sick { background-color: #f8d7da !important; color: #000 !important; font-weight: 500; }
     [data-bs-theme="dark"] .tr-holiday { background-color: #e2e3e5 !important; color: #000 !important; font-weight: 500; }
-    [data-bs-theme="dark"] .tr-weekend { background-color: #2d2d2d !important; color: #888 !important; }
+    
+    /* Wochenende im Darkmode: Heller als Hintergrund, aber dunkelgrau */
+    [data-bs-theme="dark"] .tr-weekend { background-color: #262626 !important; color: #888 !important; }
 
     /* Inputs in der Tabelle */
     .table-input {
         background: transparent; border: 1px solid transparent; 
         width: 60px; text-align: center; color: inherit; font-weight: bold;
-        border-radius: 4px; padding: 2px 0;
-        transition: all 0.2s;
+        border-radius: 4px; padding: 2px 0; transition: all 0.2s;
     }
-    .table-input:hover, .table-input:focus { background: rgba(255,255,255,0.5); border-color: #ccc; }
-    .table-input::placeholder { opacity: 0.3; font-weight: normal; }
+    .table-input:hover, .table-input:focus { background: rgba(128,128,128,0.1); border-color: var(--sloth-text-muted); }
+    .table-input::placeholder { opacity: 0.2; font-weight: normal; }
 
     /* Status Buttons */
     .btn-xs-status {
@@ -45,7 +64,8 @@
         font-size: 0.75rem; font-weight: bold;
         display: inline-flex; align-items: center; justify-content: center;
         cursor: pointer; transition: all 0.2s;
-        border: 1px solid rgba(0,0,0,0.1); background-color: var(--bs-body-bg); opacity: 0.6;
+        border: 1px solid var(--sloth-border-color); 
+        background-color: var(--sloth-bg-card); opacity: 0.5; color: var(--sloth-text-muted);
     }
     .btn-xs-status:hover { transform: scale(1.1); opacity: 1; }
     .btn-xs-status.active { opacity: 1; border-color: transparent; color: white !important; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
@@ -54,21 +74,19 @@
     .st-u.active { background-color: #ffc107; color: #000 !important; }
     .st-k.active { background-color: #dc3545; }
 
-    /* Kommentarfeld */
-    .comment-input {
-        background: transparent; border: none; width: 100%; 
-        color: inherit; font-size: 0.9rem; padding: 2px 5px;
-        border-bottom: 1px solid transparent; transition: border-color 0.2s;
+    /* Layout Elements */
+    .sloth-header-card {
+        background-color: var(--sloth-bg-card); 
+        border: 1px solid var(--sloth-border-color);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border-radius: 12px; padding: 10px; margin-bottom: 20px;
     }
-    .comment-input:focus { outline: none; border-bottom: 1px solid #aaa; }
-    .comment-input::placeholder { color: inherit; opacity: 0.5; font-style: italic; }
-
-    /* Layout */
+    
     .quota-card {
-        background: var(--bs-body-bg); border-radius: 12px; padding: 15px; margin-bottom: 20px;
-        border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        background: var(--sloth-bg-card); border-radius: 12px; padding: 15px; margin-bottom: 20px;
+        border: 1px solid var(--sloth-border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    .progress-sloth { height: 10px; border-radius: 5px; background-color: rgba(0,0,0,0.1); margin-top: 5px; overflow: hidden; }
+    .progress-sloth { height: 10px; border-radius: 5px; background-color: rgba(128,128,128,0.1); margin-top: 5px; overflow: hidden; }
     .progress-bar-sloth { background-color: #ffc107; height: 100%; transition: width 0.5s; }
     
     .type-office { border-left: 5px solid #28a745; }
@@ -78,10 +96,16 @@
     .bg-home { background-color: #17a2b8 !important; color: white; }
     .bg-doctor { background-color: #dc3545 !important; color: white; }
     
-    .view-switcher { background: rgba(0,0,0,0.05); border-radius: 20px; padding: 4px; display: inline-flex; margin-bottom: 20px; }
-    .view-btn { border: none; background: transparent; padding: 5px 15px; border-radius: 16px; font-size: 0.9rem; color: #666; transition: all 0.2s; }
-    .view-btn.active { background: var(--bs-body-bg); color: var(--sloth-primary); font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .view-switcher { background: rgba(128,128,128,0.1); border-radius: 20px; padding: 4px; display: inline-flex; margin-bottom: 20px; }
+    .view-btn { border: none; background: transparent; padding: 5px 15px; border-radius: 16px; font-size: 0.9rem; color: var(--sloth-text-muted); transition: all 0.2s; }
+    .view-btn.active { background: var(--sloth-bg-card); color: var(--sloth-primary); font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     [data-bs-theme="dark"] .view-btn.active { color: white; background: #444; }
+
+    .comment-input { background: transparent; border: none; width: 100%; color: inherit; font-size: 0.9rem; padding: 2px 5px; border-bottom: 1px solid transparent; }
+    .comment-input:focus { outline: none; border-bottom: 1px solid var(--sloth-text-muted); }
+    
+    /* Footer Fix */
+    .footer-sarcasm { color: var(--sloth-text-muted) !important; opacity: 0.6; }
 
     .cursor-pointer { cursor: pointer; }
 </style>
@@ -125,8 +149,8 @@
             <button class="btn btn-outline-secondary btn-sm rounded-circle shadow-sm" @click="shiftDay(1)"><i class="bi bi-chevron-right"></i></button>
         </div>
 
-        <div v-if="!isNonWorkDay && prediction.target !== '--:--'" class="card mb-3 border-0 bg-light shadow-sm">
-            <div class="card-body py-2 d-flex justify-content-around">
+        <div v-if="!isNonWorkDay && prediction.target !== '--:--'" class="card mb-3 border-0 shadow-sm" style="background: var(--sloth-bg-card);">
+            <div class="card-body py-2 d-flex justify-content-around align-items-center">
                 <div class="text-center">
                     <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem">Soll (7.7h)</small>
                     <strong class="text-primary">[[ prediction.target ]]</strong>
@@ -140,9 +164,9 @@
         </div>
 
         <div class="d-flex justify-content-center gap-2 mb-4">
-            <div class="btn-xs-status st-f" :class="{active: dayStatus === 'F'}" style="width:50px; height:40px; font-size:1rem; opacity: 1; border: 1px solid #ccc;" @click="toggleStatus('F')">F</div>
-            <div class="btn-xs-status st-u" :class="{active: dayStatus === 'U'}" style="width:50px; height:40px; font-size:1rem; opacity: 1; border: 1px solid #ccc;" @click="toggleStatus('U')">U</div>
-            <div class="btn-xs-status st-k" :class="{active: dayStatus === 'K'}" style="width:50px; height:40px; font-size:1rem; opacity: 1; border: 1px solid #ccc;" @click="toggleStatus('K')">K</div>
+            <div class="btn-xs-status st-f" :class="{active: dayStatus === 'F'}" style="width:50px; height:40px; font-size:1rem; opacity: 1; border: 1px solid var(--sloth-border-color);" @click="toggleStatus('F')">F</div>
+            <div class="btn-xs-status st-u" :class="{active: dayStatus === 'U'}" style="width:50px; height:40px; font-size:1rem; opacity: 1; border: 1px solid var(--sloth-border-color);" @click="toggleStatus('U')">U</div>
+            <div class="btn-xs-status st-k" :class="{active: dayStatus === 'K'}" style="width:50px; height:40px; font-size:1rem; opacity: 1; border: 1px solid var(--sloth-border-color);" @click="toggleStatus('K')">K</div>
         </div>
 
         <div v-if="!isNonWorkDay">
@@ -151,12 +175,12 @@
                     <div class="card-body p-2 d-flex align-items-center gap-2">
                         <div class="dropdown">
                             <button class="btn btn-sm dropdown-toggle text-white shadow-sm" :class="'bg-' + block.type" type="button" data-bs-toggle="dropdown" style="width: 40px;">
-                                <i :key="block.type" class="bi" :class="getTypeIcon(block.type)"></i>
+                                <i :key="block.type + index" class="bi" :class="getTypeIcon(block.type)"></i>
                             </button>
                             <ul class="dropdown-menu shadow">
-                                <li><a class="dropdown-item" @click="updateBlock(block, 'type', 'office')"><i class="bi bi-building me-2 text-success"></i>Büro</a></li>
-                                <li><a class="dropdown-item" @click="updateBlock(block, 'type', 'home')"><i class="bi bi-house me-2 text-info"></i>Home</a></li>
-                                <li><a class="dropdown-item text-danger" @click="updateBlock(block, 'type', 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</a></li>
+                                <li><a class="dropdown-item" @click="changeBlockType(index, 'office')"><i class="bi bi-building me-2 text-success"></i>Büro</a></li>
+                                <li><a class="dropdown-item" @click="changeBlockType(index, 'home')"><i class="bi bi-house me-2 text-info"></i>Home</a></li>
+                                <li><a class="dropdown-item text-danger" @click="changeBlockType(index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</a></li>
                             </ul>
                         </div>
                         <input type="text" class="form-control text-center p-1 fw-bold" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave">
@@ -173,7 +197,7 @@
                 </button>
             </div>
             
-            <div class="text-center mt-4 text-muted small bg-white p-2 rounded shadow-sm border">
+            <div class="text-center mt-4 small p-2 rounded shadow-sm border" style="background-color: var(--sloth-bg-card); color: var(--sloth-text-muted);">
                 <div class="d-flex justify-content-center gap-3">
                     <span>SAP: <strong>[[ formatH(totals.sapTime) ]]</strong></span>
                     <div class="vr"></div>
@@ -192,13 +216,13 @@
     </div>
 
     <div v-show="viewMode === 'month'" class="animate-fade">
-        <div class="d-flex justify-content-between align-items-center mb-3 bg-white p-2 rounded shadow-sm border">
+        <div class="d-flex justify-content-between align-items-center mb-3 sloth-header-card">
             <button class="btn btn-sm btn-light" @click="shiftMonth(-1)"><i class="bi bi-chevron-left"></i></button>
             <h5 class="m-0 fw-bold">[[ displayMonthName ]]</h5>
             <button class="btn btn-sm btn-light" @click="shiftMonth(1)"><i class="bi bi-chevron-right"></i></button>
         </div>
 
-        <div class="table-responsive bg-white rounded shadow-sm border">
+        <div class="table-responsive rounded shadow-sm border" style="background-color: var(--sloth-bg-card);">
             <table class="table mb-0 text-center align-middle" style="font-size: 0.9rem; border-collapse: collapse;">
                 <thead>
                     <tr>
@@ -281,7 +305,6 @@
         data() {
             return {
                 currentDateObj: new Date(),
-                // Lade ViewMode aus localStorage oder Default 'day'
                 viewMode: localStorage.getItem('viewMode') || 'day',
                 dayStatus: null, 
                 blocks: [], 
@@ -297,10 +320,7 @@
             }
         },
         watch: {
-            // Speichere Ansicht bei Änderung
-            viewMode(newVal) {
-                localStorage.setItem('viewMode', newVal);
-            }
+            viewMode(newVal) { localStorage.setItem('viewMode', newVal); }
         },
         computed: {
             isoDate() { return this.formatIsoDate(this.currentDateObj); },
@@ -423,16 +443,14 @@
                 while (date.getMonth() === month) {
                     let iso = this.formatIsoDate(date);
                     let entry = this.entriesCache.find(e => e.date === iso);
-                    let holidayName = this.holidaysMap[iso]; // Feiertagsname holen
+                    let holidayName = this.holidaysMap[iso];
                     let status = entry ? entry.status : (holidayName ? 'F' : null);
                     
-                    let hasOffice = false;
-                    let hasHome = false;
                     let sapT = 0;
-                    
-                    // Für List-Input: Hole Start/Ende des ERSTEN Blocks
                     let firstStart = '';
                     let firstEnd = '';
+                    let hasOffice = false;
+                    let hasHome = false;
                     
                     if(entry && !status) {
                         let tempSap = 0;
@@ -443,8 +461,14 @@
                         }
 
                         blocks.forEach(b => {
-                            if(b.type === 'office') hasOffice = true;
-                            if(b.type === 'home') hasHome = true;
+                            // FIX: Color logic only if block has content
+                            let hasContent = (b.start && b.start.length > 3) || (b.end && b.end.length > 3);
+                            
+                            if(hasContent) {
+                                if(b.type === 'office') hasOffice = true;
+                                if(b.type === 'home') hasHome = true;
+                            }
+
                             let s = this.toMin(b.start); let e = this.toMin(b.end);
                             if(e>s) {
                                 if(b.type==='doctor') {
@@ -459,8 +483,6 @@
 
                     let dayName = date.toLocaleDateString('de-DE', { weekday: 'long' });
                     let isWeekend = (date.getDay()===0 || date.getDay()===6);
-                    
-                    // Platzhalter Logik: Wochenende > Feiertagsname > Leer
                     let ph = '';
                     if(isWeekend) ph = dayName;
                     else if(holidayName) ph = holidayName;
@@ -478,8 +500,8 @@
                         hasHome: hasHome,
                         comment: entry ? entry.comment : '',
                         placeholder: ph,
-                        firstStart: firstStart, // Für Input
-                        firstEnd: firstEnd     // Für Input
+                        firstStart: firstStart,
+                        firstEnd: firstEnd
                     });
                     date.setDate(date.getDate() + 1);
                 }
@@ -487,34 +509,22 @@
             }
         },
         methods: {
-            // --- LISTEN INPUT UPDATE ---
             updateListTime(day, field, val) {
-                // Wir suchen den Eintrag
                 let entry = this.entriesCache.find(e => e.date === day.iso);
-                
-                // Wenn kein Eintrag -> Erstelle einen neuen mit 1 Büro-Block
                 if(!entry) {
                     entry = { date: day.iso, blocks: [{ id: Date.now(), type: 'office', start: '', end: '' }], status: null, comment: '' };
                     this.entriesCache.push(entry);
                 }
-                
-                // Wenn Eintrag aber keine Blocks (z.B. alter F Tag) -> Erstelle Block
                 if(!entry.blocks || entry.blocks.length === 0) {
                     entry.blocks = [{ id: Date.now(), type: 'office', start: '', end: '' }];
                 }
-
-                // Update den ersten Block
                 entry.blocks[0][field] = val;
-                
-                // Wenn Status F/U/K war, lösche ihn, sobald man Zeiten eintippt
                 if(entry.status) entry.status = null;
-
                 this.triggerAutoSave();
             },
             
             formatListTime(day, field, val) {
-                // Nur Formatierung (gleiche Logik wie in formatTimeInput)
-                if(!val) return;
+                if(!val) { this.updateListTime(day, field, ''); return; } // Allow empty
                 let clean = val.replace(/[^0-9]/g, '');
                 let h = 0, m = 0;
                 if (clean.length <= 2) h = parseInt(clean); 
@@ -522,12 +532,18 @@
                 else { h = parseInt(clean.substring(0,2)); m = parseInt(clean.substring(2,4)); }
                 if(h > 23) h = 23; if(m > 59) m = 59;
                 let final = h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
-                
-                // Wert zurückschreiben
                 this.updateListTime(day, field, final);
             },
 
-            // --- STANDARD METHODEN ---
+            // --- DROPDOWN FIX ---
+            changeBlockType(index, newType) {
+                // Ersetze das Objekt komplett für Reaktivität
+                let oldBlock = this.blocks[index];
+                this.blocks.splice(index, 1, { ...oldBlock, type: newType });
+                this.triggerAutoSave();
+            },
+
+            // --- STANDARD UTILS ---
             formatIsoDate(date) {
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
