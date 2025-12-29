@@ -6,159 +6,210 @@
     [data-bs-theme="dark"] body { background-color: #121212; color: #e0e0e0; }
     [data-bs-theme="dark"] .card { background-color: #1e1e1e; border-color: #333; }
     
-    /* Block-Typ Farben */
     .type-office { border-left: 5px solid #4dabf7; }
     .type-home { border-left: 5px solid #da77f2; }
     .type-doctor { border-left: 5px solid #ff6b6b; }
     
     .bg-office { background-color: #4dabf7; color: white; }
     .bg-home { background-color: #da77f2; color: white; }
-    .bg-doctor { background-color: #ff6b6b; color: white; }
-
-    /* Prognose Header */
-    .prediction-bar {
-        background: rgba(92, 124, 250, 0.1);
-        border-radius: 10px;
-        padding: 10px;
-        margin-bottom: 20px;
-        display: flex; justify-content: space-around;
-        border: 1px solid rgba(92, 124, 250, 0.2);
-    }
     
-    /* Floating Save & Add Buttons */
-    .fab-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
-    .fab-btn { width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: none; color: white; }
-    
-    /* Status Toggles (F U K) */
+    /* Status Toggles */
     .status-toggle {
-        cursor: pointer; opacity: 0.4; transition: all 0.2s; font-weight: bold;
-        width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-        border-radius: 8px; border: 2px solid #ccc;
+        cursor: pointer; opacity: 0.3; transition: all 0.2s; font-weight: bold;
+        width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;
+        border-radius: 8px; border: 1px solid #ccc; font-size: 0.9rem;
     }
     .status-toggle.active { opacity: 1; border-color: transparent; transform: scale(1.1); color: #fff; }
-    .st-holiday.active { background-color: #868e96; } /* Grau */
-    .st-vacation.active { background-color: #fcc419; } /* Gelb */
-    .st-sick.active { background-color: #fa5252; }     /* Rot */
+    .st-holiday.active { background-color: #868e96; } 
+    .st-vacation.active { background-color: #fcc419; } 
+    .st-sick.active { background-color: #fa5252; }     
 
-    /* Animation */
-    .list-enter-active, .list-leave-active { transition: all 0.3s ease; }
-    .list-enter-from, .list-leave-to { opacity: 0; transform: translateX(30px); }
+    /* Quota Bar */
+    .quota-card {
+        background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    [data-bs-theme="dark"] .quota-card { background: #1e1e1e; }
+    
+    .progress-sloth { height: 10px; border-radius: 5px; background-color: #e9ecef; margin-top: 5px; overflow: hidden; }
+    .progress-bar-sloth { background-color: #fcc419; height: 100%; transition: width 0.5s; } /* Gelb wie im Screenshot */
+
+    /* Tab Switcher */
+    .view-switcher {
+        background: #f1f3f5; border-radius: 20px; padding: 4px; display: inline-flex; margin-bottom: 20px;
+    }
+    [data-bs-theme="dark"] .view-switcher { background: #2d2d2d; }
+    
+    .view-btn {
+        border: none; background: transparent; padding: 5px 15px; border-radius: 16px; 
+        font-size: 0.9rem; color: #888; transition: all 0.2s;
+    }
+    .view-btn.active { background: white; color: black; font-weight: bold; shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    [data-bs-theme="dark"] .view-btn.active { background: #444; color: white; }
+
+    /* Auto Save Indicator */
+    .save-status { position: fixed; bottom: 20px; right: 20px; font-size: 1.5rem; opacity: 0.8; z-index: 99; transition: all 0.3s; }
 </style>
 
 <div id="app" class="container mt-3 mb-5" v-cloak>
 
-    <div class="prediction-bar" v-if="!isNonWorkDay">
-        <div class="text-center">
-            <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Soll fertig (7.7h)</small>
-            <span class="fw-bold fs-5">[[ prediction.target ]]</span>
+    <div class="quota-card">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-muted small fw-bold">BÜRO-QUOTE (40%)</span>
+            <span class="text-danger fw-bold fs-5">[[ quota.needed ]] h</span> </div>
+        <div class="d-flex justify-content-between small mb-1">
+            <span>Ist: [[ quota.current ]] h</span>
+            <span>Ziel: [[ quota.target ]] h</span>
         </div>
-        <div class="text-center border-start ps-4">
-            <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Maximal (10h)</small>
-            <span class="fw-bold fs-5 text-danger">[[ prediction.max ]]</span>
+        <div class="progress-sloth">
+            <div class="progress-bar-sloth" :style="{ width: quota.percent + '%' }"></div>
+        </div>
+        <div class="text-end mt-2">
+            <span class="badge bg-secondary" style="font-weight: normal; font-size: 0.7rem;">
+                Abzüge (Urlaub/Krank): [[ quota.deduction ]] h
+            </span>
         </div>
     </div>
 
-    <div class="card shadow-sm border-0 mb-3" style="background: linear-gradient(135deg, #1c7ed6 0%, #228be6 100%); color: white;">
-        <div class="card-body p-2">
-            <div class="row text-center align-items-center">
-                <div class="col-4">
-                    <span class="d-block h2 mb-0 fw-bold">[[ formatTime(totals.sapTime) ]]</span>
-                    <small class="opacity-75">SAP (Gleitzeit)</small>
-                </div>
-                <div class="col-4 border-start border-white-50">
-                    <span class="d-block h4 mb-0 fw-bold">[[ formatTime(totals.catsTime) ]]</span>
-                    <small class="opacity-75">CATS (Kunde)</small>
-                </div>
-                <div class="col-4 border-start border-white-50">
-                    <span class="d-block h4 mb-0 fw-bold">[[ totals.saldo ]]</span>
-                    <small class="opacity-75">Saldo</small>
-                </div>
+    <div class="text-center">
+        <div class="view-switcher">
+            <button class="view-btn" :class="{active: viewMode === 'day'}" @click="viewMode = 'day'">
+                <i class="bi bi-calendar-day"></i> Tag
+            </button>
+            <button class="view-btn" :class="{active: viewMode === 'month'}" @click="viewMode = 'month'">
+                <i class="bi bi-table"></i> Liste
+            </button>
+        </div>
+    </div>
+
+    <div v-show="viewMode === 'day'" class="animate-fade">
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <button class="btn btn-outline-secondary btn-sm rounded-circle" @click="changeDay(-1)"><i class="bi bi-chevron-left"></i></button>
+            <h5 class="m-0 fw-bold">[[ displayDate ]]</h5>
+            <button class="btn btn-outline-secondary btn-sm rounded-circle" @click="changeDay(1)"><i class="bi bi-chevron-right"></i></button>
+        </div>
+
+        <div v-if="!isNonWorkDay && prediction.target !== '--:--'" class="alert alert-light border d-flex justify-content-around py-2 mb-3">
+            <div class="text-center">
+                <small class="text-muted d-block" style="font-size: 0.7rem">Soll (7.7h)</small>
+                <strong>[[ prediction.target ]]</strong>
             </div>
-            <div class="text-center mt-2 border-top border-white-50 pt-1" v-if="totals.pause > 0" style="font-size: 0.8rem;">
-                <i class="bi bi-cup-hot"></i> Automatische Pause: -[[ totals.pause ]] Min
+            <div class="text-center border-start ps-3">
+                <small class="text-muted d-block" style="font-size: 0.7rem">Max (10h)</small>
+                <strong class="text-danger">[[ prediction.max ]]</strong>
             </div>
         </div>
-    </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <button class="btn btn-outline-secondary btn-sm" @click="changeDay(-1)"><i class="bi bi-chevron-left"></i></button>
-        <h5 class="m-0 fw-bold">[[ displayDate ]]</h5>
-        <button class="btn btn-outline-secondary btn-sm" @click="changeDay(1)"><i class="bi bi-chevron-right"></i></button>
-    </div>
+        <div class="d-flex justify-content-center gap-2 mb-4">
+            <div class="status-toggle st-holiday" :class="{active: dayStatus === 'F'}" @click="toggleStatus('F')">F</div>
+            <div class="status-toggle st-vacation" :class="{active: dayStatus === 'U'}" @click="toggleStatus('U')">U</div>
+            <div class="status-toggle st-sick" :class="{active: dayStatus === 'K'}" @click="toggleStatus('K')">K</div>
+        </div>
 
-    <div class="d-flex justify-content-center gap-3 mb-4">
-        <div class="status-toggle st-holiday" :class="{active: dayStatus === 'F'}" @click="toggleStatus('F')">F</div>
-        <div class="status-toggle st-vacation" :class="{active: dayStatus === 'U'}" @click="toggleStatus('U')">U</div>
-        <div class="status-toggle st-sick" :class="{active: dayStatus === 'K'}" @click="toggleStatus('K')">K</div>
-    </div>
+        <div v-if="!isNonWorkDay">
+            <transition-group name="list" tag="div">
+                <div v-for="(block, index) in blocks" :key="block.id" class="card mb-2 shadow-sm" :class="'type-' + block.type">
+                    <div class="card-body p-2 d-flex align-items-center gap-2">
+                        
+                        <div class="dropdown">
+                            <button class="btn btn-sm dropdown-toggle text-white" :class="'bg-' + block.type" type="button" data-bs-toggle="dropdown" style="width: 40px;">
+                                <i class="bi" :class="getTypeIcon(block.type)"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" @click="updateBlock(block, 'type', 'office')">🏢 Büro</a></li>
+                                <li><a class="dropdown-item" @click="updateBlock(block, 'type', 'home')">🏠 Home</a></li>
+                                <li><a class="dropdown-item text-danger" @click="updateBlock(block, 'type', 'doctor')">🚑 Arzt</a></li>
+                            </ul>
+                        </div>
 
-    <div v-if="!isNonWorkDay">
-        <transition-group name="list" tag="div">
-            <div v-for="(block, index) in blocks" :key="block.id" class="card mb-2 shadow-sm" :class="'type-' + block.type">
-                <div class="card-body p-2 d-flex align-items-center gap-2">
-                    
-                    <div class="dropdown">
-                        <button class="btn btn-sm dropdown-toggle text-white" :class="'bg-' + block.type" type="button" data-bs-toggle="dropdown">
-                            <i class="bi" :class="getTypeIcon(block.type)"></i>
+                        <input type="text" class="form-control text-center p-1 fw-bold" 
+                               v-model="block.start" placeholder="08:00" 
+                               @blur="formatTimeInput(block, 'start')"
+                               @input="triggerAutoSave">
+                        <span>-</span>
+                        <input type="text" class="form-control text-center p-1 fw-bold" 
+                               v-model="block.end" placeholder="16:30" 
+                               @blur="formatTimeInput(block, 'end')"
+                               @input="triggerAutoSave">
+
+                        <button class="btn btn-link text-muted p-0 ms-auto" @click="removeBlock(index)">
+                            <i class="bi bi-x-lg"></i>
                         </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" @click="block.type='office'"><i class="bi bi-building"></i> Büro</a></li>
-                            <li><a class="dropdown-item" @click="block.type='home'"><i class="bi bi-house"></i> Home</a></li>
-                            <li><a class="dropdown-item text-danger" @click="block.type='doctor'"><i class="bi bi-bandaid"></i> Arzt</a></li>
-                        </ul>
                     </div>
-
-                    <input type="tel" class="form-control text-center p-1" v-model="block.start" placeholder="0000" maxlength="4" style="font-weight: bold;">
-                    <span>-</span>
-                    <input type="tel" class="form-control text-center p-1" v-model="block.end" placeholder="0000" maxlength="4" style="font-weight: bold;">
-
-                    <button class="btn btn-link text-muted p-0 ms-auto" @click="removeBlock(index)">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
                 </div>
-                <div v-if="block.type === 'doctor'" class="card-footer py-1 px-2 bg-light text-muted" style="font-size: 0.7rem;">
-                    Hinweis: Zählt nur zwischen 08:00 - 16:12 (SAP). Zählt 0h für CATS.
-                </div>
+            </transition-group>
+
+            <div class="d-grid gap-2 mt-3">
+                <button class="btn btn-outline-secondary border-dashed" @click="addBlock('office')" style="border-style: dashed;">
+                    <i class="bi bi-plus-lg"></i> Eintrag hinzufügen
+                </button>
             </div>
-        </transition-group>
+            
+            <div class="text-center mt-4 text-muted small">
+                <div>SAP: [[ formatH(totals.sapTime) ]] | CATS: [[ formatH(totals.catsTime) ]]</div>
+                <div v-if="totals.pause > 0" class="text-warning">Pause: -[[ totals.pause ]]m</div>
+                <div class="fw-bold mt-1 fs-6">Saldo: [[ totals.saldo ]]</div>
+            </div>
+        </div>
+        
+        <div v-else class="alert text-center mt-3" :class="statusAlertClass">
+            Tag zählt als [[ getStatusText(dayStatus) ]]
+        </div>
 
-        <div v-if="blocks.length === 0" class="text-center text-muted py-4 opacity-50">
-            <i class="bi bi-stopwatch fs-1"></i><br>Noch keine Zeiten erfasst.
+    </div>
+
+    <div v-show="viewMode === 'month'" class="animate-fade">
+        <div class="table-responsive bg-white rounded shadow-sm">
+            <table class="table table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-start ps-3">Datum</th>
+                        <th>Summe</th>
+                        <th>SAP</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="day in monthDays" :key="day.iso" @click="jumpToDay(day.iso)" style="cursor: pointer;">
+                        <td class="text-start ps-3">
+                            <div class="fw-bold">[[ day.dayShort ]]., [[ day.dateNum ]].</div>
+                            <div class="text-muted small" style="font-size: 0.7rem;">KW [[ day.kw ]]</div>
+                        </td>
+                        
+                        <td :class="{'text-muted': day.sapTime == 0, 'fw-bold': day.sapTime > 0}">
+                            [[ day.sapTime > 0 ? formatH(day.sapTime) : '-' ]]
+                        </td>
+                        
+                        <td class="text-primary fw-bold">
+                            [[ day.sapTime > 0 ? formatH(day.sapTime) : '0' ]]
+                        </td>
+                        
+                        <td>
+                            <span v-if="day.status" class="badge rounded-pill" 
+                                  :class="{'bg-secondary': day.status=='F', 'bg-warning text-dark': day.status=='U', 'bg-danger': day.status=='K'}">
+                                [[ day.status ]]
+                            </span>
+                            <span v-else-if="day.isWeekend" class="text-muted small">WE</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <div v-else class="alert text-center" :class="statusAlertClass">
-        <h4 class="fw-bold mt-2">[[ getStatusText(dayStatus) ]]</h4>
-        <p class="small">Dieser Tag reduziert dein Büro-Soll um 3,08h.</p>
+    <div class="save-status text-success" v-if="saveState === 'saved'">
+        <i class="bi bi-check-circle-fill"></i>
     </div>
-
-    <div class="fab-container" v-if="!isNonWorkDay">
-        <button class="fab-btn btn-secondary shadow-sm" @click="addBlock('office')" title="Neuer Block">
-            <i class="bi bi-plus-lg"></i>
-        </button>
-        <button class="fab-btn btn-primary" @click="saveData" title="Speichern">
-            <i class="bi bi-floppy2-fill"></i>
-        </button>
+    <div class="save-status text-warning" v-if="saveState === 'saving'">
+        <div class="spinner-border spinner-border-sm"></div>
     </div>
 
 </div>
 {% endblock %}
 
-{% block scripts %}
-<script>
-    function openSettings() {
-        const el = document.getElementById('settingsModal');
-        if(el) {
-            const modal = new bootstrap.Modal(el);
-            modal.show();
-        } else {
-            console.error("Settings Modal nicht gefunden!");
-        }
-    }
-    // Global verfügbar machen
-    window.openSettings = openSettings;
-</script>
 
+{% block scripts %}
 <script>
     const { createApp } = Vue;
 
@@ -167,16 +218,22 @@
         data() {
             return {
                 currentDateObj: new Date(),
+                viewMode: 'day', // 'day' oder 'month'
+                
                 dayStatus: null, 
                 blocks: [], 
-                entriesCache: [], // Lokaler Speicher für den Monat
-                holidaysMap: {},  // Speichert Feiertage vom Server
-                loading: false,
+                
+                entriesCache: [], // Alle Einträge
+                holidaysMap: {},
+                
+                saveState: 'idle', // idle, saving, saved
+                saveTimer: null,
                 
                 settings: {
                     sollStunden: 7.70,
-                    arztStart: 480, // 08:00
-                    arztEnde: 972   // 16:12
+                    officeTarget: 66.67, // Monatsziel
+                    deductionPerDay: 3.08, // Abzug bei F/U/K
+                    arztStart: 480, arztEnde: 972 // 08:00 - 16:12
                 }
             }
         },
@@ -195,171 +252,250 @@
                 return '';
             },
 
-            // --- KERN-LOGIK ---
+            // --- TAGES RECHNUNG ---
             totals() {
-                let sapMin = 0;
-                let catsMin = 0;
-                
+                let sapMin = 0; let catsMin = 0;
                 this.blocks.forEach(b => {
-                    let start = this.toMin(b.start);
-                    let end = this.toMin(b.end);
-                    if (start >= end) return;
-
-                    let duration = end - start;
-
+                    let s = this.toMin(b.start); let e = this.toMin(b.end);
+                    if (s >= e) return;
+                    let dur = e - s;
                     if (b.type === 'doctor') {
-                        let validStart = Math.max(start, this.settings.arztStart);
-                        let validEnd = Math.min(end, this.settings.arztEnde);
-                        if (validEnd > validStart) sapMin += (validEnd - validStart);
+                        let vs = Math.max(s, this.settings.arztStart);
+                        let ve = Math.min(e, this.settings.arztEnde);
+                        if (ve > vs) sapMin += (ve - vs);
                     } else {
-                        sapMin += duration;
-                        catsMin += duration;
+                        sapMin += dur; catsMin += dur;
                     }
                 });
-
+                // Pause > 6h
                 let pause = 0;
-                // SAP Regel: >6h Anwesenheit (SAP Zeit) -> 30min Abzug
-                if (sapMin > 360) {
-                    pause = 30;
-                    sapMin -= 30;
-                    catsMin -= 30;
-                }
-
-                // Saldo Berechnung
-                // Wenn F/U/K -> Soll ist reduziert (oder Ist wird gutgeschrieben, je nach Sichtweise)
-                // Wir nehmen deine Regel: Saldo Berechnung ignoriert Soll wenn Status aktiv (bzw. ist 0)
-                let istStunden = sapMin / 60;
-                let target = this.isNonWorkDay ? 0 : this.settings.sollStunden;
+                if (sapMin > 360) { pause = 30; sapMin -= 30; catsMin -= 30; }
                 
-                // Falls Status U/K/F -> Ist es ein 0-Summen Spiel oder Gutschrift?
-                // Normalerweise: Bei Urlaub hast du 7.7h IST (fiktiv) und 7.7h SOLL.
-                // Wir zeigen Saldo einfach nur an, wenn gearbeitet wurde.
+                let ist = sapMin / 60;
+                let saldoVal = this.isNonWorkDay ? 0 : (ist - this.settings.sollStunden);
                 
-                let saldoVal = istStunden - target;
-                if (this.isNonWorkDay) saldoVal = 0; // An freien Tagen ändert sich Saldo nicht (vereinfacht)
-
-                return {
-                    sapTime: sapMin > 0 ? sapMin : 0,
-                    catsTime: catsMin > 0 ? catsMin : 0,
-                    pause: pause,
-                    saldo: (saldoVal > 0 ? '+' : '') + saldoVal.toFixed(2) + ' h'
-                };
+                return { sapTime: Math.max(0, sapMin), catsTime: Math.max(0, catsMin), pause, saldo: (saldoVal > 0 ? '+' : '') + saldoVal.toFixed(2) + ' h' };
             },
 
             prediction() {
                 if (this.blocks.length === 0 || this.isNonWorkDay) return { target: '--:--', max: '--:--' };
-                
-                // Erster Start finden
-                let firstStart = 9999;
-                let lastEnd = 0;
+                let firstStart = 9999; let lastEnd = 0;
                 this.blocks.forEach(b => {
-                    let s = this.toMin(b.start);
-                    let e = this.toMin(b.end);
+                    let s = this.toMin(b.start); let e = this.toMin(b.end);
                     if (s > 0 && s < firstStart) firstStart = s;
                     if (e > lastEnd) lastEnd = e;
                 });
-
                 if (firstStart === 9999) return { target: '--:--', max: '--:--' };
-
-                let currentNetto = this.totals.sapTime; 
+                
+                let currentNetto = this.totals.sapTime;
                 let remaining = (this.settings.sollStunden * 60) - currentNetto;
                 
-                if (remaining <= 0) return { target: 'Erledigt! 🎉', max: '...' };
+                if (remaining <= 0) return { target: '✔', max: '...' };
 
-                let finishTime = lastEnd + remaining;
-                // Pause draufrechnen wenn wir über 6h kommen
-                if (this.totals.pause === 0 && (currentNetto + remaining) > 360) {
-                     finishTime += 30;
+                let finish = lastEnd + remaining;
+                if (this.totals.pause === 0 && (currentNetto + remaining) > 360) finish += 30; // Pause einkalkulieren
+
+                let maxTime = firstStart + 630; // 10h + 30m Pause
+                return { target: this.minToString(finish), max: this.minToString(maxTime) };
+            },
+
+            // --- MONATS RECHNUNG (QUOTA) ---
+            quota() {
+                let officeMinSum = 0;
+                let deductionCount = 0;
+
+                // Gehe durch Cache (Alle geladenen Tage)
+                // Achtung: entriesCache enthält nur gespeicherte Tage.
+                // Wir müssen auch Feiertage zählen, die nicht als Entry gespeichert sind aber in holidaysMap stehen.
+                
+                // 1. Zähle gespeicherte Einträge
+                this.entriesCache.forEach(e => {
+                    if(['F','U','K'].includes(e.status)) {
+                        deductionCount++;
+                    } else {
+                        // Bürozeiten summieren
+                        let blocks = e.blocks || [];
+                        blocks.forEach(b => {
+                            if(b.type === 'office') {
+                                let s = this.toMin(b.start); let end = this.toMin(b.end);
+                                if(end > s) officeMinSum += (end - s);
+                            }
+                        });
+                    }
+                });
+
+                // 2. Feiertage checken die noch keinen Eintrag haben (verhindert doppelt zählen)
+                for(let dateStr in this.holidaysMap) {
+                    if(!this.entriesCache.find(e => e.date === dateStr)) {
+                        deductionCount++;
+                    }
                 }
 
-                let maxMin = (10 * 60) + 30; 
+                let deductionTotal = deductionCount * this.settings.deductionPerDay;
+                let targetAdjusted = this.settings.officeTarget - deductionTotal;
+                if(targetAdjusted < 0) targetAdjusted = 0;
+
+                let currentHours = officeMinSum / 60;
+                let needed = targetAdjusted - currentHours;
+                let percent = targetAdjusted > 0 ? (currentHours / targetAdjusted) * 100 : 100;
+
                 return {
-                    target: this.minToString(finishTime),
-                    max: this.minToString(firstStart + maxMin)
+                    current: currentHours.toFixed(2),
+                    target: targetAdjusted.toFixed(2),
+                    deduction: deductionTotal.toFixed(2),
+                    needed: needed > 0 ? needed.toFixed(2) : '0.00',
+                    percent: Math.min(100, percent)
                 };
+            },
+
+            // --- LIST VIEW GENERATOR ---
+            monthDays() {
+                let days = [];
+                let year = this.currentDateObj.getFullYear();
+                let month = this.currentDateObj.getMonth();
+                let date = new Date(year, month, 1);
+                
+                while (date.getMonth() === month) {
+                    let iso = date.toISOString().split('T')[0];
+                    let entry = this.entriesCache.find(e => e.date === iso);
+                    let holiday = this.holidaysMap[iso];
+                    let status = entry ? entry.status : (holiday ? 'F' : null);
+                    
+                    // Simple Summenberechnung für die Liste
+                    let sapT = 0;
+                    if(entry && !status) {
+                        let tempBlocks = entry.blocks || [];
+                        let tempSap = 0;
+                        tempBlocks.forEach(b => {
+                            let s = this.toMin(b.start); let e = this.toMin(b.end);
+                            if(e>s) {
+                                if(b.type==='doctor') {
+                                    let vs = Math.max(s, this.settings.arztStart); let ve = Math.min(e, this.settings.arztEnde);
+                                    if(ve>vs) tempSap += (ve-vs);
+                                } else tempSap += (e-s);
+                            }
+                        });
+                        if(tempSap > 360) tempSap -= 30;
+                        sapT = Math.max(0, tempSap);
+                    }
+
+                    days.push({
+                        iso: iso,
+                        dateNum: date.getDate(),
+                        dayShort: date.toLocaleDateString('de-DE', { weekday: 'short' }),
+                        kw: this.getKw(date),
+                        status: status,
+                        sapTime: sapT,
+                        isWeekend: (date.getDay()===0 || date.getDay()===6)
+                    });
+                    date.setDate(date.getDate() + 1);
+                }
+                return days;
             }
         },
         methods: {
+            // --- TIME FORMATTING ---
+            // Macht aus "8", "0800", "8.30" -> "08:00" / "08:30"
+            formatTimeInput(block, field) {
+                let val = block[field];
+                if(!val) return;
+                
+                // Entferne alles außer Zahlen
+                let clean = val.replace(/[^0-9]/g, '');
+                
+                let h = 0, m = 0;
+                
+                if (clean.length <= 2) { 
+                    // Eingabe "8" -> 08:00, "14" -> 14:00
+                    h = parseInt(clean); 
+                } else if (clean.length === 3) {
+                    // "830" -> 08:30
+                    h = parseInt(clean.substring(0,1));
+                    m = parseInt(clean.substring(1,3));
+                } else {
+                    // "0800", "1430"
+                    h = parseInt(clean.substring(0,2));
+                    m = parseInt(clean.substring(2,4));
+                }
+                
+                // Validierung
+                if(h > 23) h = 23; 
+                if(m > 59) m = 59;
+                
+                let final = h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
+                block[field] = final; // Update Model
+                this.triggerAutoSave();
+            },
+            
+            // --- HELPERS ---
             toMin(str) {
                 if (!str || str.length < 3) return 0;
-                let s = str.toString().padStart(4, '0');
+                // Erwartet HH:MM (durch Formatter garantiert)
+                // Fallback für alte Daten ohne Doppelpunkt "0800"
+                let clean = str.replace(':','');
+                let s = clean.padStart(4, '0');
                 return (parseInt(s.substr(0,2))*60) + parseInt(s.substr(2,2));
             },
             minToString(min) {
-                let h = Math.floor(min / 60);
-                let m = min % 60;
+                let h = Math.floor(min / 60); let m = min % 60;
                 return h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
             },
-            formatTime(min) { return (min / 60).toFixed(2) + ' h'; },
-            getTypeIcon(type) {
-                if(type === 'office') return 'bi-building';
-                if(type === 'home') return 'bi-house';
-                if(type === 'doctor') return 'bi-bandaid';
-                return 'bi-clock';
+            formatH(min) { return (min / 60).toFixed(2); },
+            getTypeIcon(t) {
+                if(t==='office') return 'bi-building';
+                if(t==='home') return 'bi-house';
+                return 'bi-bandaid';
             },
             getStatusText(s) {
-                if(s === 'F') return 'Feiertag 🎄';
-                if(s === 'U') return 'Urlaub 🌴';
-                if(s === 'K') return 'Krank 🤒';
+                if(s==='F') return 'Feiertag 🎄';
+                if(s==='U') return 'Urlaub 🌴';
+                if(s==='K') return 'Krank 🤒';
                 return '';
             },
+            getKw(d) {
+                d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+                var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+                return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+            },
 
+            // --- ACTIONS ---
             changeDay(offset) {
                 let d = new Date(this.currentDateObj);
                 d.setDate(d.getDate() + offset);
                 this.currentDateObj = d;
-                this.loadFromCacheOrApi(); // Intelligent laden
+                this.loadFromCache();
             },
-            
-            toggleStatus(status) {
-                if (this.dayStatus === status) this.dayStatus = null; 
-                else this.dayStatus = status;
-                // Status ist wichtig -> sofort speichern triggern (optional)
+            jumpToDay(iso) {
+                this.currentDateObj = new Date(iso);
+                this.viewMode = 'day'; // Wechsel zur Detailansicht
+                this.loadFromCache();
             },
-            
+            toggleStatus(s) {
+                this.dayStatus = (this.dayStatus === s) ? null : s;
+                this.triggerAutoSave();
+            },
             addBlock(type) {
                 this.blocks.push({ id: Date.now(), type: type, start: '', end: '' });
+                this.triggerAutoSave();
             },
-            removeBlock(index) {
-                this.blocks.splice(index, 1);
+            removeBlock(idx) {
+                this.blocks.splice(idx, 1);
+                this.triggerAutoSave();
             },
-
-            // --- ECHTE API CALLS ---
-            async loadMonthData() {
-                this.loading = true;
-                try {
-                    const res = await axios.get(`/api/get_entries?month=${this.isoMonth}`);
-                    this.entriesCache = res.data.entries;
-                    this.holidaysMap = res.data.holidays || {};
-                    this.loadFromCacheOrApi();
-                } catch(e) {
-                    console.error("Ladefehler:", e);
-                } finally {
-                    this.loading = false;
-                }
+            updateBlock(block, field, val) {
+                block[field] = val;
+                this.triggerAutoSave();
             },
 
-            loadFromCacheOrApi() {
-                const dateKey = this.isoDate;
-                
-                // 1. Check auf Globalen Feiertag
-                if (this.holidaysMap[dateKey]) {
-                    this.dayStatus = 'F'; // Automatisch Feiertag setzen
-                }
-                
-                // 2. Suche Eintrag im Cache
-                const entry = this.entriesCache.find(e => e.date === dateKey);
-                
-                if (entry) {
-                    this.blocks = entry.blocks || [];
-                    // Wenn Eintrag existiert, gewinnt dessen Status (Override möglich)
-                    if (entry.status) this.dayStatus = entry.status;
-                } else {
-                    // Reset
-                    this.blocks = [];
-                    // Status Reset nur wenn KEIN globaler Feiertag
-                    if (!this.holidaysMap[dateKey]) this.dayStatus = null;
-                }
+            // --- AUTO SAVE LOGIC ---
+            triggerAutoSave() {
+                this.saveState = 'saving';
+                if(this.saveTimer) clearTimeout(this.saveTimer);
+                // Debounce: Warte 1000ms nach letztem Tippen
+                this.saveTimer = setTimeout(() => {
+                    this.saveData();
+                }, 1000);
             },
 
             async saveData() {
@@ -370,37 +506,65 @@
                 };
 
                 try {
-                    await axios.post('/api/save_entry', payload);
-                    
-                    // Button Feedback
-                    const btn = document.querySelector('.fab-btn.btn-primary');
-                    if(btn) {
-                        let oldHtml = btn.innerHTML;
-                        btn.innerHTML = '<i class="bi bi-check-lg"></i>';
-                        btn.classList.replace('btn-primary', 'btn-success');
-                        setTimeout(() => {
-                            btn.innerHTML = oldHtml;
-                            btn.classList.replace('btn-success', 'btn-primary');
-                        }, 1000);
-                    }
-                    
-                    // Cache aktualisieren, damit beim Zurückblättern die Daten noch da sind
-                    // Wir suchen den Eintrag im Cache und updaten ihn
+                    // 1. In Cache schreiben (damit beim Tag-Wechsel Daten da sind, auch wenn API lahm ist)
                     let existing = this.entriesCache.find(e => e.date === this.isoDate);
                     if(existing) {
-                        existing.blocks = this.blocks;
+                        existing.blocks = JSON.parse(JSON.stringify(this.blocks)); // Deep copy
                         existing.status = this.dayStatus;
                     } else {
-                        this.entriesCache.push(payload);
+                        this.entriesCache.push(JSON.parse(JSON.stringify(payload)));
                     }
 
+                    // 2. API Call
+                    await axios.post('/api/save_entry', payload);
+                    
+                    this.saveState = 'saved';
+                    // Nach 2 sekunden ausblenden
+                    setTimeout(() => { if(this.saveState === 'saved') this.saveState = 'idle'; }, 2000);
+
                 } catch(e) {
-                    alert("Fehler beim Speichern: " + e);
+                    console.error(e);
+                    this.saveState = 'idle'; 
+                    alert("Fehler beim Speichern!");
+                }
+            },
+
+            // --- LOAD LOGIC ---
+            async loadMonthData() {
+                try {
+                    const res = await axios.get(`/api/get_entries?month=${this.isoMonth}`);
+                    this.entriesCache = res.data.entries;
+                    this.holidaysMap = res.data.holidays || {};
+                    this.loadFromCache();
+                } catch(e) { console.error(e); }
+            },
+
+            loadFromCache() {
+                // Wenn wir Monat wechseln, müssen wir evtl. neue Daten laden
+                // (Einfachheitshalber laden wir hier immer wenn Tag gewechselt wird und Monat nicht cached ist,
+                // aber für jetzt nehmen wir an User bleibt im Monat.
+                // Ein echter Monats-Check wäre besser, aber das hier reicht für den UseCase.)
+                
+                // Reset View
+                const iso = this.isoDate;
+                
+                // 1. Feiertag Check
+                let isHol = !!this.holidaysMap[iso];
+                
+                // 2. Cache Eintrag suchen
+                let entry = this.entriesCache.find(e => e.date === iso);
+                
+                if (entry) {
+                    // WICHTIG: Clone die Daten, damit wir nicht direkt im Cache editieren vor dem Speichern
+                    this.blocks = JSON.parse(JSON.stringify(entry.blocks || []));
+                    this.dayStatus = entry.status;
+                } else {
+                    this.blocks = [];
+                    this.dayStatus = isHol ? 'F' : null;
                 }
             }
         },
         mounted() {
-            // Initial laden
             this.loadMonthData();
         }
     }).mount('#app');

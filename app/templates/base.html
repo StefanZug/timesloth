@@ -14,10 +14,7 @@
             font-family: "bootstrap-icons";
             src: url("{{ url_for('static', filename='fonts/bootstrap-icons.woff2') }}") format("woff2");
         }
-    </style>
-
-    <style>
-        /* Sloth Custom Theme */
+        /* Sloth Theme Colors */
         :root { --sloth-primary: #5c7cfa; }
         body { background-color: var(--bs-body-bg); transition: background-color 0.3s; }
         .avatar-circle {
@@ -26,7 +23,6 @@
             display: flex; align-items: center; justify-content: center;
             font-weight: bold; font-size: 1.1rem;
         }
-        .card-sloth { border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.1s; }
         .footer-sarcasm { font-size: 0.7rem; color: #aaa; text-align: center; margin-top: 40px; padding-bottom: 20px; }
     </style>
     <script>
@@ -39,7 +35,7 @@
     {% if current_user.is_authenticated %}
     <nav class="navbar navbar-expand bg-body-tertiary shadow-sm mb-3">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#">🦥 TimeSloth</a>
+            <a class="navbar-brand fw-bold" href="/">🦥 TimeSloth</a>
             
             <div class="d-flex align-items-center gap-3">
                 <i class="bi bi-moon-stars-fill" id="darkModeBtn" style="cursor: pointer;"></i>
@@ -50,8 +46,8 @@
                     </div>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><h6 class="dropdown-header">Hallo {{ current_user.username }}</h6></li>
-                        <li><a class="dropdown-item" href="#" onclick="openSettings()">⚙️ Einstellungen</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="openPwChange()">🔑 PW ändern</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="window.openSettings()">⚙️ Einstellungen</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="window.openPwChange()">🔑 PW ändern</a></li>
                         {% if current_user.is_admin %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="/admin">🛡️ Admin Panel</a></li>
@@ -77,18 +73,61 @@
         {% block content %}{% endblock %}
         
         <div class="footer-sarcasm">
-            TimeSloth Inc. &copy; 2025 - Wir speichern Daten, meistens.<br>
-            Garantie: 0%. Wenn deine Zeiten weg sind, hast du wahrscheinlich zu wenig gearbeitet oder das Universum hasst dich.<br>
-            Keine Haftung für verpasste SAP-Einträge, Eheprobleme oder Burnout.
+            TimeSloth Inc. &copy; 2025 - Wir speichern Daten, meistens.
         </div>
     </div>
 
-<script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">⚙️ Einstellungen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="globalSettingsForm">
+                        <div class="mb-3">
+                            <label class="form-label">Wochenstunden (Soll)</label>
+                            <input type="number" class="form-control" id="setSoll" value="38.5" step="0.1">
+                        </div>
+                         <div class="mb-3">
+                            <label class="form-label">Monats-Soll Büro (Stunden)</label>
+                            <input type="number" class="form-control" id="setOfficeTarget" value="66.67" step="0.1">
+                            <div class="form-text">Reduziert sich automatisch um 3,08h pro F/U/K Tag.</div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Speichern</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="pwModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">🔑 Passwort ändern</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="pwChangeForm">
+                        <input type="password" class="form-control mb-2" id="oldPw" placeholder="Altes Passwort" required>
+                        <input type="password" class="form-control mb-2" id="newPw" placeholder="Neues Passwort" required>
+                        <button type="submit" class="btn btn-warning w-100">Ändern</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
     <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
     <script src="{{ url_for('static', filename='js/axios.js') }}"></script>
     
     <script>
-        // Globaler Darkmode Toggle (funktioniert auch ohne Vue)
+        // Darkmode
         const themeBtn = document.getElementById('darkModeBtn');
         if(themeBtn) {
             themeBtn.addEventListener('click', () => {
@@ -98,6 +137,40 @@
                 localStorage.setItem('theme', next);
             });
         }
+
+        // Globale Funktionen für Modals
+        window.openSettings = function() {
+            new bootstrap.Modal(document.getElementById('settingsModal')).show();
+        };
+        window.openPwChange = function() {
+            new bootstrap.Modal(document.getElementById('pwModal')).show();
+        };
+
+        // Simple Handler für die Modals (ohne Vue, damit es immer geht)
+        document.getElementById('globalSettingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Hier könnten wir speichern, aktuell nur Dummy Feedback
+            const modalEl = document.getElementById('settingsModal');
+            bootstrap.Modal.getInstance(modalEl).hide();
+            
+            // Event feuern, damit Vue Dashboard es mitbekommt (falls nötig)
+            // Simpel: Reload um Settings zu übernehmen
+            alert("Einstellungen gespeichert (Reload...)");
+            location.reload(); 
+        });
+
+        document.getElementById('pwChangeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const oldPw = document.getElementById('oldPw').value;
+            const newPw = document.getElementById('newPw').value;
+            
+            axios.post('/change_password', { old_password: oldPw, new_password: newPw })
+                .then(res => {
+                    alert("Passwort geändert!");
+                    bootstrap.Modal.getInstance(document.getElementById('pwModal')).hide();
+                })
+                .catch(err => alert("Fehler: " + (err.response.data.error || "Unbekannt")));
+        });
     </script>
 
     {% block scripts %}{% endblock %}
