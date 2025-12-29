@@ -43,7 +43,6 @@ def admin_delete_holiday(id):
     db.session.commit()
     return jsonify({"status": "deleted"})
 
-# ... (User Create/Delete/Reset Routen bleiben gleich wie vorher, hier gekürzt für Übersicht) ...
 @main.route('/admin/create_user', methods=['POST'])
 @login_required
 def admin_create_user():
@@ -99,7 +98,6 @@ def get_entries():
     result = []
     for e in entries:
         # Wir laden ALLES aus office_times (da speichern wir jetzt die Blocks)
-        # Fallback: Falls office_times leer ist, nimm leeres Array
         blocks = json.loads(e.office_times or '[]')
         
         result.append({
@@ -109,9 +107,12 @@ def get_entries():
             "comment": e.comment
         })
         
+    # NEU: Settings mitladen!
+    user_settings = json.loads(current_user.settings or '{}')
+        
     return jsonify({
         "entries": result,
-        "holidays": holiday_map
+        "holidays": holiday_map,  # <--- HIER WAR DAS KOMMA, DAS GEFEHLT HAT!
         "settings": user_settings
     })
 
@@ -126,11 +127,9 @@ def save_entry():
         entry = Entry(user_id=current_user.id, date_str=date_str)
         db.session.add(entry)
     
-    # TRICK: Wir speichern das komplette Block-Array einfach in 'office_times'
-    # Das spart uns Datenbank-Migrationen.
+    # Wir speichern das komplette Block-Array einfach in 'office_times'
     entry.office_times = json.dumps(data.get('blocks', []))
     
-    # Status Flags setzen
     status = data.get('status')
     entry.is_holiday = (status == 'F')
     entry.is_vacation = (status == 'U')
