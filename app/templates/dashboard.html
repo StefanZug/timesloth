@@ -162,8 +162,7 @@
     const { createApp } = Vue;
 
     createApp({
-        // Jinja2 nutzt {{ }}, Vue nutzt normalerweise auch {{ }}. 
-        // Damit sie sich nicht beißen, ändern wir Vue auf [[ ]]
+        // Wir ändern die Vue-Klammern auf [[ ]], damit sie sich nicht mit Jinja beißen.
         delimiters: ['[[', ']]'], 
         
         data() {
@@ -184,7 +183,7 @@
                 return (timeStr) => {
                     if (!timeStr || timeStr.length < 3) return 0;
                     // Mache es tolerant (800 -> 0800)
-                    const padded = timeStr.padStart(4, '0');
+                    const padded = timeStr.toString().padStart(4, '0');
                     const h = parseInt(padded.substr(0, 2));
                     const m = parseInt(padded.substr(2, 2));
                     return (h * 60) + m;
@@ -245,7 +244,6 @@
                 return h + "," + (m < 10 ? '0' : '') + m; // Dezimal-ähnliche Anzeige
             },
             saveData() {
-                // Hier kommt später der Axios Call hin
                 console.log("Speichere Daten:", {
                     buro: this.buroStart + '-' + this.buroEnde,
                     home: this.homeStart + '-' + this.homeEnde
@@ -255,7 +253,7 @@
         },
         mounted() {
             console.log("🦥 TimeSloth Dashboard V2 geladen.");
-            // Testwerte setzen (damit man gleich was sieht)
+            // Testwerte setzen
             this.buroStart = "0800";
             this.buroEnde = "1630";
         }
