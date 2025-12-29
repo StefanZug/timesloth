@@ -2,9 +2,19 @@
 
 {% block content %}
 <style>
-    /* --- STYLES --- */
+    /* --- STYLES & CONTRAST FIXES --- */
+    
+    /* Hintergrund leicht abdunkeln für Kontrast im Light Mode */
+    [data-bs-theme="light"] body { background-color: #f8f9fa; }
+    [data-bs-theme="light"] .card { border: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    
+    /* Tabellen Kontraste */
+    .table-hover tbody tr:hover { background-color: rgba(92, 124, 250, 0.05); }
+    .table-striped tbody tr:nth-of-type(odd) { background-color: rgba(0,0,0,0.015); }
+    
     [data-bs-theme="dark"] body { background-color: #121212; color: #e0e0e0; }
     [data-bs-theme="dark"] .card { background-color: #1e1e1e; border-color: #333; }
+    [data-bs-theme="dark"] .table { --bs-table-color: #e0e0e0; --bs-table-bg: #1e1e1e; --bs-table-border-color: #333; }
     
     .type-office { border-left: 5px solid #4dabf7; }
     .type-home { border-left: 5px solid #da77f2; }
@@ -17,47 +27,47 @@
     .status-toggle {
         cursor: pointer; opacity: 0.3; transition: all 0.2s; font-weight: bold;
         width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;
-        border-radius: 8px; border: 1px solid #ccc; font-size: 0.9rem;
+        border-radius: 8px; border: 1px solid #adb5bd; font-size: 0.9rem;
+        background-color: var(--bs-body-bg);
     }
-    .status-toggle.active { opacity: 1; border-color: transparent; transform: scale(1.1); color: #fff; }
+    .status-toggle.active { opacity: 1; border-color: transparent; transform: scale(1.1); color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
     .st-holiday.active { background-color: #868e96; } 
     .st-vacation.active { background-color: #fcc419; } 
     .st-sick.active { background-color: #fa5252; }     
 
-    /* Quota Bar */
+    /* Quota Card */
     .quota-card {
-        background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        background: var(--bs-body-bg); border-radius: 12px; padding: 15px; margin-bottom: 20px;
+        border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    [data-bs-theme="dark"] .quota-card { background: #1e1e1e; }
-    
     .progress-sloth { height: 10px; border-radius: 5px; background-color: #e9ecef; margin-top: 5px; overflow: hidden; }
-    .progress-bar-sloth { background-color: #fcc419; height: 100%; transition: width 0.5s; } /* Gelb wie im Screenshot */
+    .progress-bar-sloth { background-color: #fcc419; height: 100%; transition: width 0.5s; }
 
-    /* Tab Switcher */
+    /* View Switcher */
     .view-switcher {
-        background: #f1f3f5; border-radius: 20px; padding: 4px; display: inline-flex; margin-bottom: 20px;
+        background: #e9ecef; border-radius: 20px; padding: 4px; display: inline-flex; margin-bottom: 20px;
+        border: 1px solid #dee2e6;
     }
-    [data-bs-theme="dark"] .view-switcher { background: #2d2d2d; }
+    [data-bs-theme="dark"] .view-switcher { background: #2d2d2d; border-color: #444; }
     
     .view-btn {
         border: none; background: transparent; padding: 5px 15px; border-radius: 16px; 
-        font-size: 0.9rem; color: #888; transition: all 0.2s;
+        font-size: 0.9rem; color: #666; transition: all 0.2s;
     }
-    .view-btn.active { background: white; color: black; font-weight: bold; shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    [data-bs-theme="dark"] .view-btn.active { background: #444; color: white; }
-
-    /* Auto Save Indicator */
-    .save-status { position: fixed; bottom: 20px; right: 20px; font-size: 1.5rem; opacity: 0.8; z-index: 99; transition: all 0.3s; }
+    .view-btn.active { background: var(--bs-body-bg); color: var(--sloth-primary); font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    [data-bs-theme="dark"] .view-btn.active { color: white; background: #555; }
+    
+    .cursor-pointer { cursor: pointer; }
 </style>
 
 <div id="app" class="container mt-3 mb-5" v-cloak>
 
     <div class="quota-card">
         <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="text-muted small fw-bold">BÜRO-QUOTE (40%)</span>
-            <span class="text-danger fw-bold fs-5">[[ quota.needed ]] h</span> </div>
-        <div class="d-flex justify-content-between small mb-1">
+            <span class="text-muted small fw-bold text-uppercase">Büro-Quote (40%)</span>
+            <span class="text-danger fw-bold fs-5">[[ quota.needed ]] h</span>
+        </div>
+        <div class="d-flex justify-content-between small mb-1 text-muted">
             <span>Ist: [[ quota.current ]] h</span>
             <span>Ziel: [[ quota.target ]] h</span>
         </div>
@@ -65,8 +75,8 @@
             <div class="progress-bar-sloth" :style="{ width: quota.percent + '%' }"></div>
         </div>
         <div class="text-end mt-2">
-            <span class="badge bg-secondary" style="font-weight: normal; font-size: 0.7rem;">
-                Abzüge (Urlaub/Krank): [[ quota.deduction ]] h
+            <span class="badge bg-secondary opacity-75 fw-normal" style="font-size: 0.7rem;">
+                Abzüge (U/K/F): [[ quota.deduction ]] h
             </span>
         </div>
     </div>
@@ -85,19 +95,22 @@
     <div v-show="viewMode === 'day'" class="animate-fade">
         
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <button class="btn btn-outline-secondary btn-sm rounded-circle" @click="changeDay(-1)"><i class="bi bi-chevron-left"></i></button>
-            <h5 class="m-0 fw-bold">[[ displayDate ]]</h5>
-            <button class="btn btn-outline-secondary btn-sm rounded-circle" @click="changeDay(1)"><i class="bi bi-chevron-right"></i></button>
+            <button class="btn btn-outline-secondary btn-sm rounded-circle shadow-sm" @click="shiftDay(-1)"><i class="bi bi-chevron-left"></i></button>
+            <h5 class="m-0 fw-bold">[[ displayDateDayView ]]</h5>
+            <button class="btn btn-outline-secondary btn-sm rounded-circle shadow-sm" @click="shiftDay(1)"><i class="bi bi-chevron-right"></i></button>
         </div>
 
-        <div v-if="!isNonWorkDay && prediction.target !== '--:--'" class="alert alert-light border d-flex justify-content-around py-2 mb-3">
-            <div class="text-center">
-                <small class="text-muted d-block" style="font-size: 0.7rem">Soll (7.7h)</small>
-                <strong>[[ prediction.target ]]</strong>
-            </div>
-            <div class="text-center border-start ps-3">
-                <small class="text-muted d-block" style="font-size: 0.7rem">Max (10h)</small>
-                <strong class="text-danger">[[ prediction.max ]]</strong>
+        <div v-if="!isNonWorkDay && prediction.target !== '--:--'" class="card mb-3 border-0 bg-light shadow-sm">
+            <div class="card-body py-2 d-flex justify-content-around">
+                <div class="text-center">
+                    <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem">Soll (7.7h)</small>
+                    <strong class="text-primary">[[ prediction.target ]]</strong>
+                </div>
+                <div class="vr opacity-25"></div>
+                <div class="text-center">
+                    <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem">Max (10h)</small>
+                    <strong class="text-danger">[[ prediction.max ]]</strong>
+                </div>
             </div>
         </div>
 
@@ -109,75 +122,79 @@
 
         <div v-if="!isNonWorkDay">
             <transition-group name="list" tag="div">
-                <div v-for="(block, index) in blocks" :key="block.id" class="card mb-2 shadow-sm" :class="'type-' + block.type">
+                <div v-for="(block, index) in blocks" :key="block.id" class="card mb-2 shadow-sm border" :class="'type-' + block.type">
                     <div class="card-body p-2 d-flex align-items-center gap-2">
-                        
                         <div class="dropdown">
-                            <button class="btn btn-sm dropdown-toggle text-white" :class="'bg-' + block.type" type="button" data-bs-toggle="dropdown" style="width: 40px;">
+                            <button class="btn btn-sm dropdown-toggle text-white shadow-sm" :class="'bg-' + block.type" type="button" data-bs-toggle="dropdown" style="width: 40px;">
                                 <i class="bi" :class="getTypeIcon(block.type)"></i>
                             </button>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu shadow">
                                 <li><a class="dropdown-item" @click="updateBlock(block, 'type', 'office')">🏢 Büro</a></li>
                                 <li><a class="dropdown-item" @click="updateBlock(block, 'type', 'home')">🏠 Home</a></li>
                                 <li><a class="dropdown-item text-danger" @click="updateBlock(block, 'type', 'doctor')">🚑 Arzt</a></li>
                             </ul>
                         </div>
-
-                        <input type="text" class="form-control text-center p-1 fw-bold" 
-                               v-model="block.start" placeholder="08:00" 
-                               @blur="formatTimeInput(block, 'start')"
-                               @input="triggerAutoSave">
+                        <input type="text" class="form-control text-center p-1 fw-bold" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave">
                         <span>-</span>
-                        <input type="text" class="form-control text-center p-1 fw-bold" 
-                               v-model="block.end" placeholder="16:30" 
-                               @blur="formatTimeInput(block, 'end')"
-                               @input="triggerAutoSave">
-
-                        <button class="btn btn-link text-muted p-0 ms-auto" @click="removeBlock(index)">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
+                        <input type="text" class="form-control text-center p-1 fw-bold" v-model="block.end" placeholder="16:30" @blur="formatTimeInput(block, 'end')" @input="triggerAutoSave">
+                        <button class="btn btn-link text-muted p-0 ms-auto" @click="removeBlock(index)"><i class="bi bi-x-lg"></i></button>
                     </div>
                 </div>
             </transition-group>
 
             <div class="d-grid gap-2 mt-3">
-                <button class="btn btn-outline-secondary border-dashed" @click="addBlock('office')" style="border-style: dashed;">
-                    <i class="bi bi-plus-lg"></i> Eintrag hinzufügen
+                <button class="btn btn-outline-secondary border-dashed" @click="addBlock('office')" style="border-style: dashed; opacity: 0.7;">
+                    <i class="bi bi-plus-lg"></i> Eintrag
                 </button>
             </div>
             
-            <div class="text-center mt-4 text-muted small">
-                <div>SAP: [[ formatH(totals.sapTime) ]] | CATS: [[ formatH(totals.catsTime) ]]</div>
-                <div v-if="totals.pause > 0" class="text-warning">Pause: -[[ totals.pause ]]m</div>
-                <div class="fw-bold mt-1 fs-6">Saldo: [[ totals.saldo ]]</div>
+            <div class="text-center mt-4 text-muted small bg-white p-2 rounded shadow-sm border">
+                <div class="d-flex justify-content-center gap-3">
+                    <span>SAP: <strong>[[ formatH(totals.sapTime) ]]</strong></span>
+                    <div class="vr"></div>
+                    <span>CATS: <strong>[[ formatH(totals.catsTime) ]]</strong></span>
+                </div>
+                <div v-if="totals.pause > 0" class="text-warning mt-1" style="font-size: 0.8rem;">
+                    <i class="bi bi-cup-hot"></i> Pause: -[[ totals.pause ]]m
+                </div>
+                <div class="fw-bold mt-2 text-primary fs-6 border-top pt-1">Saldo: [[ totals.saldo ]]</div>
             </div>
         </div>
         
-        <div v-else class="alert text-center mt-3" :class="statusAlertClass">
-            Tag zählt als [[ getStatusText(dayStatus) ]]
+        <div v-else class="alert text-center mt-3 shadow-sm border" :class="statusAlertClass">
+            <h5 class="m-0">[[ getStatusText(dayStatus) ]]</h5>
         </div>
 
     </div>
 
     <div v-show="viewMode === 'month'" class="animate-fade">
-        <div class="table-responsive bg-white rounded shadow-sm">
-            <table class="table table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
+        
+        <div class="d-flex justify-content-between align-items-center mb-3 bg-white p-2 rounded shadow-sm border">
+            <button class="btn btn-sm btn-light" @click="shiftMonth(-1)"><i class="bi bi-chevron-left"></i></button>
+            <h5 class="m-0 fw-bold">[[ displayMonthName ]]</h5>
+            <button class="btn btn-sm btn-light" @click="shiftMonth(1)"><i class="bi bi-chevron-right"></i></button>
+        </div>
+
+        <div class="table-responsive bg-white rounded shadow-sm border">
+            <table class="table table-hover table-striped mb-0 text-center align-middle" style="font-size: 0.9rem;">
                 <thead class="table-light">
                     <tr>
-                        <th class="text-start ps-3">Datum</th>
+                        <th class="text-start ps-3 py-3">Datum</th>
                         <th>Summe</th>
                         <th>SAP</th>
-                        <th>Status</th>
+                        <th>Info</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="day in monthDays" :key="day.iso" @click="jumpToDay(day.iso)" style="cursor: pointer;">
+                    <tr v-for="day in monthDays" :key="day.iso" @click="jumpToDay(day.iso)" class="cursor-pointer">
                         <td class="text-start ps-3">
-                            <div class="fw-bold">[[ day.dayShort ]]., [[ day.dateNum ]].</div>
-                            <div class="text-muted small" style="font-size: 0.7rem;">KW [[ day.kw ]]</div>
+                            <div class="fw-bold" :class="{'text-primary': day.isToday}">
+                                [[ day.dayShort ]]., [[ day.dateNum ]].
+                            </div>
+                            <div class="text-muted opacity-75" style="font-size: 0.7rem;">KW [[ day.kw ]]</div>
                         </td>
                         
-                        <td :class="{'text-muted': day.sapTime == 0, 'fw-bold': day.sapTime > 0}">
+                        <td :class="{'opacity-25': day.sapTime == 0, 'fw-bold': day.sapTime > 0}">
                             [[ day.sapTime > 0 ? formatH(day.sapTime) : '-' ]]
                         </td>
                         
@@ -186,11 +203,11 @@
                         </td>
                         
                         <td>
-                            <span v-if="day.status" class="badge rounded-pill" 
+                            <span v-if="day.status" class="badge rounded-pill shadow-sm" 
                                   :class="{'bg-secondary': day.status=='F', 'bg-warning text-dark': day.status=='U', 'bg-danger': day.status=='K'}">
                                 [[ day.status ]]
                             </span>
-                            <span v-else-if="day.isWeekend" class="text-muted small">WE</span>
+                            <span v-else-if="day.isWeekend" class="text-muted small" style="font-size: 0.7rem;">WE</span>
                         </td>
                     </tr>
                 </tbody>
@@ -198,11 +215,13 @@
         </div>
     </div>
 
-    <div class="save-status text-success" v-if="saveState === 'saved'">
-        <i class="bi bi-check-circle-fill"></i>
-    </div>
-    <div class="save-status text-warning" v-if="saveState === 'saving'">
-        <div class="spinner-border spinner-border-sm"></div>
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 99;">
+        <div v-if="saveState === 'saved'" class="text-success bg-white rounded-circle shadow p-2">
+            <i class="bi bi-check-lg fs-4"></i>
+        </div>
+        <div v-if="saveState === 'saving'" class="text-warning bg-white rounded-circle shadow p-2">
+            <div class="spinner-border spinner-border-sm"></div>
+        </div>
     </div>
 
 </div>
@@ -217,32 +236,41 @@
         delimiters: ['[[', ']]'], 
         data() {
             return {
-                currentDateObj: new Date(),
-                viewMode: 'day', // 'day' oder 'month'
+                currentDateObj: new Date(), // Aktuell gewählter Tag
+                viewMode: 'day',
                 
                 dayStatus: null, 
                 blocks: [], 
                 
-                entriesCache: [], // Alle Einträge
+                entriesCache: [],
                 holidaysMap: {},
                 
-                saveState: 'idle', // idle, saving, saved
+                saveState: 'idle', 
                 saveTimer: null,
                 
                 settings: {
                     sollStunden: 7.70,
-                    officeTarget: 66.67, // Monatsziel
-                    deductionPerDay: 3.08, // Abzug bei F/U/K
-                    arztStart: 480, arztEnde: 972 // 08:00 - 16:12
+                    officeTarget: 66.67,
+                    deductionPerDay: 3.08,
+                    arztStart: 480, arztEnde: 972
                 }
             }
         },
         computed: {
-            displayDate() {
+            // Hilfsfunktion: Datum formatieren OHNE Zeitzonen-Probleme
+            // Wir nutzen locale Komponenten und bauen den String selbst
+            isoDate() { return this.formatIsoDate(this.currentDateObj); },
+            isoMonth() { return this.isoDate.substring(0, 7); },
+
+            displayDateDayView() {
                 return this.currentDateObj.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
             },
-            isoDate() { return this.currentDateObj.toISOString().split('T')[0]; },
-            isoMonth() { return this.isoDate.substring(0, 7); },
+            
+            displayMonthName() {
+                // Zeigt "Dezember 2025" basierend auf currentDateObj
+                return this.currentDateObj.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+            },
+
             isNonWorkDay() { return ['F', 'U', 'K'].includes(this.dayStatus); },
             
             statusAlertClass() {
@@ -252,7 +280,6 @@
                 return '';
             },
 
-            // --- TAGES RECHNUNG ---
             totals() {
                 let sapMin = 0; let catsMin = 0;
                 this.blocks.forEach(b => {
@@ -267,13 +294,10 @@
                         sapMin += dur; catsMin += dur;
                     }
                 });
-                // Pause > 6h
                 let pause = 0;
                 if (sapMin > 360) { pause = 30; sapMin -= 30; catsMin -= 30; }
-                
                 let ist = sapMin / 60;
                 let saldoVal = this.isNonWorkDay ? 0 : (ist - this.settings.sollStunden);
-                
                 return { sapTime: Math.max(0, sapMin), catsTime: Math.max(0, catsMin), pause, saldo: (saldoVal > 0 ? '+' : '') + saldoVal.toFixed(2) + ' h' };
             },
 
@@ -286,87 +310,69 @@
                     if (e > lastEnd) lastEnd = e;
                 });
                 if (firstStart === 9999) return { target: '--:--', max: '--:--' };
-                
                 let currentNetto = this.totals.sapTime;
                 let remaining = (this.settings.sollStunden * 60) - currentNetto;
-                
                 if (remaining <= 0) return { target: '✔', max: '...' };
-
                 let finish = lastEnd + remaining;
-                if (this.totals.pause === 0 && (currentNetto + remaining) > 360) finish += 30; // Pause einkalkulieren
-
-                let maxTime = firstStart + 630; // 10h + 30m Pause
+                if (this.totals.pause === 0 && (currentNetto + remaining) > 360) finish += 30;
+                let maxTime = firstStart + 630; 
                 return { target: this.minToString(finish), max: this.minToString(maxTime) };
             },
 
-            // --- MONATS RECHNUNG (QUOTA) ---
             quota() {
                 let officeMinSum = 0;
                 let deductionCount = 0;
-
-                // Gehe durch Cache (Alle geladenen Tage)
-                // Achtung: entriesCache enthält nur gespeicherte Tage.
-                // Wir müssen auch Feiertage zählen, die nicht als Entry gespeichert sind aber in holidaysMap stehen.
-                
-                // 1. Zähle gespeicherte Einträge
+                // Zähle nur relevante Einträge
                 this.entriesCache.forEach(e => {
-                    if(['F','U','K'].includes(e.status)) {
-                        deductionCount++;
-                    } else {
-                        // Bürozeiten summieren
-                        let blocks = e.blocks || [];
-                        blocks.forEach(b => {
+                    if(['F','U','K'].includes(e.status)) deductionCount++;
+                    else {
+                        (e.blocks || []).forEach(b => {
                             if(b.type === 'office') {
-                                let s = this.toMin(b.start); let end = this.toMin(b.end);
-                                if(end > s) officeMinSum += (end - s);
+                                let s = this.toMin(b.start); let e = this.toMin(b.end);
+                                if(e>s) officeMinSum += (e - s);
                             }
                         });
                     }
                 });
-
-                // 2. Feiertage checken die noch keinen Eintrag haben (verhindert doppelt zählen)
+                // Ergänze Feiertage aus Map, die noch keinen Eintrag haben
                 for(let dateStr in this.holidaysMap) {
-                    if(!this.entriesCache.find(e => e.date === dateStr)) {
-                        deductionCount++;
-                    }
+                    if(!this.entriesCache.find(e => e.date === dateStr)) deductionCount++;
                 }
 
                 let deductionTotal = deductionCount * this.settings.deductionPerDay;
-                let targetAdjusted = this.settings.officeTarget - deductionTotal;
-                if(targetAdjusted < 0) targetAdjusted = 0;
-
+                let targetAdjusted = Math.max(0, this.settings.officeTarget - deductionTotal);
                 let currentHours = officeMinSum / 60;
-                let needed = targetAdjusted - currentHours;
                 let percent = targetAdjusted > 0 ? (currentHours / targetAdjusted) * 100 : 100;
-
+                
                 return {
                     current: currentHours.toFixed(2),
                     target: targetAdjusted.toFixed(2),
                     deduction: deductionTotal.toFixed(2),
-                    needed: needed > 0 ? needed.toFixed(2) : '0.00',
+                    needed: Math.max(0, targetAdjusted - currentHours).toFixed(2),
                     percent: Math.min(100, percent)
                 };
             },
 
-            // --- LIST VIEW GENERATOR ---
             monthDays() {
                 let days = [];
+                // Wir bauen die Tage basierend auf dem aktuellen Monat in currentDateObj
                 let year = this.currentDateObj.getFullYear();
                 let month = this.currentDateObj.getMonth();
-                let date = new Date(year, month, 1);
                 
+                // Erster Tag des Monats
+                let date = new Date(year, month, 1);
+                const todayIso = this.formatIsoDate(new Date());
+
                 while (date.getMonth() === month) {
-                    let iso = date.toISOString().split('T')[0];
+                    let iso = this.formatIsoDate(date); // Sichere Methode!
                     let entry = this.entriesCache.find(e => e.date === iso);
                     let holiday = this.holidaysMap[iso];
                     let status = entry ? entry.status : (holiday ? 'F' : null);
                     
-                    // Simple Summenberechnung für die Liste
                     let sapT = 0;
                     if(entry && !status) {
-                        let tempBlocks = entry.blocks || [];
                         let tempSap = 0;
-                        tempBlocks.forEach(b => {
+                        (entry.blocks||[]).forEach(b => {
                             let s = this.toMin(b.start); let e = this.toMin(b.end);
                             if(e>s) {
                                 if(b.type==='doctor') {
@@ -386,72 +392,51 @@
                         kw: this.getKw(date),
                         status: status,
                         sapTime: sapT,
-                        isWeekend: (date.getDay()===0 || date.getDay()===6)
+                        isWeekend: (date.getDay()===0 || date.getDay()===6),
+                        isToday: (iso === todayIso)
                     });
+                    
+                    // Nächster Tag
                     date.setDate(date.getDate() + 1);
                 }
                 return days;
             }
         },
         methods: {
-            // --- TIME FORMATTING ---
-            // Macht aus "8", "0800", "8.30" -> "08:00" / "08:30"
+            // --- CORE DATE FIX ---
+            // Diese Funktion verhindert das "einen Tag zurück"-Problem
+            formatIsoDate(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            },
+
             formatTimeInput(block, field) {
                 let val = block[field];
                 if(!val) return;
-                
-                // Entferne alles außer Zahlen
                 let clean = val.replace(/[^0-9]/g, '');
-                
                 let h = 0, m = 0;
-                
-                if (clean.length <= 2) { 
-                    // Eingabe "8" -> 08:00, "14" -> 14:00
-                    h = parseInt(clean); 
-                } else if (clean.length === 3) {
-                    // "830" -> 08:30
-                    h = parseInt(clean.substring(0,1));
-                    m = parseInt(clean.substring(1,3));
-                } else {
-                    // "0800", "1430"
-                    h = parseInt(clean.substring(0,2));
-                    m = parseInt(clean.substring(2,4));
-                }
-                
-                // Validierung
-                if(h > 23) h = 23; 
-                if(m > 59) m = 59;
-                
-                let final = h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
-                block[field] = final; // Update Model
+                if (clean.length <= 2) h = parseInt(clean); 
+                else if (clean.length === 3) { h = parseInt(clean.substring(0,1)); m = parseInt(clean.substring(1,3)); } 
+                else { h = parseInt(clean.substring(0,2)); m = parseInt(clean.substring(2,4)); }
+                if(h > 23) h = 23; if(m > 59) m = 59;
+                block[field] = h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
                 this.triggerAutoSave();
             },
             
-            // --- HELPERS ---
             toMin(str) {
                 if (!str || str.length < 3) return 0;
-                // Erwartet HH:MM (durch Formatter garantiert)
-                // Fallback für alte Daten ohne Doppelpunkt "0800"
-                let clean = str.replace(':','');
-                let s = clean.padStart(4, '0');
-                return (parseInt(s.substr(0,2))*60) + parseInt(s.substr(2,2));
+                let clean = str.replace(':','').padStart(4, '0');
+                return (parseInt(clean.substr(0,2))*60) + parseInt(clean.substr(2,2));
             },
             minToString(min) {
                 let h = Math.floor(min / 60); let m = min % 60;
                 return h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
             },
             formatH(min) { return (min / 60).toFixed(2); },
-            getTypeIcon(t) {
-                if(t==='office') return 'bi-building';
-                if(t==='home') return 'bi-house';
-                return 'bi-bandaid';
-            },
-            getStatusText(s) {
-                if(s==='F') return 'Feiertag 🎄';
-                if(s==='U') return 'Urlaub 🌴';
-                if(s==='K') return 'Krank 🤒';
-                return '';
-            },
+            getTypeIcon(t) { return (t==='office'?'bi-building':(t==='home'?'bi-house':'bi-bandaid')); },
+            getStatusText(s) { return (s==='F'?'Feiertag 🎄':(s==='U'?'Urlaub 🌴':(s==='K'?'Krank 🤒':''))); },
             getKw(d) {
                 d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
                 d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
@@ -459,18 +444,32 @@
                 return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
             },
 
-            // --- ACTIONS ---
-            changeDay(offset) {
+            // --- NAVIGATION ---
+            shiftDay(offset) {
                 let d = new Date(this.currentDateObj);
                 d.setDate(d.getDate() + offset);
+                // Check ob Monatswechsel
+                let oldMonth = this.currentDateObj.getMonth();
                 this.currentDateObj = d;
-                this.loadFromCache();
+                if(d.getMonth() !== oldMonth) this.loadMonthData(); // Neu laden wenn Monat wechselt
+                else this.loadFromCache();
             },
+            
+            shiftMonth(offset) {
+                // Ändert nur den Monat, Tag wird auf 1. gesetzt um Überlauf zu vermeiden
+                let d = new Date(this.currentDateObj);
+                d.setDate(1); // Sicherheitshalber auf den Ersten
+                d.setMonth(d.getMonth() + offset);
+                this.currentDateObj = d;
+                this.loadMonthData();
+            },
+
             jumpToDay(iso) {
                 this.currentDateObj = new Date(iso);
-                this.viewMode = 'day'; // Wechsel zur Detailansicht
+                this.viewMode = 'day';
                 this.loadFromCache();
             },
+
             toggleStatus(s) {
                 this.dayStatus = (this.dayStatus === s) ? null : s;
                 this.triggerAutoSave();
@@ -488,48 +487,24 @@
                 this.triggerAutoSave();
             },
 
-            // --- AUTO SAVE LOGIC ---
             triggerAutoSave() {
                 this.saveState = 'saving';
                 if(this.saveTimer) clearTimeout(this.saveTimer);
-                // Debounce: Warte 1000ms nach letztem Tippen
-                this.saveTimer = setTimeout(() => {
-                    this.saveData();
-                }, 1000);
+                this.saveTimer = setTimeout(() => { this.saveData(); }, 1000);
             },
 
             async saveData() {
-                const payload = {
-                    date: this.isoDate,
-                    blocks: this.blocks,
-                    status: this.dayStatus
-                };
-
+                const payload = { date: this.isoDate, blocks: this.blocks, status: this.dayStatus };
                 try {
-                    // 1. In Cache schreiben (damit beim Tag-Wechsel Daten da sind, auch wenn API lahm ist)
                     let existing = this.entriesCache.find(e => e.date === this.isoDate);
-                    if(existing) {
-                        existing.blocks = JSON.parse(JSON.stringify(this.blocks)); // Deep copy
-                        existing.status = this.dayStatus;
-                    } else {
-                        this.entriesCache.push(JSON.parse(JSON.stringify(payload)));
-                    }
-
-                    // 2. API Call
+                    if(existing) { existing.blocks = JSON.parse(JSON.stringify(this.blocks)); existing.status = this.dayStatus; } 
+                    else { this.entriesCache.push(JSON.parse(JSON.stringify(payload))); }
                     await axios.post('/api/save_entry', payload);
-                    
                     this.saveState = 'saved';
-                    // Nach 2 sekunden ausblenden
                     setTimeout(() => { if(this.saveState === 'saved') this.saveState = 'idle'; }, 2000);
-
-                } catch(e) {
-                    console.error(e);
-                    this.saveState = 'idle'; 
-                    alert("Fehler beim Speichern!");
-                }
+                } catch(e) { console.error(e); this.saveState = 'idle'; }
             },
 
-            // --- LOAD LOGIC ---
             async loadMonthData() {
                 try {
                     const res = await axios.get(`/api/get_entries?month=${this.isoMonth}`);
@@ -540,22 +515,10 @@
             },
 
             loadFromCache() {
-                // Wenn wir Monat wechseln, müssen wir evtl. neue Daten laden
-                // (Einfachheitshalber laden wir hier immer wenn Tag gewechselt wird und Monat nicht cached ist,
-                // aber für jetzt nehmen wir an User bleibt im Monat.
-                // Ein echter Monats-Check wäre besser, aber das hier reicht für den UseCase.)
-                
-                // Reset View
                 const iso = this.isoDate;
-                
-                // 1. Feiertag Check
                 let isHol = !!this.holidaysMap[iso];
-                
-                // 2. Cache Eintrag suchen
                 let entry = this.entriesCache.find(e => e.date === iso);
-                
                 if (entry) {
-                    // WICHTIG: Clone die Daten, damit wir nicht direkt im Cache editieren vor dem Speichern
                     this.blocks = JSON.parse(JSON.stringify(entry.blocks || []));
                     this.dayStatus = entry.status;
                 } else {
