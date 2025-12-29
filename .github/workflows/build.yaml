@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write  # Wichtig, damit wir in die Registry schreiben dürfen
+      packages: write  # Wichtig für den Upload zu GitHub Packages
     
     steps:
       - name: Checkout Code
@@ -31,9 +31,7 @@ jobs:
         uses: home-assistant/builder@master
         with:
           args: |
-            --aarch64 \
-            --amd64 \
-            --armv7 \
+            --all \
             --target . \
             --image "timesloth-{arch}" \
             --docker-hub "ghcr.io/${{ github.repository_owner }}"
