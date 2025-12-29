@@ -1,99 +1,117 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="card shadow-sm border-0 mb-4">
-    <div class="card-body">
-        <h4 class="card-title mb-3">🦖 Benutzerverwaltung</h4>
-        
-        <form id="createUserForm" class="row g-2 align-items-center mb-4 p-3 bg-light rounded">
-            <div class="col-auto">
-                <input type="text" class="form-control" id="newUsername" placeholder="Username" required autocomplete="off">
-            </div>
-            <div class="col-auto">
-                <input type="password" class="form-control" id="newPassword" placeholder="Initial-Passwort" required autocomplete="new-password">
-            </div>
-            <div class="col-auto form-check">
-                <input class="form-check-input" type="checkbox" id="isAdmin">
-                <label class="form-check-label" for="isAdmin">Admin?</label>
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">Anlegen</button>
-            </div>
-        </form>
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h4 class="card-title mb-3">🦖 User Verwaltung</h4>
+                
+                <form id="createUserForm" class="row g-2 align-items-center mb-4 p-3 bg-light rounded">
+                    <div class="col-6">
+                        <input type="text" class="form-control" id="newUsername" placeholder="Username" required>
+                    </div>
+                    <div class="col-6">
+                        <input type="password" class="form-control" id="newPassword" placeholder="Passwort" required>
+                    </div>
+                    <div class="col-12 d-flex justify-content-between align-items-center mt-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isAdmin">
+                            <label class="form-check-label" for="isAdmin">Admin?</label>
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-primary">Anlegen</button>
+                    </div>
+                </form>
 
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>User</th>
-                        <th>Rolle</th>
-                        <th class="text-end">Aktionen</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for u in users %}
-                    <tr>
-                        <td>{{ u.id }}</td>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar-circle" style="width: 25px; height: 25px; font-size: 0.8rem;">
-                                    {{ u.username[0]|upper }}
-                                </div>
-                                <span>{{ u.username }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            {% if u.is_admin %}
-                            <span class="badge bg-danger">Admin</span>
-                            {% else %}
-                            <span class="badge bg-secondary">User</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-warning me-1" onclick="resetPw({{ u.id }}, '{{ u.username }}')">
-                                <i class="bi bi-key"></i> Reset PW
-                            </button>
-                            {% if u.id != current_user.id %}
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteUser({{ u.id }}, '{{ u.username }}')">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm align-middle">
+                        <thead><tr><th>User</th><th>Rolle</th><th>Action</th></tr></thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr>
+                                <td>{{ u.username }}</td>
+                                <td>{{ 'Admin' if u.is_admin else 'User' }}</td>
+                                <td>
+                                    {% if u.id != current_user.id %}
+                                    <button class="btn btn-xs btn-outline-danger" onclick="deleteUser({{ u.id }}, '{{ u.username }}')">x</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h4 class="card-title mb-3">🎄 Feiertage</h4>
+                
+                <form id="createHolidayForm" class="row g-2 align-items-center mb-4 p-3 bg-light rounded">
+                    <div class="col-5">
+                        <input type="date" class="form-control" id="holDate" required>
+                    </div>
+                    <div class="col-5">
+                        <input type="text" class="form-control" id="holName" placeholder="Name (z.B. Weihnachten)" required>
+                    </div>
+                    <div class="col-2">
+                        <button type="submit" class="btn btn-success w-100">+</button>
+                    </div>
+                </form>
+
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm align-middle table-striped">
+                        <thead><tr><th>Datum</th><th>Name</th><th></th></tr></thead>
+                        <tbody>
+                            {% for h in holidays %}
+                            <tr>
+                                <td>{{ h.date_str }}</td>
+                                <td>{{ h.name }}</td>
+                                <td class="text-end">
+                                    <button class="btn btn-xs btn-outline-danger" onclick="deleteHoliday({{ h.id }})">x</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // User anlegen
+    // --- USER LOGIK ---
     document.getElementById('createUserForm').addEventListener('submit', function(e) {
         e.preventDefault();
         axios.post('/admin/create_user', {
             username: document.getElementById('newUsername').value,
             password: document.getElementById('newPassword').value,
             is_admin: document.getElementById('isAdmin').checked
-        }).then(res => {
-            location.reload();
-        }).catch(err => alert(err.response.data.error));
+        }).then(() => location.reload()).catch(err => alert(err.response.data.error));
     });
 
-    // PW Reset
-    function resetPw(id, name) {
-        if(confirm(`Passwort für ${name} wirklich auf 'changeme123' zurücksetzen?`)) {
-            axios.post(`/admin/reset_pw/${id}`).then(res => alert(res.data.status));
+    function deleteUser(id, name) {
+        if(confirm(`User ${name} löschen?`)) {
+            axios.post(`/admin/delete_user/${id}`).then(() => location.reload());
         }
     }
 
-    // User löschen
-    function deleteUser(id, name) {
-        if(confirm(`ACHTUNG: User ${name} und ALLE seine Zeiten unwiderruflich löschen?`)) {
-            axios.post(`/admin/delete_user/${id}`).then(res => {
-                location.reload();
-            });
+    // --- FEIERTAGE LOGIK ---
+    document.getElementById('createHolidayForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        axios.post('/admin/holiday', {
+            date: document.getElementById('holDate').value,
+            name: document.getElementById('holName').value
+        }).then(() => location.reload()).catch(err => alert(err.response.data.error));
+    });
+
+    function deleteHoliday(id) {
+        if(confirm("Feiertag wirklich löschen?")) {
+            axios.delete(`/admin/holiday/${id}`).then(() => location.reload());
         }
     }
 </script>

@@ -146,6 +146,20 @@
 
 {% block scripts %}
 <script>
+    function openSettings() {
+        const el = document.getElementById('settingsModal');
+        if(el) {
+            const modal = new bootstrap.Modal(el);
+            modal.show();
+        } else {
+            console.error("Settings Modal nicht gefunden!");
+        }
+    }
+    // Global verfügbar machen
+    window.openSettings = openSettings;
+</script>
+
+<script>
     const { createApp } = Vue;
 
     createApp({
@@ -153,13 +167,16 @@
         data() {
             return {
                 currentDateObj: new Date(),
-                dayStatus: null, // 'F', 'U', 'K' oder null
-                blocks: [], // Array von { id, type, start, end }
+                dayStatus: null, 
+                blocks: [], 
+                entriesCache: [], // Lokaler Speicher für den Monat
+                holidaysMap: {},  // Speichert Feiertage vom Server
+                loading: false,
                 
                 settings: {
                     sollStunden: 7.70,
-                    arztStart: 480, // 08:00 in min
-                    arztEnde: 972   // 16:12 in min
+                    arztStart: 480, // 08:00
+                    arztEnde: 972   // 16:12
                 }
             }
         },
@@ -168,6 +185,7 @@
                 return this.currentDateObj.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
             },
             isoDate() { return this.currentDateObj.toISOString().split('T')[0]; },
+            isoMonth() { return this.isoDate.substring(0, 7); },
             isNonWorkDay() { return ['F', 'U', 'K'].includes(this.dayStatus); },
             
             statusAlertClass() {
@@ -181,9 +199,7 @@
             totals() {
                 let sapMin = 0;
                 let catsMin = 0;
-                let rawWorkMin = 0; // Für Pausenberechnung (ohne Arzt-Kappung, aber nur Arbeitszeit)
-
-                // 1. Blöcke durchgehen
+                
                 this.blocks.forEach(b => {
                     let start = this.toMin(b.start);
                     let end = this.toMin(b.end);
@@ -192,40 +208,36 @@
                     let duration = end - start;
 
                     if (b.type === 'doctor') {
-                        // Arzt: Zählt NICHT für CATS. Zählt für SAP nur im Fenster.
-                        // Kappung Start: max(TerminStart, 08:00)
                         let validStart = Math.max(start, this.settings.arztStart);
-                        // Kappung Ende: min(TerminEnde, 16:12)
                         let validEnd = Math.min(end, this.settings.arztEnde);
-                        
-                        if (validEnd > validStart) {
-                            sapMin += (validEnd - validStart);
-                        }
-                        // CATS bleibt 0 für Arzt
+                        if (validEnd > validStart) sapMin += (validEnd - validStart);
                     } else {
-                        // Büro / Home
                         sapMin += duration;
                         catsMin += duration;
-                        rawWorkMin += duration;
                     }
                 });
 
-                // 2. Pausen-Check (SAP Regel: >6h Arbeit -> 30min Abzug, wenn keine Pause gemacht)
-                // Wir checken hier vereinfacht nur die Summe.
-                // Profi-Check wäre: Gibt es eine Lücke > 30min zwischen 11:00 und 14:00?
-                // Wir nehmen deine "Standard"-Regel: Summe > 6h -> Abzug.
                 let pause = 0;
-                // ACHTUNG: Zählt Arzt zur 6h Grenze? SAP sagt meistens: Anwesenheit zählt.
-                // Wenn du 4h arbeitest + 3h Arzt = 7h Anwesenheit -> Pause Pflicht.
-                if ((sapMin) > 360) {
+                // SAP Regel: >6h Anwesenheit (SAP Zeit) -> 30min Abzug
+                if (sapMin > 360) {
                     pause = 30;
                     sapMin -= 30;
-                    catsMin -= 30; // Pause mindert auch verrechenbare Zeit
+                    catsMin -= 30;
                 }
 
-                // 3. Saldo
-                let saldoVal = (sapMin / 60) - this.settings.sollStunden;
+                // Saldo Berechnung
+                // Wenn F/U/K -> Soll ist reduziert (oder Ist wird gutgeschrieben, je nach Sichtweise)
+                // Wir nehmen deine Regel: Saldo Berechnung ignoriert Soll wenn Status aktiv (bzw. ist 0)
+                let istStunden = sapMin / 60;
+                let target = this.isNonWorkDay ? 0 : this.settings.sollStunden;
                 
+                // Falls Status U/K/F -> Ist es ein 0-Summen Spiel oder Gutschrift?
+                // Normalerweise: Bei Urlaub hast du 7.7h IST (fiktiv) und 7.7h SOLL.
+                // Wir zeigen Saldo einfach nur an, wenn gearbeitet wurde.
+                
+                let saldoVal = istStunden - target;
+                if (this.isNonWorkDay) saldoVal = 0; // An freien Tagen ändert sich Saldo nicht (vereinfacht)
+
                 return {
                     sapTime: sapMin > 0 ? sapMin : 0,
                     catsTime: catsMin > 0 ? catsMin : 0,
@@ -235,10 +247,9 @@
             },
 
             prediction() {
-                // Wann ist Soll erfüllt?
-                if (this.blocks.length === 0) return { target: '--:--', max: '--:--' };
+                if (this.blocks.length === 0 || this.isNonWorkDay) return { target: '--:--', max: '--:--' };
                 
-                // Wir suchen den allerersten Startzeitpunkt
+                // Erster Start finden
                 let firstStart = 9999;
                 let lastEnd = 0;
                 this.blocks.forEach(b => {
@@ -250,37 +261,25 @@
 
                 if (firstStart === 9999) return { target: '--:--', max: '--:--' };
 
-                // Soll-Minuten brutto (Soll + 30min Pause, da wir davon ausgehen dass wir >6h bleiben)
-                let targetMin = (this.settings.sollStunden * 60) + 30; 
-                let maxMin = (10 * 60) + 30; // 10h + Pause
-
-                // Wir addieren einfach auf den Startzeitpunkt
-                // ACHTUNG: Das ignoriert Lücken (z.B. Mittagspause zu Hause).
-                // Besser: Wir nehmen die *bereits geleisteten* Minuten und rechnen den Rest auf "JETZT" oder "Letztes Ende" drauf.
-                
-                let currentNetto = this.totals.sapTime; // Schon geleistet (Netto)
+                let currentNetto = this.totals.sapTime; 
                 let remaining = (this.settings.sollStunden * 60) - currentNetto;
                 
                 if (remaining <= 0) return { target: 'Erledigt! 🎉', max: '...' };
 
-                // Wir addieren den Rest auf das Ende des letzten Blocks
-                // (Annahme: Du arbeitest ab jetzt/Blockende am Stück durch)
                 let finishTime = lastEnd + remaining;
-                
-                // Wenn wir durch den Rest über die 6h Grenze kommen und noch keine Pause abgezogen wurde,
-                // müssen wir 30min später gehen.
+                // Pause draufrechnen wenn wir über 6h kommen
                 if (this.totals.pause === 0 && (currentNetto + remaining) > 360) {
                      finishTime += 30;
                 }
 
+                let maxMin = (10 * 60) + 30; 
                 return {
                     target: this.minToString(finishTime),
-                    max: this.minToString(firstStart + maxMin) // 10h Regel gilt ab Beginn
+                    max: this.minToString(firstStart + maxMin)
                 };
             }
         },
         methods: {
-            // --- HELPER ---
             toMin(str) {
                 if (!str || str.length < 3) return 0;
                 let s = str.toString().padStart(4, '0');
@@ -291,9 +290,7 @@
                 let m = min % 60;
                 return h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
             },
-            formatTime(min) {
-                return (min / 60).toFixed(2) + ' h';
-            },
+            formatTime(min) { return (min / 60).toFixed(2) + ' h'; },
             getTypeIcon(type) {
                 if(type === 'office') return 'bi-building';
                 if(type === 'home') return 'bi-house';
@@ -307,60 +304,104 @@
                 return '';
             },
 
-            // --- ACTIONS ---
             changeDay(offset) {
                 let d = new Date(this.currentDateObj);
                 d.setDate(d.getDate() + offset);
                 this.currentDateObj = d;
-                this.loadData();
+                this.loadFromCacheOrApi(); // Intelligent laden
             },
+            
             toggleStatus(status) {
-                if (this.dayStatus === status) this.dayStatus = null; // deaktivieren
+                if (this.dayStatus === status) this.dayStatus = null; 
                 else this.dayStatus = status;
+                // Status ist wichtig -> sofort speichern triggern (optional)
             },
+            
             addBlock(type) {
-                this.blocks.push({
-                    id: Date.now(),
-                    type: type,
-                    start: '',
-                    end: ''
-                });
+                this.blocks.push({ id: Date.now(), type: type, start: '', end: '' });
             },
             removeBlock(index) {
                 this.blocks.splice(index, 1);
             },
 
-            // --- API (Mockup für jetzt) ---
-            async loadData() {
-                // Hier würdest du normalerweise via axios.get laden
-                // Mockup Reset:
-                this.blocks = [];
-                this.dayStatus = null;
-                console.log("Lade Daten für", this.isoDate);
+            // --- ECHTE API CALLS ---
+            async loadMonthData() {
+                this.loading = true;
+                try {
+                    const res = await axios.get(`/api/get_entries?month=${this.isoMonth}`);
+                    this.entriesCache = res.data.entries;
+                    this.holidaysMap = res.data.holidays || {};
+                    this.loadFromCacheOrApi();
+                } catch(e) {
+                    console.error("Ladefehler:", e);
+                } finally {
+                    this.loading = false;
+                }
             },
+
+            loadFromCacheOrApi() {
+                const dateKey = this.isoDate;
+                
+                // 1. Check auf Globalen Feiertag
+                if (this.holidaysMap[dateKey]) {
+                    this.dayStatus = 'F'; // Automatisch Feiertag setzen
+                }
+                
+                // 2. Suche Eintrag im Cache
+                const entry = this.entriesCache.find(e => e.date === dateKey);
+                
+                if (entry) {
+                    this.blocks = entry.blocks || [];
+                    // Wenn Eintrag existiert, gewinnt dessen Status (Override möglich)
+                    if (entry.status) this.dayStatus = entry.status;
+                } else {
+                    // Reset
+                    this.blocks = [];
+                    // Status Reset nur wenn KEIN globaler Feiertag
+                    if (!this.holidaysMap[dateKey]) this.dayStatus = null;
+                }
+            },
+
             async saveData() {
                 const payload = {
                     date: this.isoDate,
                     blocks: this.blocks,
                     status: this.dayStatus
                 };
-                console.log("Speichere:", payload);
-                
-                // Feedback
-                const btn = document.querySelector('.fab-btn.btn-primary');
-                let oldHtml = btn.innerHTML;
-                btn.innerHTML = '<i class="bi bi-check-lg"></i>';
-                btn.classList.replace('btn-primary', 'btn-success');
-                setTimeout(() => {
-                    btn.innerHTML = oldHtml;
-                    btn.classList.replace('btn-success', 'btn-primary');
-                }, 1000);
+
+                try {
+                    await axios.post('/api/save_entry', payload);
+                    
+                    // Button Feedback
+                    const btn = document.querySelector('.fab-btn.btn-primary');
+                    if(btn) {
+                        let oldHtml = btn.innerHTML;
+                        btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+                        btn.classList.replace('btn-primary', 'btn-success');
+                        setTimeout(() => {
+                            btn.innerHTML = oldHtml;
+                            btn.classList.replace('btn-success', 'btn-primary');
+                        }, 1000);
+                    }
+                    
+                    // Cache aktualisieren, damit beim Zurückblättern die Daten noch da sind
+                    // Wir suchen den Eintrag im Cache und updaten ihn
+                    let existing = this.entriesCache.find(e => e.date === this.isoDate);
+                    if(existing) {
+                        existing.blocks = this.blocks;
+                        existing.status = this.dayStatus;
+                    } else {
+                        this.entriesCache.push(payload);
+                    }
+
+                } catch(e) {
+                    alert("Fehler beim Speichern: " + e);
+                }
             }
         },
         mounted() {
-            // Beispiel-Daten initialisieren
-            this.blocks.push({ id: 1, type: 'home', start: '0600', end: '0700' });
-            this.blocks.push({ id: 2, type: 'office', start: '0730', end: '1300' });
+            // Initial laden
+            this.loadMonthData();
         }
     }).mount('#app');
 </script>
