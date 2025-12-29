@@ -2,71 +2,85 @@
 
 {% block content %}
 <style>
-    /* --- DARK MODE & COLORS --- */
+    /* --- COLORS & THEME --- */
     
+    /* Standard Light Mode */
     [data-bs-theme="light"] body { background-color: #f8f9fa; }
     
-    /* Tabellen Zeilen Farben */
-    .tr-weekend { background-color: rgba(0,0,0,0.03) !important; color: #999; }
-    .tr-holiday { background-color: rgba(108, 117, 125, 0.2) !important; }  /* Grau */
-    .tr-vacation { background-color: rgba(255, 193, 7, 0.2) !important; }  /* Gelb */
-    .tr-sick { background-color: rgba(220, 53, 69, 0.2) !important; }      /* Rot */
+    /* WICHTIG: Überschreibt Bootstrap Table Backgrounds für Farben */
+    .table > :not(caption) > * > * { background-color: transparent; color: inherit; box-shadow: none; }
+    
+    /* Status Farben (Ganze Zeile) */
+    .tr-holiday { background-color: rgba(108, 117, 125, 0.25) !important; }  /* F - Grau */
+    .tr-vacation { background-color: rgba(255, 193, 7, 0.25) !important; }   /* U - Gelb */
+    .tr-sick { background-color: rgba(220, 53, 69, 0.25) !important; }       /* K - Rot */
+    
+    .tr-office { background-color: rgba(40, 167, 69, 0.15) !important; }     /* Büro - Grün */
+    .tr-home { background-color: rgba(23, 162, 184, 0.15) !important; }      /* HO - Blau */
+    .tr-weekend { background-color: rgba(0,0,0,0.05) !important; color: #888; } /* WE - Grau */
 
-    /* Dark Mode Overrides für Lesbarkeit */
+    /* Dark Mode Anpassungen */
     [data-bs-theme="dark"] body { background-color: #121212; color: #e0e0e0; }
     [data-bs-theme="dark"] .card { background-color: #1e1e1e; border-color: #333; }
-    [data-bs-theme="dark"] .table { color: #e0e0e0; }
     
-    [data-bs-theme="dark"] .tr-weekend { background-color: rgba(255,255,255,0.05) !important; color: #666; }
-    [data-bs-theme="dark"] .tr-holiday { background-color: rgba(108, 117, 125, 0.4) !important; color: #fff; }
-    [data-bs-theme="dark"] .tr-vacation { background-color: rgba(255, 193, 7, 0.3) !important; color: #fff; }
-    [data-bs-theme="dark"] .tr-sick { background-color: rgba(220, 53, 69, 0.4) !important; color: #fff; }
+    /* Tabellen Header im Darkmode lesbar machen */
+    [data-bs-theme="dark"] .table thead th { color: #e0e0e0; background-color: #2c2c2c; border-bottom: 1px solid #444; }
+    [data-bs-theme="dark"] .table { color: #e0e0e0; --bs-table-border-color: #333; }
 
-    /* Mini Buttons in der Liste */
+    /* Dark Mode Zeilen Farben (etwas transparenter für Lesbarkeit) */
+    [data-bs-theme="dark"] .tr-office { background-color: rgba(40, 167, 69, 0.25) !important; color: #fff; }
+    [data-bs-theme="dark"] .tr-home { background-color: rgba(23, 162, 184, 0.25) !important; color: #fff; }
+    [data-bs-theme="dark"] .tr-holiday { background-color: rgba(255, 255, 255, 0.1) !important; color: #aaa; }
+    [data-bs-theme="dark"] .tr-weekend { background-color: rgba(255,255,255,0.05) !important; color: #666; }
+
+    /* Status Buttons (F U K) */
     .btn-xs-status {
-        width: 28px; height: 28px; 
+        width: 30px; height: 30px; 
         border-radius: 6px; 
-        font-size: 0.75rem; font-weight: bold;
+        font-size: 0.8rem; font-weight: bold;
         display: inline-flex; align-items: center; justify-content: center;
         cursor: pointer; transition: all 0.2s;
-        border: 1px solid transparent;
-        opacity: 0.3; /* Inaktiv */
-        color: inherit;
+        border: 1px solid rgba(0,0,0,0.1);
+        background-color: var(--bs-body-bg);
+        opacity: 0.6;
     }
-    .btn-xs-status:hover { transform: scale(1.1); opacity: 0.8; }
-    
-    .btn-xs-status.active { opacity: 1; border-color: rgba(0,0,0,0.1); box-shadow: 0 2px 4px rgba(0,0,0,0.1); color: white; }
+    .btn-xs-status:hover { transform: scale(1.1); opacity: 1; }
+    .btn-xs-status.active { opacity: 1; border-color: transparent; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
     
     .st-f.active { background-color: #6c757d; }
     .st-u.active { background-color: #ffc107; color: #000 !important; }
     .st-k.active { background-color: #dc3545; }
-    
-    /* Type Colors */
-    .type-office { border-left: 5px solid #4dabf7; }
-    .type-home { border-left: 5px solid #da77f2; }
-    .type-doctor { border-left: 5px solid #ff6b6b; }
-    .bg-office { background-color: #4dabf7; color: white; }
-    .bg-home { background-color: #da77f2; color: white; }
 
-    /* Quota Card */
+    /* Kommentarfeld (Invisible Input) */
+    .comment-input {
+        background: transparent; border: none; width: 100%; 
+        color: inherit; font-size: 0.9rem; padding: 2px 5px;
+        border-bottom: 1px solid transparent;
+        transition: border-color 0.2s;
+    }
+    .comment-input:focus { outline: none; border-bottom: 1px solid #aaa; }
+    .comment-input::placeholder { color: inherit; opacity: 0.5; font-style: italic; }
+
+    /* Progress Bar */
     .quota-card {
         background: var(--bs-body-bg); border-radius: 12px; padding: 15px; margin-bottom: 20px;
         border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     .progress-sloth { height: 10px; border-radius: 5px; background-color: rgba(0,0,0,0.1); margin-top: 5px; overflow: hidden; }
-    .progress-bar-sloth { background-color: #ffc107; height: 100%; transition: width 0.5s; }
-
+    .progress-bar-sloth { background-color: #ffc107; height: 100%; transition: width 0.5s; } /* Gelb */
+    
+    /* Type Colors Borders (Tag Ansicht) */
+    .type-office { border-left: 5px solid #28a745; }
+    .type-home { border-left: 5px solid #17a2b8; }
+    .type-doctor { border-left: 5px solid #dc3545; }
+    .bg-office { background-color: #28a745; color: white; }
+    .bg-home { background-color: #17a2b8; color: white; }
+    
     /* View Switcher */
-    .view-switcher {
-        background: rgba(0,0,0,0.05); border-radius: 20px; padding: 4px; display: inline-flex; margin-bottom: 20px;
-    }
-    .view-btn {
-        border: none; background: transparent; padding: 5px 15px; border-radius: 16px; 
-        font-size: 0.9rem; color: #666; transition: all 0.2s;
-    }
+    .view-switcher { background: rgba(0,0,0,0.05); border-radius: 20px; padding: 4px; display: inline-flex; margin-bottom: 20px; }
+    .view-btn { border: none; background: transparent; padding: 5px 15px; border-radius: 16px; font-size: 0.9rem; color: #666; transition: all 0.2s; }
     .view-btn.active { background: var(--bs-body-bg); color: var(--sloth-primary); font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    [data-bs-theme="dark"] .view-btn { color: #aaa; }
-    [data-bs-theme="dark"] .view-btn.active { color: #fff; background: #444; }
+    [data-bs-theme="dark"] .view-btn.active { color: white; background: #444; }
 
     .cursor-pointer { cursor: pointer; }
 </style>
@@ -80,7 +94,7 @@
         </div>
         <div class="d-flex justify-content-between small mb-1 text-muted">
             <span>Ist: [[ quota.current ]] h</span>
-            <span>Ziel: [[ quota.target ]] h</span>
+            <span>Ziel (dynamisch): [[ quota.target ]] h</span>
         </div>
         <div class="progress-sloth">
             <div class="progress-bar-sloth" :style="{ width: quota.percent + '%' }"></div>
@@ -184,18 +198,18 @@
         </div>
 
         <div class="table-responsive bg-white rounded shadow-sm border">
-            <table class="table mb-0 text-center align-middle" style="font-size: 0.9rem;">
-                <thead class="table-light">
+            <table class="table mb-0 text-center align-middle" style="font-size: 0.9rem; border-collapse: collapse;">
+                <thead>
                     <tr>
                         <th class="text-start ps-3 py-3">Datum</th>
                         <th>Summe</th>
                         <th>SAP</th>
-                        <th style="min-width: 100px;">Status</th>
+                        <th style="min-width: 110px;">Status</th>
+                        <th style="min-width: 100px;" class="text-start">Kommentar</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="day in monthDays" :key="day.iso" 
-                        :class="getRowClass(day)">
+                    <tr v-for="day in monthDays" :key="day.iso" :class="getRowClass(day)">
                         
                         <td class="text-start ps-3 cursor-pointer" @click="jumpToDay(day.iso)">
                             <div class="fw-bold" :class="{'text-primary': day.isToday}">
@@ -217,6 +231,13 @@
                                 <div class="btn-xs-status st-u" :class="{active: day.status === 'U'}" @click.stop="quickToggle(day, 'U')">U</div>
                                 <div class="btn-xs-status st-k" :class="{active: day.status === 'K'}" @click.stop="quickToggle(day, 'K')">K</div>
                             </div>
+                        </td>
+
+                        <td>
+                            <input type="text" class="comment-input" 
+                                   v-model.lazy="day.comment" 
+                                   :placeholder="day.placeholder"
+                                   @change="updateComment(day)">
                         </td>
                     </tr>
                 </tbody>
@@ -259,14 +280,13 @@
                 
                 settings: {
                     sollStunden: 7.70,
-                    officeTarget: 66.67,
+                    // officeTarget ist jetzt dynamisch, diese Variable ist nur Fallback
                     deductionPerDay: 3.08,
                     arztStart: 480, arztEnde: 972
                 }
             }
         },
         computed: {
-            // Hilfsfunktion: Datum formatieren
             isoDate() { return this.formatIsoDate(this.currentDateObj); },
             isoMonth() { return this.isoDate.substring(0, 7); },
 
@@ -329,13 +349,27 @@
                 let officeMinSum = 0;
                 let deductionCount = 0;
                 
+                // 1. Berechnung der möglichen Arbeitstage im Monat für das dynamische Ziel
+                let y = this.currentDateObj.getFullYear();
+                let m = this.currentDateObj.getMonth();
+                let daysInMonth = new Date(y, m + 1, 0).getDate();
+                let workDaysCount = 0;
+                
+                for(let d=1; d<=daysInMonth; d++) {
+                    let tempDate = new Date(y, m, d);
+                    let wd = tempDate.getDay();
+                    if(wd !== 0 && wd !== 6) workDaysCount++;
+                }
+                
+                // Dynamisches Ziel: Werktage * 7.7 * 0.4
+                let dynamicTarget = workDaysCount * this.settings.sollStunden * 0.40;
+
+                // 2. Abzüge und Ist-Stand berechnen
                 this.entriesCache.forEach(e => {
-                    // Check auf Wochenende (Sa=6, So=0)
                     const d = new Date(e.date);
                     const dayNum = d.getDay();
                     const isWeekend = (dayNum === 0 || dayNum === 6);
 
-                    // Nur wenn KEIN Wochenende, dann zählen F/U/K als Abzug
                     if(['F','U','K'].includes(e.status) && !isWeekend) {
                         deductionCount++;
                     } else {
@@ -348,21 +382,17 @@
                     }
                 });
 
-                // Auch globale Feiertage aus der Map checken
+                // Globale Feiertage als Abzug (nur Werktags)
                 for(let dateStr in this.holidaysMap) {
-                    // Wenn Eintrag nicht existiert (sonst oben schon gezählt)
                     if(!this.entriesCache.find(e => e.date === dateStr)) {
                         const d = new Date(dateStr);
                         const dayNum = d.getDay();
-                        // Nur Werktags-Feiertage zählen als Abzug
-                        if(dayNum !== 0 && dayNum !== 6) {
-                            deductionCount++;
-                        }
+                        if(dayNum !== 0 && dayNum !== 6) deductionCount++;
                     }
                 }
 
                 let deductionTotal = deductionCount * this.settings.deductionPerDay;
-                let targetAdjusted = Math.max(0, this.settings.officeTarget - deductionTotal);
+                let targetAdjusted = Math.max(0, dynamicTarget - deductionTotal);
                 let currentHours = officeMinSum / 60;
                 let percent = targetAdjusted > 0 ? (currentHours / targetAdjusted) * 100 : 100;
                 
@@ -388,10 +418,16 @@
                     let holiday = this.holidaysMap[iso];
                     let status = entry ? entry.status : (holiday ? 'F' : null);
                     
+                    let hasOffice = false;
+                    let hasHome = false;
                     let sapT = 0;
+                    
                     if(entry && !status) {
                         let tempSap = 0;
                         (entry.blocks||[]).forEach(b => {
+                            if(b.type === 'office') hasOffice = true;
+                            if(b.type === 'home') hasHome = true;
+                            
                             let s = this.toMin(b.start); let e = this.toMin(b.end);
                             if(e>s) {
                                 if(b.type==='doctor') {
@@ -404,6 +440,10 @@
                         sapT = Math.max(0, tempSap);
                     }
 
+                    // Wochentag Name (für Platzhalter)
+                    let dayName = date.toLocaleDateString('de-DE', { weekday: 'long' });
+                    let isWeekend = (date.getDay()===0 || date.getDay()===6);
+
                     days.push({
                         iso: iso,
                         dateNum: date.getDate(),
@@ -411,8 +451,12 @@
                         kw: this.getKw(date),
                         status: status,
                         sapTime: sapT,
-                        isWeekend: (date.getDay()===0 || date.getDay()===6),
-                        isToday: (iso === todayIso)
+                        isWeekend: isWeekend,
+                        isToday: (iso === todayIso),
+                        hasOffice: hasOffice,
+                        hasHome: hasHome,
+                        comment: entry ? entry.comment : '',
+                        placeholder: isWeekend ? dayName : ''
                     });
                     date.setDate(date.getDate() + 1);
                 }
@@ -431,6 +475,11 @@
                 if (day.status === 'F') return 'tr-holiday';
                 if (day.status === 'U') return 'tr-vacation';
                 if (day.status === 'K') return 'tr-sick';
+                
+                // Priorität: Büro (Grün) > Home (Blau)
+                if (day.hasOffice) return 'tr-office';
+                if (day.hasHome) return 'tr-home';
+                
                 if (day.isWeekend) return 'tr-weekend';
                 return '';
             },
@@ -475,11 +524,9 @@
                 if(d.getMonth() !== oldMonth) this.loadMonthData();
                 else this.loadFromCache();
             },
-            
             shiftMonth(offset) {
                 let d = new Date(this.currentDateObj);
-                d.setDate(1); 
-                d.setMonth(d.getMonth() + offset);
+                d.setDate(1); d.setMonth(d.getMonth() + offset);
                 this.currentDateObj = d;
                 this.loadMonthData();
             },
@@ -490,44 +537,36 @@
                 this.loadFromCache();
             },
 
+            // --- DATA SAVING ---
+
             toggleStatus(s) {
                 this.dayStatus = (this.dayStatus === s) ? null : s;
                 this.triggerAutoSave();
             },
-
-            // --- INLINE EDITIEREN IN LISTE ---
+            
             async quickToggle(day, status) {
-                // Wenn schon aktiv, dann deaktivieren (null), sonst aktivieren
                 const newStatus = (day.status === status) ? null : status;
-                
-                // Wir müssen den Eintrag im Cache finden oder erstellen
                 let entry = this.entriesCache.find(e => e.date === day.iso);
                 
-                // Daten vorbereiten
-                let payload = {
-                    date: day.iso,
-                    blocks: entry ? (entry.blocks || []) : [],
-                    status: newStatus
-                };
+                // Optimistic UI
+                if(entry) entry.status = newStatus;
+                else {
+                    entry = { date: day.iso, blocks: [], status: newStatus, comment: '' };
+                    this.entriesCache.push(entry);
+                }
+                
+                this.saveSingleEntry(entry);
+            },
 
-                // Sofortiges UI Update (Optimistic UI)
+            updateComment(day) {
+                let entry = this.entriesCache.find(e => e.date === day.iso);
                 if(entry) {
-                    entry.status = newStatus;
+                    entry.comment = day.comment;
                 } else {
-                    this.entriesCache.push(JSON.parse(JSON.stringify(payload)));
+                    entry = { date: day.iso, blocks: [], status: null, comment: day.comment };
+                    this.entriesCache.push(entry);
                 }
-
-                // API Call (Fire & Forget, Status Indikator zeigt Erfolg)
-                this.saveState = 'saving';
-                try {
-                    await axios.post('/api/save_entry', payload);
-                    this.saveState = 'saved';
-                    setTimeout(() => { if(this.saveState === 'saved') this.saveState = 'idle'; }, 2000);
-                } catch(e) {
-                    console.error(e);
-                    this.saveState = 'idle';
-                    alert("Fehler beim Speichern!");
-                }
+                this.saveSingleEntry(entry);
             },
 
             addBlock(type) {
@@ -545,19 +584,33 @@
 
             triggerAutoSave() {
                 this.saveState = 'saving';
-                // Timer zurücksetzen, wenn man weitertippt
                 if(this.saveTimer) clearTimeout(this.saveTimer);
-                this.saveTimer = setTimeout(() => { 
-                    this.saveData(); 
-                }, 250); 
+                this.saveTimer = setTimeout(() => { this.saveData(); }, 250);
             },
 
             async saveData() {
-                const payload = { date: this.isoDate, blocks: this.blocks, status: this.dayStatus };
+                // Speichert den aktuellen Tag (Tag-Ansicht)
+                const payload = { date: this.isoDate, blocks: this.blocks, status: this.dayStatus, comment: '' };
+                // Kommentar aus Cache holen falls wir in Tag-Ansicht sind und dort kein Feld ist (aktuell keines, also leer lassen oder aus cache holen)
+                let existing = this.entriesCache.find(e => e.date === this.isoDate);
+                if(existing) payload.comment = existing.comment;
+
+                await this.saveSingleEntry(payload);
+            },
+
+            async saveSingleEntry(payload) {
+                this.saveState = 'saving';
                 try {
-                    let existing = this.entriesCache.find(e => e.date === this.isoDate);
-                    if(existing) { existing.blocks = JSON.parse(JSON.stringify(this.blocks)); existing.status = this.dayStatus; } 
-                    else { this.entriesCache.push(JSON.parse(JSON.stringify(payload))); }
+                    // Cache Update
+                    let existing = this.entriesCache.find(e => e.date === payload.date);
+                    if(existing) {
+                        existing.blocks = payload.blocks;
+                        existing.status = payload.status;
+                        existing.comment = payload.comment;
+                    } else {
+                        this.entriesCache.push(JSON.parse(JSON.stringify(payload)));
+                    }
+
                     await axios.post('/api/save_entry', payload);
                     this.saveState = 'saved';
                     setTimeout(() => { if(this.saveState === 'saved') this.saveState = 'idle'; }, 2000);
