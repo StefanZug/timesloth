@@ -3,16 +3,12 @@
 {% block content %}
 <style>
     /* --- CSS VARIABLES & THEME --- */
-    
-    /* LIGHT MODE */
     [data-bs-theme="light"] {
         --sloth-bg-card: #ffffff;
         --sloth-bg-body: #f8f9fa;
         --sloth-text-muted: #6c757d;
         --sloth-border-color: #dee2e6;
     }
-    
-    /* DARK MODE - High Contrast Fixes */
     [data-bs-theme="dark"] {
         --sloth-bg-card: #1e1e1e;
         --sloth-bg-body: #121212;
@@ -22,15 +18,22 @@
 
     body { background-color: var(--sloth-bg-body); color: var(--bs-body-color); }
     .card { background-color: var(--sloth-bg-card); border-color: var(--sloth-border-color); }
-    
-    /* --- TABELLE & ZEILEN FARBEN --- */
-    
     .table > :not(caption) > * > * { background-color: transparent; color: inherit; box-shadow: none; border-bottom-color: var(--sloth-border-color); }
-    
-    /* Leere Zeilen im Darkmode abdunkeln für Kontrast */
     [data-bs-theme="dark"] tr { background-color: #181818; } 
 
-    /* PASTELL FARBEN (Darkmode mit SCHWARZER Schrift für Lesbarkeit) */
+    /* STICKY HEADER FIX */
+    .sticky-header {
+        position: sticky;
+        top: 58px; /* Klebt jetzt UNTERHALB der Navbar (ca 58px hoch) */
+        z-index: 900; /* Kleiner als Navbar (1050) damit Dropdown drüber geht */
+        background-color: var(--sloth-bg-body);
+        padding-top: 15px;
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+        box-shadow: 0 10px 10px -10px rgba(0,0,0,0.1); 
+    }
+
+    /* ZEILEN FARBEN */
     .tr-office { background-color: rgba(40, 167, 69, 0.15) !important; }
     .tr-home { background-color: rgba(23, 162, 184, 0.15) !important; }
     .tr-holiday { background-color: rgba(108, 117, 125, 0.2) !important; }
@@ -43,11 +46,8 @@
     [data-bs-theme="dark"] .tr-vacation { background-color: #fff3cd !important; color: #000 !important; font-weight: 500; }
     [data-bs-theme="dark"] .tr-sick { background-color: #f8d7da !important; color: #000 !important; font-weight: 500; }
     [data-bs-theme="dark"] .tr-holiday { background-color: #e2e3e5 !important; color: #000 !important; font-weight: 500; }
-    
-    /* Wochenende im Darkmode: Heller als Hintergrund, aber dunkelgrau */
     [data-bs-theme="dark"] .tr-weekend { background-color: #262626 !important; color: #888 !important; }
 
-    /* Inputs in der Tabelle */
     .table-input {
         background: transparent; border: 1px solid transparent; 
         width: 60px; text-align: center; color: inherit; font-weight: bold;
@@ -56,7 +56,7 @@
     .table-input:hover, .table-input:focus { background: rgba(128,128,128,0.1); border-color: var(--sloth-text-muted); }
     .table-input::placeholder { opacity: 0.2; font-weight: normal; }
 
-    /* Status Buttons */
+    /* Buttons & Layout */
     .btn-xs-status {
         width: 28px; height: 28px; border-radius: 6px; 
         font-size: 0.75rem; font-weight: bold;
@@ -72,26 +72,6 @@
     .st-u.active { background-color: #ffc107; color: #000 !important; }
     .st-k.active { background-color: #dc3545; }
 
-    /* Layout Elements */
-    /* STICKY HEADER FIX */
-    .sticky-header {
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        background-color: var(--sloth-bg-body);
-        padding-top: 15px;
-        padding-bottom: 5px;
-        margin-bottom: 10px;
-        box-shadow: 0 10px 10px -10px rgba(0,0,0,0.1); 
-    }
-    
-    .sloth-header-card {
-        background-color: var(--sloth-bg-card); 
-        border: 1px solid var(--sloth-border-color);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        border-radius: 12px; padding: 10px; margin-bottom: 20px;
-    }
-    
     .quota-card {
         background: var(--sloth-bg-card); border-radius: 12px; padding: 15px;
         border: 1px solid var(--sloth-border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -105,7 +85,7 @@
     .type-office { border-left: 5px solid #28a745; }
     .type-home { border-left: 5px solid #17a2b8; }
     .type-doctor { border-left: 5px solid #dc3545; }
-    
+
     .view-switcher { background: rgba(128,128,128,0.1); border-radius: 20px; padding: 4px; display: inline-flex; }
     .view-btn { border: none; background: transparent; padding: 5px 15px; border-radius: 16px; font-size: 0.9rem; color: var(--sloth-text-muted); transition: all 0.2s; }
     .view-btn.active { background: var(--sloth-bg-card); color: var(--sloth-primary); font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -113,9 +93,9 @@
 
     .comment-input { background: transparent; border: none; width: 100%; color: inherit; font-size: 0.9rem; padding: 2px 5px; border-bottom: 1px solid transparent; }
     .comment-input:focus { outline: none; border-bottom: 1px solid var(--sloth-text-muted); }
-    
     .footer-sarcasm { color: var(--sloth-text-muted) !important; opacity: 0.6; }
     .cursor-pointer { cursor: pointer; }
+    .sloth-header-card { background-color: var(--sloth-bg-card); border: 1px solid var(--sloth-border-color); box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-radius: 12px; padding: 10px; margin-bottom: 20px; }
 </style>
 
 <div id="app" class="container mt-3 mb-5" v-cloak>
@@ -227,9 +207,9 @@
 
     <div v-show="viewMode === 'month'" class="animate-fade">
         <div class="d-flex justify-content-between align-items-center mb-3 sloth-header-card">
-            <button class="btn btn-sm btn-outline-secondary rounded-circle" @click="shiftMonth(-1)"><i class="bi bi-chevron-left"></i></button>
+            <button class="btn btn-sm btn-light" @click="shiftMonth(-1)"><i class="bi bi-chevron-left"></i></button>
             <h5 class="m-0 fw-bold">[[ displayMonthName ]]</h5>
-            <button class="btn btn-sm btn-outline-secondary rounded-circle" @click="shiftMonth(1)"><i class="bi bi-chevron-right"></i></button>
+            <button class="btn btn-sm btn-light" @click="shiftMonth(1)"><i class="bi bi-chevron-right"></i></button>
         </div>
 
         <div class="table-responsive rounded shadow-sm border" style="background-color: var(--sloth-bg-card);">
@@ -321,7 +301,6 @@
             viewMode(newVal) { localStorage.setItem('viewMode', newVal); }
         },
         computed: {
-            // Dynamische Abzugs-Berechnung (immer 40% des aktuellen Solls)
             deductionPerDay() {
                 return (this.settings.sollStunden * 0.40).toFixed(2);
             },
@@ -380,6 +359,14 @@
                 if (remaining <= 0) return { target: '✔', max: '...' };
                 let finish = lastEnd + remaining;
                 if (this.totals.pause === 0 && (currentNetto + remaining) > 360) finish += 30;
+                
+                // Berechnung immer ab firstStart, falls lastEnd unplausibel
+                let base = (lastEnd > 0 && lastEnd > firstStart) ? lastEnd : firstStart;
+                if(base === firstStart) { 
+                    // Wenn noch keine Arbeit erfasst (nur Startzeit), dann addiere Soll auf Start
+                    finish = firstStart + (this.settings.sollStunden * 60) + (this.settings.sollStunden > 6 ? 30 : 0);
+                }
+
                 let maxTime = firstStart + 630; 
                 return { target: this.minToString(finish), max: this.minToString(maxTime) };
             },
@@ -464,7 +451,6 @@
                         }
 
                         blocks.forEach(b => {
-                            // LOGIC FIX: Color ONLY if time is present
                             let hasContent = (b.start && b.start.length >= 3) || (b.end && b.end.length >= 3);
                             if(hasContent) {
                                 if(b.type === 'office') hasOffice = true;
@@ -528,12 +514,28 @@
             formatListTime(day, field, val) {
                 if(!val) { this.updateListTime(day, field, ''); return; }
                 let clean = val.replace(/[^0-9]/g, '');
+                
+                // --- FIX: SEKUNDEN SUPPORT ---
                 let h = 0, m = 0;
-                if (clean.length <= 2) h = parseInt(clean); 
-                else if (clean.length === 3) { h = parseInt(clean.substring(0,1)); m = parseInt(clean.substring(1,3)); } 
-                else { h = parseInt(clean.substring(0,2)); m = parseInt(clean.substring(2,4)); }
+                
+                if(clean.length >= 5) {
+                    // Fall 080530 (HHMMSS) -> Runden!
+                    h = parseInt(clean.substring(0,2));
+                    m = parseInt(clean.substring(2,4));
+                    let s = parseInt(clean.substring(4,6));
+                    if(s >= 30) m++; // Kaufmännisch runden
+                } else if (clean.length === 4) {
+                    h = parseInt(clean.substring(0,2));
+                    m = parseInt(clean.substring(2,4));
+                } else if (clean.length === 3) {
+                    h = parseInt(clean.substring(0,1)); m = parseInt(clean.substring(1,3));
+                } else {
+                    h = parseInt(clean);
+                }
+                
                 if(h > 23) h = 23; if(m > 59) m = 59;
                 let final = h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
+                
                 this.updateListTime(day, field, final);
             },
 
@@ -565,9 +567,21 @@
                 if(!val) return;
                 let clean = val.replace(/[^0-9]/g, '');
                 let h = 0, m = 0;
-                if (clean.length <= 2) h = parseInt(clean); 
-                else if (clean.length === 3) { h = parseInt(clean.substring(0,1)); m = parseInt(clean.substring(1,3)); } 
-                else { h = parseInt(clean.substring(0,2)); m = parseInt(clean.substring(2,4)); }
+                
+                // --- FIX: SEKUNDEN SUPPORT (Gleiche Logik) ---
+                if(clean.length >= 5) {
+                    h = parseInt(clean.substring(0,2));
+                    m = parseInt(clean.substring(2,4));
+                    let s = parseInt(clean.substring(4,6));
+                    if(s >= 30) m++;
+                } else if (clean.length === 4) {
+                    h = parseInt(clean.substring(0,2)); m = parseInt(clean.substring(2,4));
+                } else if (clean.length === 3) {
+                    h = parseInt(clean.substring(0,1)); m = parseInt(clean.substring(1,3));
+                } else {
+                    h = parseInt(clean);
+                }
+
                 if(h > 23) h = 23; if(m > 59) m = 59;
                 block[field] = h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
                 this.triggerAutoSave();

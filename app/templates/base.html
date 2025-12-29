@@ -41,7 +41,7 @@
 <body>
     
     {% if current_user.is_authenticated %}
-    <nav class="navbar navbar-expand bg-body-tertiary shadow-sm mb-3 border-bottom">
+    <nav class="navbar navbar-expand bg-body-tertiary shadow-sm mb-3 border-bottom sticky-top" style="z-index: 1050;">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="/">🦥 TimeSloth</a>
             
@@ -155,22 +155,18 @@
             });
         }
 
-        // --- NEUE SETTINGS LOGIK ---
+        // Settings Logik
         const rangePercent = document.getElementById('rangePercent');
         const lblPercent = document.getElementById('lblPercent');
         const lblWeekHours = document.getElementById('lblWeekHours');
         const lblDayHours = document.getElementById('lblDayHours');
-        
-        // Basis: 100% = 38.5h Woche = 7.7h Tag
         const BASE_WEEKLY = 38.5;
         
         function updateCalc() {
             const pct = parseInt(rangePercent.value);
             lblPercent.textContent = pct + '%';
-            
             const weekly = (BASE_WEEKLY * (pct / 100));
             const daily = weekly / 5;
-            
             lblWeekHours.textContent = weekly.toFixed(2) + ' h';
             lblDayHours.textContent = daily.toFixed(2) + ' h';
         }
@@ -181,8 +177,6 @@
         }
 
         window.openSettings = function() {
-            // Optional: Hier könnte man den aktuellen Wert vom User laden.
-            // Fürs erste nehmen wir den Default oder was im DOM steht.
             new bootstrap.Modal(document.getElementById('settingsModal')).show();
         };
         window.openPwChange = function() {
@@ -191,16 +185,12 @@
 
         document.getElementById('globalSettingsForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
             const pct = parseInt(rangePercent.value);
             const daily = (BASE_WEEKLY * (pct / 100)) / 5;
-            
             axios.post('/api/settings', { 
                 sollStunden: daily.toFixed(2),
                 percent: pct
-            }).then(() => {
-                location.reload(); 
-            }).catch(err => alert("Fehler beim Speichern"));
+            }).then(() => location.reload()).catch(err => alert("Fehler beim Speichern"));
         });
 
         document.getElementById('pwChangeForm').addEventListener('submit', function(e) {
