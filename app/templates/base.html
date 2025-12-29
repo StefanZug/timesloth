@@ -4,9 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TimeSloth 🦥</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
+    
+    <style>
+        @font-face {
+            font-family: "bootstrap-icons";
+            src: url("{{ url_for('static', filename='fonts/bootstrap-icons.woff2') }}") format("woff2");
+        }
+    </style>
+
     <style>
         /* Sloth Custom Theme */
         :root { --sloth-primary: #5c7cfa; }
@@ -21,7 +29,6 @@
         .footer-sarcasm { font-size: 0.7rem; color: #aaa; text-align: center; margin-top: 40px; padding-bottom: 20px; }
     </style>
     <script>
-        // Darkmode Init bevor Seite rendert (gegen Flackern)
         const theme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-bs-theme', theme);
     </script>
@@ -75,9 +82,9 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/axios.js') }}"></script>
     
     <script>
         // Darkmode Logic
@@ -88,8 +95,12 @@
             localStorage.setItem('theme', next);
         });
         
-        // Settings / PW Change Modals (Platzhalter Logik)
-        function openSettings() { alert('Hier kommen die Anzeige-Optionen hin (Sortierung Home/Office etc.)'); }
+        // Settings Placeholder
+        function openSettings() { 
+            // Dieser Alert sollte jetzt NICHT mehr kommen, wenn Vue lädt
+            if(typeof Vue === 'undefined') alert('Fehler: Vue.js wurde nicht geladen!');
+        }
+        
         function openPwChange() { 
             const newPw = prompt("Neues Passwort eingeben:");
             if(newPw) {

@@ -11,34 +11,17 @@ def login():
         return redirect(url_for('main.dashboard'))
     
     if request.method == 'POST':
-        # Wir unterstützen sowohl JSON (für die App) als auch Form Data (für Browser-Enter)
         if request.is_json:
             data = request.get_json()
-            username = data.get('username')
+            # HIER: .lower() hinzufügen
+            username = data.get('username', '').lower()
             password = data.get('password')
         else:
-            username = request.form.get('username')
+            # HIER: .lower() hinzufügen
+            username = request.form.get('username', '').lower()
             password = request.form.get('password')
 
         user = User.query.filter_by(username=username).first()
-        
-        if user and bcrypt.check_password_hash(user.password_hash, password):
-            login_user(user, remember=True)
-            
-            # Loggen für User-Info (Privacy: Nur Zeit & IP)
-            log = LoginLog(user_id=user.id, ip_address=request.remote_addr)
-            db.session.add(log)
-            db.session.commit()
-            
-            if request.is_json:
-                return jsonify({"status": "success"})
-            return redirect(url_for('main.dashboard'))
-        
-        if request.is_json:
-            return jsonify({"error": "Falsche Daten"}), 401
-        flash('Login fehlgeschlagen. Prüfe User und Passwort.', 'danger')
-        
-    return render_template('login.html')
 
 @auth.route('/logout')
 @login_required

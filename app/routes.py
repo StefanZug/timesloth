@@ -23,12 +23,12 @@ def admin_panel():
 def admin_create_user():
     if not current_user.is_admin: return jsonify({"error": "Nein"}), 403
     data = request.get_json()
-    
+    username_clean = data['username'].lower()
     if User.query.filter_by(username=data['username']).first():
         return jsonify({"error": "User existiert schon"}), 400
         
     hashed_pw = bcrypt.generate_password_hash(data['password']).decode('utf-8')
-    user = User(username=data['username'], password_hash=hashed_pw, is_admin=data.get('is_admin', False))
+    user = User(username=username_clean, password_hash=hashed_pw, is_admin=data.get('is_admin', False))
     db.session.add(user)
     db.session.commit()
     return jsonify({"status": "User angelegt"})
