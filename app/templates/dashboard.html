@@ -2,197 +2,143 @@
 
 {% block content %}
 <style>
-    /* --- DARK MODE FIXES & COLORS --- */
+    /* --- STYLES --- */
     [data-bs-theme="dark"] body { background-color: #121212; color: #e0e0e0; }
     [data-bs-theme="dark"] .card { background-color: #1e1e1e; border-color: #333; }
-    [data-bs-theme="dark"] .form-control { background-color: #2d2d2d; border: 1px solid #444; color: #fff; }
     
-    /* Farben */
-    :root {
-        --color-office: #4dabf7;
-        --color-home: #da77f2;
-        --color-sick: #ff6b6b;
-    }
+    /* Block-Typ Farben */
+    .type-office { border-left: 5px solid #4dabf7; }
+    .type-home { border-left: 5px solid #da77f2; }
+    .type-doctor { border-left: 5px solid #ff6b6b; }
     
-    .border-office { border-left: 5px solid var(--color-office) !important; }
-    .border-home { border-left: 5px solid var(--color-home) !important; }
-    .text-office { color: var(--color-office); }
-    .text-home { color: var(--color-home); }
+    .bg-office { background-color: #4dabf7; color: white; }
+    .bg-home { background-color: #da77f2; color: white; }
+    .bg-doctor { background-color: #ff6b6b; color: white; }
 
-    /* --- WEEK VIEW (Desktop) --- */
-    .week-container {
-        display: flex;
-        gap: 10px;
+    /* Prognose Header */
+    .prediction-bar {
+        background: rgba(92, 124, 250, 0.1);
+        border-radius: 10px;
+        padding: 10px;
         margin-bottom: 20px;
-        overflow-x: auto;
-        padding-bottom: 5px;
+        display: flex; justify-content: space-around;
+        border: 1px solid rgba(92, 124, 250, 0.2);
     }
     
-    .day-card {
-        flex: 1;
-        min-width: 100px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        border: 2px solid transparent;
-        opacity: 0.7;
-    }
+    /* Floating Save & Add Buttons */
+    .fab-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
+    .fab-btn { width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: none; color: white; }
     
-    .day-card:hover { opacity: 1; transform: translateY(-2px); }
-    
-    .day-card.active {
-        border-color: var(--sloth-primary, #5c7cfa);
-        background-color: rgba(92, 124, 250, 0.1);
-        opacity: 1;
-        font-weight: bold;
+    /* Status Toggles (F U K) */
+    .status-toggle {
+        cursor: pointer; opacity: 0.4; transition: all 0.2s; font-weight: bold;
+        width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+        border-radius: 8px; border: 2px solid #ccc;
     }
+    .status-toggle.active { opacity: 1; border-color: transparent; transform: scale(1.1); color: #fff; }
+    .st-holiday.active { background-color: #868e96; } /* Grau */
+    .st-vacation.active { background-color: #fcc419; } /* Gelb */
+    .st-sick.active { background-color: #fa5252; }     /* Rot */
 
-    .mini-indicator {
-        height: 4px;
-        width: 100%;
-        margin-top: 4px;
-        border-radius: 2px;
-        background-color: #eee;
-    }
-    .bg-office { background-color: var(--color-office); }
-    .bg-home { background-color: var(--color-home); }
-
-    /* --- FAB SAVE BUTTON (Mobile) --- */
-    .fab-save {
-        position: fixed; bottom: 20px; right: 20px;
-        width: 60px; height: 60px; border-radius: 50%;
-        font-size: 24px; display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 1000;
-    }
+    /* Animation */
+    .list-enter-active, .list-leave-active { transition: all 0.3s ease; }
+    .list-enter-from, .list-leave-to { opacity: 0; transform: translateX(30px); }
 </style>
 
-<div id="app" class="container mt-3" v-cloak>
+<div id="app" class="container mt-3 mb-5" v-cloak>
 
-    <div class="card shadow-sm border-0 mb-4 text-white" 
-         style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px;">
-        <div class="card-body p-3">
-            <div class="row text-center">
-                <div class="col-4 border-end border-white-50">
-                    <span class="d-block h4 mb-0 fw-bold">[[ stats.quote ]]%</span>
-                    <small class="text-uppercase opacity-75" style="font-size: 0.7rem;">Büro</small>
-                </div>
-                <div class="col-4 border-end border-white-50">
-                    <span class="d-block h4 mb-0 fw-bold">[[ stats.saldo ]]</span>
-                    <small class="text-uppercase opacity-75" style="font-size: 0.7rem;">Saldo</small>
-                </div>
+    <div class="prediction-bar" v-if="!isNonWorkDay">
+        <div class="text-center">
+            <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Soll fertig (7.7h)</small>
+            <span class="fw-bold fs-5">[[ prediction.target ]]</span>
+        </div>
+        <div class="text-center border-start ps-4">
+            <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Maximal (10h)</small>
+            <span class="fw-bold fs-5 text-danger">[[ prediction.max ]]</span>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-3" style="background: linear-gradient(135deg, #1c7ed6 0%, #228be6 100%); color: white;">
+        <div class="card-body p-2">
+            <div class="row text-center align-items-center">
                 <div class="col-4">
-                    <span class="d-block h4 mb-0 fw-bold">[[ stats.rest ]]</span>
-                    <small class="text-uppercase opacity-75" style="font-size: 0.7rem;">Rest</small>
+                    <span class="d-block h2 mb-0 fw-bold">[[ formatTime(totals.sapTime) ]]</span>
+                    <small class="opacity-75">SAP (Gleitzeit)</small>
                 </div>
+                <div class="col-4 border-start border-white-50">
+                    <span class="d-block h4 mb-0 fw-bold">[[ formatTime(totals.catsTime) ]]</span>
+                    <small class="opacity-75">CATS (Kunde)</small>
+                </div>
+                <div class="col-4 border-start border-white-50">
+                    <span class="d-block h4 mb-0 fw-bold">[[ totals.saldo ]]</span>
+                    <small class="opacity-75">Saldo</small>
+                </div>
+            </div>
+            <div class="text-center mt-2 border-top border-white-50 pt-1" v-if="totals.pause > 0" style="font-size: 0.8rem;">
+                <i class="bi bi-cup-hot"></i> Automatische Pause: -[[ totals.pause ]] Min
             </div>
         </div>
     </div>
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <button class="btn btn-outline-secondary btn-sm" @click="changeDay(-1)">
-            <i class="bi bi-chevron-left"></i>
+        <button class="btn btn-outline-secondary btn-sm" @click="changeDay(-1)"><i class="bi bi-chevron-left"></i></button>
+        <h5 class="m-0 fw-bold">[[ displayDate ]]</h5>
+        <button class="btn btn-outline-secondary btn-sm" @click="changeDay(1)"><i class="bi bi-chevron-right"></i></button>
+    </div>
+
+    <div class="d-flex justify-content-center gap-3 mb-4">
+        <div class="status-toggle st-holiday" :class="{active: dayStatus === 'F'}" @click="toggleStatus('F')">F</div>
+        <div class="status-toggle st-vacation" :class="{active: dayStatus === 'U'}" @click="toggleStatus('U')">U</div>
+        <div class="status-toggle st-sick" :class="{active: dayStatus === 'K'}" @click="toggleStatus('K')">K</div>
+    </div>
+
+    <div v-if="!isNonWorkDay">
+        <transition-group name="list" tag="div">
+            <div v-for="(block, index) in blocks" :key="block.id" class="card mb-2 shadow-sm" :class="'type-' + block.type">
+                <div class="card-body p-2 d-flex align-items-center gap-2">
+                    
+                    <div class="dropdown">
+                        <button class="btn btn-sm dropdown-toggle text-white" :class="'bg-' + block.type" type="button" data-bs-toggle="dropdown">
+                            <i class="bi" :class="getTypeIcon(block.type)"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" @click="block.type='office'"><i class="bi bi-building"></i> Büro</a></li>
+                            <li><a class="dropdown-item" @click="block.type='home'"><i class="bi bi-house"></i> Home</a></li>
+                            <li><a class="dropdown-item text-danger" @click="block.type='doctor'"><i class="bi bi-bandaid"></i> Arzt</a></li>
+                        </ul>
+                    </div>
+
+                    <input type="tel" class="form-control text-center p-1" v-model="block.start" placeholder="0000" maxlength="4" style="font-weight: bold;">
+                    <span>-</span>
+                    <input type="tel" class="form-control text-center p-1" v-model="block.end" placeholder="0000" maxlength="4" style="font-weight: bold;">
+
+                    <button class="btn btn-link text-muted p-0 ms-auto" @click="removeBlock(index)">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div v-if="block.type === 'doctor'" class="card-footer py-1 px-2 bg-light text-muted" style="font-size: 0.7rem;">
+                    Hinweis: Zählt nur zwischen 08:00 - 16:12 (SAP). Zählt 0h für CATS.
+                </div>
+            </div>
+        </transition-group>
+
+        <div v-if="blocks.length === 0" class="text-center text-muted py-4 opacity-50">
+            <i class="bi bi-stopwatch fs-1"></i><br>Noch keine Zeiten erfasst.
+        </div>
+    </div>
+
+    <div v-else class="alert text-center" :class="statusAlertClass">
+        <h4 class="fw-bold mt-2">[[ getStatusText(dayStatus) ]]</h4>
+        <p class="small">Dieser Tag reduziert dein Büro-Soll um 3,08h.</p>
+    </div>
+
+    <div class="fab-container" v-if="!isNonWorkDay">
+        <button class="fab-btn btn-secondary shadow-sm" @click="addBlock('office')" title="Neuer Block">
+            <i class="bi bi-plus-lg"></i>
         </button>
-        
-        <h5 class="m-0 fw-bold d-md-none">[[ displayDateMobile ]]</h5>
-        <h5 class="m-0 fw-bold d-none d-md-block">KW [[ currentKw ]] - [[ displayMonth ]]</h5>
-        
-        <button class="btn btn-outline-secondary btn-sm" @click="changeDay(1)">
-            <i class="bi bi-chevron-right"></i>
+        <button class="fab-btn btn-primary" @click="saveData" title="Speichern">
+            <i class="bi bi-floppy2-fill"></i>
         </button>
-    </div>
-
-    <div class="week-container d-none d-md-flex">
-        <div v-for="day in weekDays" 
-             class="card day-card p-2 shadow-sm"
-             :class="{ 'active': day.iso === form.dateIso, 'bg-light': isWeekend(day.obj) }"
-             @click="jumpToDate(day.obj)">
-             
-            <div class="small text-muted text-uppercase">[[ day.name ]]</div>
-            <div class="h5 mb-1">[[ day.dayNum ]]</div>
-            
-            <div class="mini-indicator" 
-                 :class="{ 'bg-office': day.hasOffice, 'bg-home': day.hasHome }">
-            </div>
-        </div>
-    </div>
-
-    <div class="animate-fade-in">
-        
-        <div class="card mb-3 border-office shadow-sm">
-            <div class="card-body p-3">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="text-office me-3"><i class="bi bi-building-fill fs-3"></i></div>
-                    <div class="flex-grow-1 fw-bold">Büro Anwesenheit</div>
-                </div>
-                <div class="input-group input-group-lg">
-                    <input type="tel" class="form-control text-center" v-model="form.buroStart" placeholder="0800" maxlength="4">
-                    <span class="input-group-text border-0 bg-transparent">-</span>
-                    <input type="tel" class="form-control text-center" v-model="form.buroEnde" placeholder="1630" maxlength="4">
-                </div>
-            </div>
-        </div>
-
-        <div class="card mb-3 border-home shadow-sm">
-            <div class="card-body p-3">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="text-home me-3"><i class="bi bi-house-heart-fill fs-3"></i></div>
-                    <div class="flex-grow-1 fw-bold">Home Office</div>
-                </div>
-                <div class="input-group input-group-lg">
-                    <input type="tel" class="form-control text-center" v-model="form.homeStart" placeholder="Start" maxlength="4">
-                    <span class="input-group-text border-0 bg-transparent">-</span>
-                    <input type="tel" class="form-control text-center" v-model="form.homeEnde" placeholder="Ende" maxlength="4">
-                </div>
-            </div>
-        </div>
-
-        <div class="card mb-3 border-start border-3 border-danger shadow-sm">
-            <div class="card-body p-3 d-flex align-items-center">
-                <div class="text-danger me-3"><i class="bi bi-bandaid-fill fs-3"></i></div>
-                <div class="flex-grow-1 fw-bold">Arzt / Behörde</div>
-                <div style="width: 100px;">
-                    <input type="number" class="form-control text-center" v-model="form.arztMin" placeholder="Min">
-                </div>
-            </div>
-        </div>
-
-        <div class="mb-5">
-            <input type="text" class="form-control p-3" placeholder="Notiz für diesen Tag..." v-model="form.kommentar">
-        </div>
-        
-        <div class="text-center text-muted small mt-4 mb-5">
-            <div v-if="loading" class="spinner-border spinner-border-sm text-primary" role="status"></div>
-            <div v-else>
-                Gesamt: <strong>[[ formatMinutes(dailySum) ]] h</strong>
-                <span v-if="dailyPause > 0" class="text-warning ms-2">(Pause: -[[ dailyPause ]]m)</span>
-            </div>
-        </div>
-    </div>
-
-    <button class="btn btn-primary fab-save text-white" @click="saveEntry">
-        <i class="bi bi-floppy2-fill"></i>
-    </button>
-
-    <div class="modal fade" id="settingsModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title">⚙️ Einstellungen</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form @submit.prevent="saveSettings">
-                        <div class="mb-3">
-                            <label class="form-label">Wochenstunden (Soll)</label>
-                            <input type="number" class="form-control" v-model="settings.sollStunden" step="0.1">
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Speichern</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
     </div>
 
 </div>
@@ -207,251 +153,214 @@
         data() {
             return {
                 currentDateObj: new Date(),
-                entriesCache: [], // Alle Einträge des Monats
-                loading: false,
+                dayStatus: null, // 'F', 'U', 'K' oder null
+                blocks: [], // Array von { id, type, start, end }
                 
-                // Aktuelles Formular
-                form: {
-                    dateIso: '',
-                    buroStart: '', buroEnde: '',
-                    homeStart: '', homeEnde: '',
-                    arztMin: '', kommentar: ''
-                },
-                
-                // Einstellungen
                 settings: {
-                    sollStunden: 38.5
+                    sollStunden: 7.70,
+                    arztStart: 480, // 08:00 in min
+                    arztEnde: 972   // 16:12 in min
                 }
             }
         },
         computed: {
-            // --- DATUM HELFER ---
-            displayDateMobile() {
-                return this.currentDateObj.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit' });
+            displayDate() {
+                return this.currentDateObj.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
             },
-            displayMonth() {
-                return this.currentDateObj.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
-            },
-            currentKw() {
-                // Simplifizierte KW Berechnung
-                const date = new Date(this.currentDateObj.getTime());
-                date.setHours(0, 0, 0, 0);
-                date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
-                const week1 = new Date(date.getFullYear(), 0, 4);
-                return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-            },
+            isoDate() { return this.currentDateObj.toISOString().split('T')[0]; },
+            isNonWorkDay() { return ['F', 'U', 'K'].includes(this.dayStatus); },
             
-            // --- WOCHENANSICHT GENERATOR ---
-            weekDays() {
-                // Finde den Montag der aktuellen Woche
-                let curr = new Date(this.currentDateObj);
-                let day = curr.getDay(); 
-                let diff = curr.getDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
-                let monday = new Date(curr.setDate(diff));
-                
-                let week = [];
-                for (let i=0; i<7; i++) {
-                    let d = new Date(monday);
-                    d.setDate(monday.getDate() + i);
-                    let iso = d.toISOString().split('T')[0];
-                    
-                    // Prüfen ob Daten im Cache existieren für Indikatoren
-                    let entry = this.entriesCache.find(e => e.date === iso);
-                    let hasOffice = entry && entry.office_times && entry.office_times.length > 0;
-                    let hasHome = entry && entry.home_times && entry.home_times.length > 0;
-
-                    week.push({
-                        obj: d,
-                        iso: iso,
-                        name: d.toLocaleDateString('de-DE', { weekday: 'short' }),
-                        dayNum: d.getDate(),
-                        hasOffice: hasOffice,
-                        hasHome: hasHome
-                    });
-                }
-                return week;
+            statusAlertClass() {
+                if(this.dayStatus === 'F') return 'alert-secondary';
+                if(this.dayStatus === 'U') return 'alert-warning';
+                if(this.dayStatus === 'K') return 'alert-danger';
+                return '';
             },
 
-            // --- BERECHNUNGEN AKTUELLE SEITE ---
-            dailySum() {
-                let buro = this.calcDiff(this.form.buroStart, this.form.buroEnde);
-                let home = this.calcDiff(this.form.homeStart, this.form.homeEnde);
-                let arzt = parseInt(this.form.arztMin) || 0;
-                let raw = buro + home + arzt;
-                // Pause abziehen (> 6h -> 30min)
-                if (raw > 360) return raw - 30;
-                return raw > 0 ? raw : 0;
-            },
-            dailyPause() {
-                let raw = this.calcDiff(this.form.buroStart, this.form.buroEnde) + 
-                          this.calcDiff(this.form.homeStart, this.form.homeEnde) + 
-                          (parseInt(this.form.arztMin) || 0);
-                return raw > 360 ? 30 : 0;
-            },
+            // --- KERN-LOGIK ---
+            totals() {
+                let sapMin = 0;
+                let catsMin = 0;
+                let rawWorkMin = 0; // Für Pausenberechnung (ohne Arzt-Kappung, aber nur Arbeitszeit)
 
-            // --- GESAMT STATISTIK ---
-            stats() {
-                // Wir summieren ALLES im Cache (ganzer Monat)
-                let totalMin = 0;
-                let officeMin = 0;
-                
-                this.entriesCache.forEach(e => {
-                    // Zeiten parsen (wir nehmen hier vereinfacht den ersten Block an)
-                    let o = e.office_times[0] ? this.calcDiff(e.office_times[0].start, e.office_times[0].end) : 0;
-                    let h = e.home_times[0] ? this.calcDiff(e.home_times[0].start, e.home_times[0].end) : 0;
-                    let a = e.doctor_minutes || 0;
-                    
-                    let daySum = o + h + a;
-                    if(daySum > 360) daySum -= 30; // Pause
-                    
-                    totalMin += Math.max(0, daySum);
-                    officeMin += o; // Für Quote (Brutto oder Netto ist hier Interpretationssache, nehmen wir Brutto-Zeit)
+                // 1. Blöcke durchgehen
+                this.blocks.forEach(b => {
+                    let start = this.toMin(b.start);
+                    let end = this.toMin(b.end);
+                    if (start >= end) return;
+
+                    let duration = end - start;
+
+                    if (b.type === 'doctor') {
+                        // Arzt: Zählt NICHT für CATS. Zählt für SAP nur im Fenster.
+                        // Kappung Start: max(TerminStart, 08:00)
+                        let validStart = Math.max(start, this.settings.arztStart);
+                        // Kappung Ende: min(TerminEnde, 16:12)
+                        let validEnd = Math.min(end, this.settings.arztEnde);
+                        
+                        if (validEnd > validStart) {
+                            sapMin += (validEnd - validStart);
+                        }
+                        // CATS bleibt 0 für Arzt
+                    } else {
+                        // Büro / Home
+                        sapMin += duration;
+                        catsMin += duration;
+                        rawWorkMin += duration;
+                    }
                 });
 
-                // Soll berechnen (Anzahl Arbeitstage bis heute * Soll/Tag)
-                // Das ist komplexer, wir machen es simpel: Soll vs Ist des Monats
-                // Soll: Wir nehmen an User arbeitet Mo-Fr
-                // Hier vereinfacht: Saldo = Ist - (SollStunden * 4.33 Wochen / Arbeitstage... zu komplex)
-                // Simpler: Saldo = Ist Stunden - (Anzahl Werktage im Monat * 7.7)
-                
-                let istStunden = totalMin / 60;
-                let quote = totalMin > 0 ? Math.round((officeMin / totalMin) * 100) : 0;
+                // 2. Pausen-Check (SAP Regel: >6h Arbeit -> 30min Abzug, wenn keine Pause gemacht)
+                // Wir checken hier vereinfacht nur die Summe.
+                // Profi-Check wäre: Gibt es eine Lücke > 30min zwischen 11:00 und 14:00?
+                // Wir nehmen deine "Standard"-Regel: Summe > 6h -> Abzug.
+                let pause = 0;
+                // ACHTUNG: Zählt Arzt zur 6h Grenze? SAP sagt meistens: Anwesenheit zählt.
+                // Wenn du 4h arbeitest + 3h Arzt = 7h Anwesenheit -> Pause Pflicht.
+                if ((sapMin) > 360) {
+                    pause = 30;
+                    sapMin -= 30;
+                    catsMin -= 30; // Pause mindert auch verrechenbare Zeit
+                }
+
+                // 3. Saldo
+                let saldoVal = (sapMin / 60) - this.settings.sollStunden;
                 
                 return {
-                    quote: quote,
-                    saldo: istStunden.toFixed(2) + ' h', // Platzhalter Logik
-                    rest: '0.00 h'
+                    sapTime: sapMin > 0 ? sapMin : 0,
+                    catsTime: catsMin > 0 ? catsMin : 0,
+                    pause: pause,
+                    saldo: (saldoVal > 0 ? '+' : '') + saldoVal.toFixed(2) + ' h'
+                };
+            },
+
+            prediction() {
+                // Wann ist Soll erfüllt?
+                if (this.blocks.length === 0) return { target: '--:--', max: '--:--' };
+                
+                // Wir suchen den allerersten Startzeitpunkt
+                let firstStart = 9999;
+                let lastEnd = 0;
+                this.blocks.forEach(b => {
+                    let s = this.toMin(b.start);
+                    let e = this.toMin(b.end);
+                    if (s > 0 && s < firstStart) firstStart = s;
+                    if (e > lastEnd) lastEnd = e;
+                });
+
+                if (firstStart === 9999) return { target: '--:--', max: '--:--' };
+
+                // Soll-Minuten brutto (Soll + 30min Pause, da wir davon ausgehen dass wir >6h bleiben)
+                let targetMin = (this.settings.sollStunden * 60) + 30; 
+                let maxMin = (10 * 60) + 30; // 10h + Pause
+
+                // Wir addieren einfach auf den Startzeitpunkt
+                // ACHTUNG: Das ignoriert Lücken (z.B. Mittagspause zu Hause).
+                // Besser: Wir nehmen die *bereits geleisteten* Minuten und rechnen den Rest auf "JETZT" oder "Letztes Ende" drauf.
+                
+                let currentNetto = this.totals.sapTime; // Schon geleistet (Netto)
+                let remaining = (this.settings.sollStunden * 60) - currentNetto;
+                
+                if (remaining <= 0) return { target: 'Erledigt! 🎉', max: '...' };
+
+                // Wir addieren den Rest auf das Ende des letzten Blocks
+                // (Annahme: Du arbeitest ab jetzt/Blockende am Stück durch)
+                let finishTime = lastEnd + remaining;
+                
+                // Wenn wir durch den Rest über die 6h Grenze kommen und noch keine Pause abgezogen wurde,
+                // müssen wir 30min später gehen.
+                if (this.totals.pause === 0 && (currentNetto + remaining) > 360) {
+                     finishTime += 30;
+                }
+
+                return {
+                    target: this.minToString(finishTime),
+                    max: this.minToString(firstStart + maxMin) // 10h Regel gilt ab Beginn
                 };
             }
         },
         methods: {
-            // --- TOOLS ---
-            isWeekend(date) { return date.getDay() === 0 || date.getDay() === 6; },
-            
-            formatMinutes(mins) {
-                let h = Math.floor(mins / 60);
-                let m = mins % 60;
-                return h + "," + (m < 10 ? '0' : '') + m;
+            // --- HELPER ---
+            toMin(str) {
+                if (!str || str.length < 3) return 0;
+                let s = str.toString().padStart(4, '0');
+                return (parseInt(s.substr(0,2))*60) + parseInt(s.substr(2,2));
             },
-            
-            parseTime(t) {
-                if(!t || t.length < 3) return 0;
-                let s = t.toString().padStart(4, '0');
-                return parseInt(s.substring(0,2))*60 + parseInt(s.substring(2,4));
+            minToString(min) {
+                let h = Math.floor(min / 60);
+                let m = min % 60;
+                return h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
             },
-            
-            calcDiff(start, end) {
-                let s = this.parseTime(start);
-                let e = this.parseTime(end);
-                return e > s ? e - s : 0;
+            formatTime(min) {
+                return (min / 60).toFixed(2) + ' h';
+            },
+            getTypeIcon(type) {
+                if(type === 'office') return 'bi-building';
+                if(type === 'home') return 'bi-house';
+                if(type === 'doctor') return 'bi-bandaid';
+                return 'bi-clock';
+            },
+            getStatusText(s) {
+                if(s === 'F') return 'Feiertag 🎄';
+                if(s === 'U') return 'Urlaub 🌴';
+                if(s === 'K') return 'Krank 🤒';
+                return '';
             },
 
-            // --- NAVIGATION & API ---
+            // --- ACTIONS ---
             changeDay(offset) {
                 let d = new Date(this.currentDateObj);
                 d.setDate(d.getDate() + offset);
-                this.jumpToDate(d);
+                this.currentDateObj = d;
+                this.loadData();
             },
-            
-            jumpToDate(dateObj) {
-                this.currentDateObj = dateObj;
-                this.updateFormFromCache();
-                
-                // Wenn Monat gewechselt, lade neue Daten
-                // (Optimierung: Könnte man checken. Einfachheitshalber laden wir neu wenn nötig)
-                this.loadData(); 
+            toggleStatus(status) {
+                if (this.dayStatus === status) this.dayStatus = null; // deaktivieren
+                else this.dayStatus = status;
+            },
+            addBlock(type) {
+                this.blocks.push({
+                    id: Date.now(),
+                    type: type,
+                    start: '',
+                    end: ''
+                });
+            },
+            removeBlock(index) {
+                this.blocks.splice(index, 1);
             },
 
+            // --- API (Mockup für jetzt) ---
             async loadData() {
-                this.loading = true;
-                const isoMonth = this.currentDateObj.toISOString().substring(0, 7);
-                
-                try {
-                    const res = await axios.get(`/api/get_entries?month=${isoMonth}`);
-                    this.entriesCache = res.data;
-                    this.updateFormFromCache();
-                } catch(e) {
-                    console.error(e);
-                } finally {
-                    this.loading = false;
-                }
+                // Hier würdest du normalerweise via axios.get laden
+                // Mockup Reset:
+                this.blocks = [];
+                this.dayStatus = null;
+                console.log("Lade Daten für", this.isoDate);
             },
-
-            updateFormFromCache() {
-                const isoDate = this.currentDateObj.toISOString().split('T')[0];
-                this.form.dateIso = isoDate;
-                
-                const entry = this.entriesCache.find(e => e.date === isoDate);
-                
-                if (entry) {
-                    const office = entry.office_times[0] || {};
-                    const home = entry.home_times[0] || {};
-                    
-                    this.form.buroStart = office.start || '';
-                    this.form.buroEnde = office.end || '';
-                    this.form.homeStart = home.start || '';
-                    this.form.homeEnde = home.end || '';
-                    this.form.arztMin = entry.doctor_minutes || '';
-                    this.form.kommentar = entry.comment || '';
-                } else {
-                    // Reset
-                    this.form.buroStart = ''; this.form.buroEnde = '';
-                    this.form.homeStart = ''; this.form.homeEnde = '';
-                    this.form.arztMin = ''; this.form.kommentar = '';
-                }
-            },
-
-            async saveEntry() {
+            async saveData() {
                 const payload = {
-                    date: this.form.dateIso,
-                    office_times: (this.form.buroStart && this.form.buroEnde) ? 
-                        [{start: this.form.buroStart, end: this.form.buroEnde}] : [],
-                    home_times: (this.form.homeStart && this.form.homeEnde) ? 
-                        [{start: this.form.homeStart, end: this.form.homeEnde}] : [],
-                    doctor_minutes: this.form.arztMin,
-                    comment: this.form.kommentar
+                    date: this.isoDate,
+                    blocks: this.blocks,
+                    status: this.dayStatus
                 };
-
-                try {
-                    await axios.post('/api/save_entry', payload);
-                    
-                    // Cache aktualisieren (damit Wochenansicht sofort updatet)
-                    // Wir laden einfach neu, ist sicherer
-                    await this.loadData();
-                    
-                    // Visuelles Feedback am Button
-                    const btn = document.querySelector('.fab-save');
-                    btn.classList.remove('btn-primary');
-                    btn.classList.add('btn-success');
-                    setTimeout(() => {
-                        btn.classList.add('btn-primary');
-                        btn.classList.remove('btn-success');
-                    }, 1000);
-                    
-                } catch(e) {
-                    alert("Fehler beim Speichern");
-                }
-            },
-            
-            saveSettings() {
-                // Hier könntest du eine API Route /api/settings aufrufen
-                // Aktuell speichern wir es nur lokal im Modal zum Schein
-                const modalEl = document.getElementById('settingsModal');
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                modal.hide();
-                alert("Einstellungen gespeichert (Dummy)");
+                console.log("Speichere:", payload);
+                
+                // Feedback
+                const btn = document.querySelector('.fab-btn.btn-primary');
+                let oldHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+                btn.classList.replace('btn-primary', 'btn-success');
+                setTimeout(() => {
+                    btn.innerHTML = oldHtml;
+                    btn.classList.replace('btn-success', 'btn-primary');
+                }, 1000);
             }
         },
         mounted() {
-            // 1. Daten laden
-            this.loadData();
-            
-            // 2. Globalen Hook für Base.html Navbar setzen
-            // Das behebt den Fehler "openSettings is not defined"
-            window.openSettings = () => {
-                const modal = new bootstrap.Modal(document.getElementById('settingsModal'));
-                modal.show();
-            };
+            // Beispiel-Daten initialisieren
+            this.blocks.push({ id: 1, type: 'home', start: '0600', end: '0700' });
+            this.blocks.push({ id: 2, type: 'office', start: '0730', end: '1300' });
         }
     }).mount('#app');
 </script>
