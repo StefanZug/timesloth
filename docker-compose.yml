@@ -1,0 +1,15 @@
+services:
+  timesloth:
+    build: .
+    container_name: timesloth_dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./app:/app/app             # Live-Code-Sync: Änderungen am Code werden sofort übernommen
+      - ./data:/data               # Datenbank wird lokal in deinem Projektordner gespeichert
+      - ./run.sh:/app/run.sh       # Start-Skript Mapping
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DB_FOLDER=/data
+      - SECRET_KEY=lokaler_test_key
+    restart: unless-stopped
