@@ -26,7 +26,15 @@ def create_app():
         except OSError:
             pass 
             
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(db_folder, "timesloth.db")}'
+    # DB Pfad Logik
+    # Wir holen den Pfad, entfernen evtl. trailing slashes
+    db_folder = os.environ.get('DB_FOLDER', '/data').rstrip('/')
+    
+    db_path = os.path.join(db_folder, "timesloth.db")
+    print(f"🐞 DEBUG: Nutze Datenbank Pfad: {db_path}") # Damit sehen wir es im Log!
+    
+    # 4 Slashes für absoluten Pfad auf Unix/Linux
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Init Extensions
