@@ -19,8 +19,7 @@ COPY . .
 # --- WICHTIG: ENV VAR SETZEN ---
 ENV DB_FOLDER=/data
 
-# --- ASSETS DOWNLOAD (Proxy-Bypass & Favicon) ---
-# Ordnerstruktur erstellen (inkl. img Ordner für Favicon)
+# --- ASSETS VORBEREITEN ---
 RUN mkdir -p app/static/js app/static/css app/static/fonts app/static/img
 
 # JS laden
@@ -35,9 +34,8 @@ RUN curl -L -o app/static/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstr
 RUN curl -L -o app/static/css/bootstrap-icons.css https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css
 RUN curl -L -o app/static/fonts/bootstrap-icons.woff2 https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/fonts/bootstrap-icons.woff2
 
-# --- FAVICON LADEN ---
-# Wir laden ein Faultier-Icon
-RUN curl -L -o app/static/img/favicon.png https://www.emoji.family/api/emojis/1f9a5/noto/svg.svg
+# --- FAVICON ---
+COPY icon.png app/static/img/favicon.png
 
 # Berechtigungen
 RUN chmod +x run.sh
