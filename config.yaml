@@ -1,14 +1,11 @@
 name: "TimeSloth"
-version: "0.0.3"
+version: "0.0.4"
 slug: "timesloth"
 description: "Professional Time Tracking for Sloths 🦥"
 url: "https://github.com/StefanZug/timesloth"
-# Wichtig: Kleinschreibung deines Usernamens beachten!
 image: "ghcr.io/stefanzug/timesloth-{arch}"
 arch:
   - aarch64
-  - amd64
-  - armv7
 startup: application
 boot: auto
 init: false
