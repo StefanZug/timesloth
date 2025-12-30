@@ -7,19 +7,18 @@ on:
 
 jobs:
   build:
+    name: "Build Add-on"
     runs-on: "ubuntu-latest"
     permissions:
       contents: read
       packages: write
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Notwendig für ARM64 Build auf GitHub Runnern
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      # Notwendig für Caching & Multi-Platform
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -30,20 +29,21 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # FIX: Repo-Namen erzwingend kleinschreiben (stefanzug statt StefanZug)
       - name: Prepare Tags
         run: |
-          # Wandelt StefanZug/timesloth in stefanzug/timesloth um
           REPO_LOWER="$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')"
           echo "IMAGE_TAG=ghcr.io/${REPO_LOWER}:latest" >> $GITHUB_ENV
-      
-      - name: Build and push
+
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
+          # Nur für Raspberry Pi 5 / 64-bit
           platforms: linux/arm64
-          # Hier setzen wir den Tag einfach direkt:
-          tags: ghcr.io/${{ github.repository }}:latest
-          # Das Caching (das den Build so schnell macht) bleibt aktiv:
+          # Hier nutzen wir jetzt die kleingeschriebene Variable von oben!
+          tags: ${{ env.IMAGE_TAG }}
+          # Caching aktivieren
           cache-from: type=gha
           cache-to: type=gha,mode=max
