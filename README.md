@@ -5,6 +5,9 @@
 
 TimeSloth ist ein spezialisiertes Zeiterfassungstool, optimiert für komplexe Gleitzeit-Modelle mit Home-Office-Quoten, SAP-Integration und strengen "Arzt-Regeln". Es ist als Docker-Container (speziell für Home Assistant Add-ons) konzipiert.
 
+Es dient nur als Hilfe um die vor Ort Anwesenheit (Office Quota) zu kontrollieren und nicht als tatsächliche Zeiterfassung. 
+Es soll kein SAP ablösen oder ersetzen.
+
 ---
 
 ## 🧠 Business Logic & Rechenregeln (WICHTIG FÜR AI)
@@ -35,7 +38,8 @@ Der User kann in den Settings sein Ausmaß einstellen (z.B. 100%, 50%).
 * Alle Berechnungen (Soll, Quoten-Abzug, Saldo) skalieren automatisch anhand dieses Prozentsatzes.
 
 ### 5. Pausen-Automatik
-* Ab **6 Stunden** reiner Arbeitszeit (SAP) werden automatisch **30 Minuten** abgezogen, sofern keine Pause gestempelt wurde.
+* Ab **6,01 Stunden** reiner Arbeitszeit (SAP) werden automatisch **30 Minuten** abgezogen, sofern keine Pause gestempelt wurde.
+* Wenn man genau **6,00 Stunden** arbeitet, wird keine Pause abgezogen.
 
 ---
 
@@ -60,5 +64,5 @@ Der User kann in den Settings sein Ausmaß einstellen (z.B. 100%, 50%).
 * **Dark Mode:** Vollständige Unterstützung mit angepassten Pastell-Farben für Kontrast.
 * **Smart Input:** Unterstützt Eingaben wie `0800`, `8`, `08:00` und sogar Sekunden (werden kaufmännisch gerundet).
 * **Live Prognose:** Zeigt basierend auf dem aktuellen Startzeitpunkt an, wann das Soll (7,7h) und die gesetzliche Höchstgrenze (10h) erreicht sind.
-* **Admin Panel:** Verwaltung von Usern und globalen Feiertagen.
-* 
+* **Admin Panel:** Verwaltung von Usern und globalen Feiertagen. 
+* **Privacy by Design:** Admins können User verwalten, aber keine Zeitbuchungen anderer Personen einsehen.
