@@ -68,11 +68,15 @@
                                 <tr>
                                     <td>{{ log.timestamp.strftime('%d.%m.%y %H:%M') }}</td>
                                     <td>
-                                        {% if 'Windows' in log.user_agent %}<i class="bi bi-microsoft"></i>
-                                        {% elif 'Android' in log.user_agent %}<i class="bi bi-android2"></i>
-                                        {% elif 'Mac' in log.user_agent or 'iPhone' in log.user_agent %}<i class="bi bi-apple"></i>
-                                        {% else %}<i class="bi bi-globe"></i>{% endif %}
-                                        {{ log.user_agent }}
+                                        {% if log.user_agent %}
+                                            {% if 'Windows' in log.user_agent %}<i class="bi bi-microsoft"></i>
+                                            {% elif 'Android' in log.user_agent %}<i class="bi bi-android2"></i>
+                                            {% elif 'Mac' in log.user_agent or 'iPhone' in log.user_agent %}<i class="bi bi-apple"></i>
+                                            {% else %}<i class="bi bi-globe"></i>{% endif %}
+                                            {{ log.user_agent }}
+                                        {% else %}
+                                            <i class="bi bi-question-circle text-muted"></i> <span class="text-muted small">Unbekannt (Alt)</span>
+                                        {% endif %}
                                     </td>
                                     <td class="font-monospace small">{{ log.ip_address }}</td>
                                 </tr>
