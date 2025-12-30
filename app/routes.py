@@ -1,11 +1,23 @@
-from flask import Blueprint, render_template, request, jsonify, current_app
+from flask import Blueprint, render_template, request, jsonify, current_app, flash, redirect, url_for
 from flask_login import login_required, current_user
+from functools import wraps
 from . import db, bcrypt
-from .models import User, Entry, GlobalHoliday
+from .models import User, Entry, GlobalHoliday, LoginLog
 import json
 from datetime import datetime
 
 main = Blueprint('main', __name__)
+
+# Decorator, um Routen für Admins zu schützen
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            flash('Für diese Seite sind Admin-Rechte erforderlich.', 'danger')
+            return redirect(url_for('main.dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 # --- ADMIN BEREICH ---
 
@@ -17,6 +29,21 @@ def admin_panel():
     users = User.query.all()
     holidays = GlobalHoliday.query.order_by(GlobalHoliday.date_str).all()
     return render_template('admin.html', users=users, holidays=holidays)
+
+@main.route('/admin/logs')
+@login_required
+@admin_required
+def admin_logs():
+    page = request.args.get('page', 1, type=int)
+    # Wir holen die Logs mit Pagination und joinen den Usernamen dazu
+    logs_pagination = db.session.query(
+        LoginLog, User.username
+    ).join(
+        User, LoginLog.user_id == User.id
+    ).order_by(
+        LoginLog.timestamp.desc()
+    ).paginate(page=page, per_page=30, error_out=False)
+    return render_template('admin_logs.html', logs_pagination=logs_pagination)
 
 @main.route('/admin/holiday', methods=['POST'])
 @login_required

@@ -1,11 +1,13 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
-from . import db, bcrypt
+# HINWEIS: `limiter` muss in der app/__init__.py initialisiert und hier importiert werden.
+from . import db, bcrypt, limiter
 from .models import User, LoginLog
 
 auth = Blueprint('auth', __name__)
 
 @auth.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10 per minute") # Schutz vor Brute-Force-Attacken
 def login():
     # Wenn schon eingeloggt, direkt zum Dashboard
     if current_user.is_authenticated:
@@ -22,6 +24,12 @@ def login():
         else:
             username = request.form.get('username', '').lower()
             password = request.form.get('password')
+
+        if not username or not password:
+            if request.is_json:
+                return jsonify({"error": "Benutzername und Passwort erforderlich"}), 400
+            flash('Benutzername und Passwort sind erforderlich.', 'danger')
+            return render_template('login.html')
 
         user = User.query.filter_by(username=username).first()
         
@@ -58,6 +66,9 @@ def change_password():
     old_pw = data.get('old_password')
     new_pw = data.get('new_password')
     
+    if not new_pw or len(new_pw) < 8:
+        return jsonify({"error": "Neues Passwort muss mindestens 8 Zeichen lang sein."}), 400
+
     if not bcrypt.check_password_hash(current_user.password_hash, old_pw):
         return jsonify({"error": "Altes Passwort falsch"}), 400
     

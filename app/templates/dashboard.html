@@ -168,9 +168,9 @@
                                 <i class="bi" :class="getTypeIcon(block.type)"></i>
                             </button>
                             <ul class="dropdown-menu shadow">
-                                <li><a class="dropdown-item" @click="changeBlockType(index, 'office')"><i class="bi bi-building me-2 text-success"></i>Büro</a></li>
-                                <li><a class="dropdown-item" @click="changeBlockType(index, 'home')"><i class="bi bi-house me-2 text-info"></i>Home</a></li>
-                                <li><a class="dropdown-item text-danger" @click="changeBlockType(index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</a></li>
+                                <li><a class="dropdown-item" @click="changeBlockType($event, index, 'office')"><i class="bi bi-building me-2 text-success"></i>Büro</a></li>
+                                <li><a class="dropdown-item" @click="changeBlockType($event, index, 'home')"><i class="bi bi-house me-2 text-info"></i>Home</a></li>
+                                <li><a class="dropdown-item text-danger" @click="changeBlockType($event, index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</a></li>
                             </ul>
                         </div>
                         <input type="text" class="form-control text-center p-1 fw-bold" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave">
@@ -539,10 +539,17 @@
                 this.updateListTime(day, field, final);
             },
 
-            changeBlockType(index, newType) {
+            changeBlockType(event, index, newType) {
                 let oldBlock = this.blocks[index];
                 this.blocks.splice(index, 1, { ...oldBlock, type: newType });
                 this.triggerAutoSave();
+
+                // Dropdown nach Auswahl schließen
+                const dropdownToggle = event.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
+                if (dropdownToggle) {
+                    const dropdown = bootstrap.Dropdown.getInstance(dropdownToggle);
+                    if (dropdown) dropdown.hide();
+                }
             },
 
             formatIsoDate(date) {
