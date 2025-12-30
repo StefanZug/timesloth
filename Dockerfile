@@ -1,5 +1,18 @@
+# Diese Argumente werden vom Build-System (GitHub Actions oder HA) bereitgestellt.
 ARG BUILD_FROM
-FROM $BUILD_FROM
+ARG TARGETARCH
+ARG TARGETVARIANT
+
+# Definiere die Basis-Images für jede Architektur als benannte Stufen.
+# Dies ermöglicht es dem Build-Prozess, die richtige Basis auszuwählen.
+FROM ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.19 AS base-amd64
+FROM ghcr.io/home-assistant/aarch64-base-python:3.12-alpine3.19 AS base-arm64
+FROM ghcr.io/home-assistant/armv7-base-python:3.12-alpine3.19 AS base-armv7
+
+# Wähle die richtige Basis:
+# 1. Wenn BUILD_FROM gesetzt ist (HA-Build), verwende es.
+# 2. Ansonsten (GitHub Actions-Build), konstruiere den Stufennamen aus TARGETARCH.
+FROM ${BUILD_FROM:-base-${TARGETARCH}${TARGETVARIANT}}
 
 # 1. Installiere notwendige Pakete
 RUN apk add --no-cache python3 py3-pip curl
