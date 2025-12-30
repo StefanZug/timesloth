@@ -1,5 +1,15 @@
 ARG BUILD_FROM
-FROM $BUILD_FROM
+ARG TARGETARCH
+ARG TARGETVARIANT
+
+# Definiere die Standard-Basis-Images für jede Architektur.
+# Dies wird verwendet, wenn der Build-Prozess (wie dieser GitHub Workflow)
+# die Variable BUILD_FROM nicht explizit setzt.
+ARG BASE_IMAGE_amd64="ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.19"
+ARG BASE_IMAGE_arm64="ghcr.io/home-assistant/aarch64-base-python:3.12-alpine3.19"
+ARG BASE_IMAGE_armv7="ghcr.io/home-assistant/armv7-base-python:3.12-alpine3.19"
+
+FROM ${BUILD_FROM:-${BASE_IMAGE_${TARGETARCH}${TARGETVARIANT}}}
 
 # 1. Installiere notwendige Pakete
 RUN apk add --no-cache python3 py3-pip curl
