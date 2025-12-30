@@ -36,16 +36,27 @@ def login():
         if user and bcrypt.check_password_hash(user.password_hash, password):
             login_user(user, remember=True)
             
-            # Loggen für User-Info
-            log = LoginLog(user_id=user.id, ip_address=request.remote_addr)
+            # --- NEU: ECHTE IP & BROWSER ERKENNUNG ---
+            # 1. IP: Hinter Home Assistant Ingress ist die echte IP im Header
+            if request.headers.getlist("X-Forwarded-For"):
+                real_ip = request.headers.getlist("X-Forwarded-For")[0]
+            else:
+                real_ip = request.remote_addr
+            
+            # 2. Browser/OS: Wir bauen einen schönen String (z.B. "Chrome auf Windows")
+            ua = request.user_agent
+            ua_string = "Unbekannt"
+            if ua.platform and ua.browser:
+                ua_string = f"{ua.browser.capitalize()} auf {ua.platform.capitalize()}"
+            elif ua.string:
+                ua_string = ua.string[:50] # Fallback
+            
+            log = LoginLog(user_id=user.id, ip_address=real_ip, user_agent=ua_string)
             db.session.add(log)
             db.session.commit()
+            # ------------------------------------------
             
             if request.is_json:
-                return jsonify({"status": "success"})
-            return redirect(url_for('main.dashboard'))
-        
-        if request.is_json:
             return jsonify({"error": "Falsche Daten"}), 401
         flash('Login fehlgeschlagen. Prüfe User und Passwort.', 'danger')
         

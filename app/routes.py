@@ -110,6 +110,18 @@ def admin_reset_pw(user_id):
 def dashboard():
     return render_template('dashboard.html', user=current_user)
 
+@main.route('/settings')
+@login_required
+def settings_page():
+    # Logs der letzten 30 Tage laden
+    cutoff = datetime.utcnow() - timedelta(days=30)
+    
+    my_logs = LoginLog.query.filter_by(user_id=current_user.id)\
+        .filter(LoginLog.timestamp >= cutoff)\
+        .order_by(LoginLog.timestamp.desc()).all()
+        
+    return render_template('settings.html', logs=my_logs)
+
 @main.route('/api/get_entries')
 @login_required
 def get_entries():

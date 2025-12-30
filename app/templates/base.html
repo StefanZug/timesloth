@@ -33,11 +33,11 @@
             opacity: 0.8;
         }
 
-        /* Style für Zeiteingabefelder in Tabellen, damit man sie erkennt */
+        /* Style für Zeiteingabefelder in Tabellen */
         tbody td input[type="text"], 
         tbody td input[type="time"] {
             width: 100%;
-            min-width: 60px; /* Verhindert, dass die Spalten zu schmal werden */
+            min-width: 60px;
             background-color: transparent;
             border: 1px solid var(--bs-border-color-translucent);
             border-radius: 4px;
@@ -49,7 +49,7 @@
         tbody td input[type="time"]:focus {
             border-color: var(--sloth-primary);
             outline: 0;
-            box-shadow: 0 0 0 0.2rem rgba(92, 124, 250, 0.25); /* --sloth-primary mit alpha */
+            box-shadow: 0 0 0 0.2rem rgba(92, 124, 250, 0.25);
         }
     </style>
     <script>
@@ -74,12 +74,12 @@
                     <img src="{{ url_for('static', filename='img/favicon.png') }}" alt="User Menu" class="avatar-circle" data-bs-toggle="dropdown" style="cursor: pointer;">
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                         <li><h6 class="dropdown-header">Hallo {{ current_user.username }}</h6></li>
-                        <li><a class="dropdown-item" href="#" onclick="window.openSettings()">⚙️ Einstellungen</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="window.openPwChange()">🔑 PW ändern</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('main.settings_page') }}">⚙️ Einstellungen</a></li>
+                        
                         {% if current_user.is_admin %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{{ url_for('main.admin_panel') }}">🛡️ Admin Panel</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('main.admin_logs') }}">📜 Login Logs</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('main.admin_logs') }}">📜 Login Logs (Global)</a></li>
                         {% endif %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/logout">Logout</a></li>
@@ -107,65 +107,12 @@
         </div>
     </div>
 
-    <div class="modal fade" id="settingsModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title">⚙️ Einstellungen</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="globalSettingsForm">
-                        <div class="mb-4">
-                            <label class="form-label d-flex justify-content-between">
-                                <span>Beschäftigungsausmaß</span>
-                                <span class="fw-bold text-primary" id="lblPercent">100%</span>
-                            </label>
-                            <input type="range" class="form-range" id="rangePercent" min="10" max="100" step="5" value="100">
-                            
-                            <div class="card bg-body-tertiary border-0 mt-3">
-                                <div class="card-body py-2 small text-muted d-flex justify-content-between">
-                                    <span>Wochenstunden:</span>
-                                    <strong id="lblWeekHours">38.50 h</strong>
-                                </div>
-                                <div class="card-body py-2 small text-muted d-flex justify-content-between border-top">
-                                    <span>Täglich (Soll):</span>
-                                    <strong id="lblDayHours">7.70 h</strong>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Speichern</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="pwModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title">🔑 Passwort ändern</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="pwChangeForm">
-                        <input type="password" class="form-control mb-2" id="oldPw" placeholder="Altes Passwort" required>
-                        <input type="password" class="form-control mb-2" id="newPw" placeholder="Neues Passwort" required>
-                        <button type="submit" class="btn btn-warning w-100">Ändern</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
     <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
     <script src="{{ url_for('static', filename='js/axios.js') }}"></script>
     
     <script>
+        // Nur noch Theme-Logik übrig, der Rest ist in settings.html
         const themeBtn = document.getElementById('darkModeBtn');
         if(themeBtn) {
             themeBtn.addEventListener('click', () => {
@@ -175,56 +122,6 @@
                 localStorage.setItem('theme', next);
             });
         }
-
-        // Settings Logik
-        const rangePercent = document.getElementById('rangePercent');
-        const lblPercent = document.getElementById('lblPercent');
-        const lblWeekHours = document.getElementById('lblWeekHours');
-        const lblDayHours = document.getElementById('lblDayHours');
-        const BASE_WEEKLY = 38.5;
-        
-        function updateCalc() {
-            const pct = parseInt(rangePercent.value);
-            lblPercent.textContent = pct + '%';
-            const weekly = (BASE_WEEKLY * (pct / 100));
-            const daily = weekly / 5;
-            lblWeekHours.textContent = weekly.toFixed(2) + ' h';
-            lblDayHours.textContent = daily.toFixed(2) + ' h';
-        }
-
-        if(rangePercent) {
-            rangePercent.addEventListener('input', updateCalc);
-            updateCalc();
-        }
-
-        window.openSettings = function() {
-            new bootstrap.Modal(document.getElementById('settingsModal')).show();
-        };
-        window.openPwChange = function() {
-            new bootstrap.Modal(document.getElementById('pwModal')).show();
-        };
-
-        document.getElementById('globalSettingsForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const pct = parseInt(rangePercent.value);
-            const daily = (BASE_WEEKLY * (pct / 100)) / 5;
-            axios.post('/api/settings', { 
-                sollStunden: daily.toFixed(2),
-                percent: pct
-            }).then(() => location.reload()).catch(err => alert("Fehler beim Speichern"));
-        });
-
-        document.getElementById('pwChangeForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const oldPw = document.getElementById('oldPw').value;
-            const newPw = document.getElementById('newPw').value;
-            axios.post('/change_password', { old_password: oldPw, new_password: newPw })
-                .then(res => {
-                    alert("Passwort geändert!");
-                    bootstrap.Modal.getInstance(document.getElementById('pwModal')).hide();
-                })
-                .catch(err => alert("Fehler: " + (err.response.data.error || "Unbekannt")));
-        });
     </script>
 
     {% block scripts %}{% endblock %}

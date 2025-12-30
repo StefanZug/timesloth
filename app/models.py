@@ -64,3 +64,4 @@ class LoginLog(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     ip_address = db.Column(db.String(50))
+    user_agent = db.Column(db.String(200))

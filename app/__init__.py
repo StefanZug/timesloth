@@ -21,8 +21,14 @@ def create_app():
     app = Flask(__name__)
     
     # Config
+    # Das hier holt den Key aus HA (via run.sh). Der String hinten ist nur Fallback.
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'timesloth_secret_key_change_me')
-    app.config['RATELIMIT_STORAGE_URL'] = os.environ.get('RATELIMIT_STORAGE_URL', 'memory://')
+    
+    # FIX für die Warnung: Flask-Limiter braucht RATELIMIT_STORAGE_URI
+    # Auch hier: Holt die URL aus HA, sonst nimmt er memory://
+    redis_url = os.environ.get('RATELIMIT_STORAGE_URL', 'memory://')
+    app.config['RATELIMIT_STORAGE_URI'] = redis_url
+    app.config['RATELIMIT_STORAGE_URL'] = redis_url
     
     # DB Pfad Logik
     db_folder = os.environ.get('DB_FOLDER', './data')
@@ -59,6 +65,20 @@ def create_app():
     # --- DIE ZERO-TOUCH AUTOMATIK (Sicher für mehrere Worker) ---
     with app.app_context():
         db.create_all()
+        
+        # --- SIMPLE MIGRATION: user_agent Spalte hinzufügen falls fehlt ---
+        from sqlalchemy import text
+        try:
+            with db.engine.connect() as conn:
+                conn.execute(text("SELECT user_agent FROM login_log LIMIT 1"))
+        except Exception:
+            print("⚠️ Migriere DB: Füge 'user_agent' Spalte hinzu...")
+            try:
+                with db.engine.connect() as conn:
+                    conn.execute(text("ALTER TABLE login_log ADD COLUMN user_agent VARCHAR(200)"))
+                    conn.commit()
+            except Exception as e:
+                print(f"Migration Fehler (kann ignoriert werden bei neuer DB): {e}")
         
         # Import hier drin um Zirkelbezug zu vermeiden
         from .models import User
