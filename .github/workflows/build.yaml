@@ -1,4 +1,4 @@
-name: Build and Publish Add-on
+name: Build and Publish PHP Add-on
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # FIX: Repo-Namen erzwingend kleinschreiben (stefanzug statt StefanZug)
+      # DEIN FIX: Repo-Namen erzwingend kleinschreiben
       - name: Prepare Tags
         run: |
           REPO_LOWER="$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')"
@@ -40,10 +40,7 @@ jobs:
         with:
           context: .
           push: true
-          # Nur für Raspberry Pi 5 / 64-bit
           platforms: linux/arm64
-          # Hier nutzen wir jetzt die kleingeschriebene Variable von oben!
           tags: ${{ env.IMAGE_TAG }}
-          # Caching aktivieren
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -5,15 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TimeSloth 🦥</title>
     
-    <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
-    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
+    <link rel="icon" href="/static/img/favicon.png">
+    
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/bootstrap-icons.css" rel="stylesheet">
     
     <style>
+        /* Fix für lokale Fonts ohne Internet */
         @font-face {
             font-family: "bootstrap-icons";
-            src: url("{{ url_for('static', filename='fonts/bootstrap-icons.woff2') }}") format("woff2");
+            src: url("/static/fonts/bootstrap-icons.woff2") format("woff2");
         }
+        
         /* Sloth Theme Colors */
         :root { --sloth-primary: #5c7cfa; }
         body { background-color: var(--bs-body-bg); transition: background-color 0.3s; }
@@ -33,37 +36,39 @@
             opacity: 0.8;
         }
 
-        /* Style für Zeiteingabefelder in Tabellen */
+        /* Input Styling */
         tbody td input[type="text"], 
         tbody td input[type="time"] {
-            width: 100%;
-            min-width: 60px;
+            width: 100%; min-width: 60px;
             background-color: transparent;
             border: 1px solid var(--bs-border-color-translucent);
-            border-radius: 4px;
-            padding: 2px 5px;
-            text-align: center;
+            border-radius: 4px; padding: 2px 5px; text-align: center;
             transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
         }
         tbody td input[type="text"]:focus,
         tbody td input[type="time"]:focus {
-            border-color: var(--sloth-primary);
-            outline: 0;
+            border-color: var(--sloth-primary); outline: 0;
             box-shadow: 0 0 0 0.2rem rgba(92, 124, 250, 0.25);
         }
     </style>
+
+    <script src="/static/js/bootstrap.js"></script>
+    <script src="/static/js/vue.js"></script>
+    <script src="/static/js/axios.js"></script>
+
     <script>
+        // Theme direkt beim Laden setzen, um Flackern zu vermeiden
         const theme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-bs-theme', theme);
     </script>
 </head>
 <body>
     
-    {% if current_user.is_authenticated %}
+    <?php if (isset($_SESSION['user'])): ?>
     <nav class="navbar navbar-expand bg-body-tertiary shadow-sm mb-3 border-bottom sticky-top" style="z-index: 1050;">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold d-flex align-items-center" href="/">
-                <img src="{{ url_for('static', filename='img/favicon.png') }}" alt="TimeSloth Logo" width="30" height="30" class="me-2 rounded-circle">
+                <img src="/static/img/favicon.png" alt="Logo" width="30" height="30" class="me-2 rounded-circle">
                 TimeSloth
             </a>
             
@@ -71,16 +76,19 @@
                 <i class="bi bi-moon-stars-fill" id="darkModeBtn" style="cursor: pointer;"></i>
                 
                 <div class="dropdown">
-                    <img src="{{ url_for('static', filename='img/favicon.png') }}" alt="User Menu" class="avatar-circle" data-bs-toggle="dropdown" style="cursor: pointer;">
+                    <div class="avatar-circle" data-bs-toggle="dropdown" style="cursor: pointer;">
+                        <?= strtoupper(substr($_SESSION['user']['username'], 0, 1)) ?>
+                    </div>
+                    
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                        <li><h6 class="dropdown-header">Hallo {{ current_user.username }}</h6></li>
-                        <li><a class="dropdown-item" href="{{ url_for('main.settings_page') }}">⚙️ Einstellungen</a></li>
+                        <li><h6 class="dropdown-header">Hallo <?= htmlspecialchars($_SESSION['user']['username']) ?></h6></li>
+                        <li><a class="dropdown-item" href="/settings">⚙️ Einstellungen</a></li>
                         
-                        {% if current_user.is_admin %}
+                        <?php if (!empty($_SESSION['user']['is_admin'])): ?>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for('main.admin_panel') }}">🛡️ Admin Panel</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('main.admin_logs') }}">📜 Login Logs (Global)</a></li>
-                        {% endif %}
+                        <li><a class="dropdown-item" href="/admin">🛡️ Admin Panel</a></li>
+                        <?php endif; ?>
+                        
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/logout">Logout</a></li>
                     </ul>
@@ -88,31 +96,34 @@
             </div>
         </div>
     </nav>
-    {% endif %}
+    <?php endif; ?>
 
     <div class="container-fluid p-0" style="max-width: 800px; margin: 0 auto;">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }} m-2 shadow-sm">{{ message }}</div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+        
+        <?php if (isset($_SESSION['flash_error'])): ?>
+            <div class="alert alert-danger m-2 shadow-sm">
+                <?= htmlspecialchars($_SESSION['flash_error']) ?>
+            </div>
+            <?php unset($_SESSION['flash_error']); ?>
+        <?php endif; ?>
 
-        {% block content %}{% endblock %}
+        <?php if (isset($_SESSION['flash_success'])): ?>
+            <div class="alert alert-success m-2 shadow-sm">
+                <?= htmlspecialchars($_SESSION['flash_success']) ?>
+            </div>
+            <?php unset($_SESSION['flash_success']); ?>
+        <?php endif; ?>
+
+        <?= $content ?? '' ?>
         
         <div class="footer-sarcasm">
-            TimeSloth Inc. &copy; 2025 - Wir speichern Daten, meistens.<br>
+            TimeSloth Inc. &copy; <?= date('Y') ?> - Wir speichern Daten, meistens.<br>
             Keine Haftung für verpasste SAP-Einträge, Eheprobleme oder Burnout.
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/axios.js') }}"></script>
-    
     <script>
-        // Nur noch Theme-Logik übrig, der Rest ist in settings.html
+        // Dark Mode Toggle Logik
         const themeBtn = document.getElementById('darkModeBtn');
         if(themeBtn) {
             themeBtn.addEventListener('click', () => {
@@ -123,7 +134,5 @@
             });
         }
     </script>
-
-    {% block scripts %}{% endblock %}
 </body>
 </html>

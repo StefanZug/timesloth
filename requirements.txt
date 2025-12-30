@@ -1,8 +1,0 @@
-Flask
-Flask-SQLAlchemy
-Flask-Login
-Flask-Bcrypt
-Flask-Limiter
-Flask-Migrate
-gunicorn
-redis

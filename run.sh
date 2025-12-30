@@ -3,25 +3,26 @@ set -e
 
 CONFIG_PATH=/data/options.json
 
-if ! command -v jq &> /dev/null
-then
-    echo "jq nicht gefunden, installiere es..."
-    apk add --no-cache jq
+# Config aus HA lesen (falls vorhanden)
+if [ -f "$CONFIG_PATH" ]; then
+    export DB_FOLDER=$(jq --raw-output '.db_folder // "/data"' $CONFIG_PATH)
+else
+    export DB_FOLDER="/data"
 fi
 
-export SECRET_KEY=$(jq --raw-output '.secret_key' $CONFIG_PATH)
-export DB_FOLDER=$(jq --raw-output '.db_folder' $CONFIG_PATH)
+# Sicherstellen, dass DB Ordner existiert
+mkdir -p "$DB_FOLDER"
+echo "🦥 TimeSloth (PHP Edition) startet..."
+echo "📂 Datenbank Pfad: $DB_FOLDER/timesloth.sqlite"
 
-# FIX: Wir lesen nicht mehr aus der Config, sondern erzwingen Memory
-export RATELIMIT_STORAGE_URL="memory://"
+# PHP-FPM konfigurieren (User www-data -> root oder anpassen für HA Container)
+# Im HA Container laufen wir oft als root, PHP-FPM meckert da standardmäßig.
+# Wir erlauben root execution für simplify.
+sed -i 's/user = nobody/user = root/g' /etc/php83/php-fpm.d/www.conf
+sed -i 's/group = nobody/group = root/g' /etc/php83/php-fpm.d/www.conf
 
-# --- Sicherheits-Check ---
-if [ "$SECRET_KEY" == "CHANGE_ME_IN_ADDON_CONFIG" ]; then
-    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    echo "!! ACHTUNG: Bitte setze einen sicheren 'secret_key'!        !!"
-    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    exit 1
-fi
+# PHP-FPM im Hintergrund starten
+php-fpm83 -D
 
-echo "🦥 TimeSloth startet..."
-exec gunicorn --bind 0.0.0.0:8080 --workers 4 --threads 2 "app:create_app()"
+# Nginx im Vordergrund starten
+nginx -g "daemon off;"

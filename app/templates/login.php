@@ -1,6 +1,3 @@
-{% extends "base.html" %}
-
-{% block content %}
 <div class="d-flex align-items-center justify-content-center" style="min-height: 70vh;">
     <div class="card shadow border-0 p-4" style="width: 100%; max-width: 350px;">
         <div class="text-center mb-4">
@@ -23,4 +20,3 @@
         </form>
     </div>
 </div>
-{% endblock %}
