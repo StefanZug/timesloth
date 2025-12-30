@@ -5,3 +5,4 @@ Flask-Bcrypt
 Flask-Limiter
 Flask-Migrate
 gunicorn
+redis

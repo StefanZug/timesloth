@@ -6,6 +6,7 @@ from flask_login import LoginManager
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from sqlalchemy.exc import IntegrityError
+from datetime import timedelta
 
 # Globale Instanzen
 db = SQLAlchemy()
@@ -21,6 +22,7 @@ def create_app():
     
     # Config
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'timesloth_secret_key_change_me')
+    app.config['RATELIMIT_STORAGE_URL'] = os.environ.get('RATELIMIT_STORAGE_URL', 'memory://')
     
     # DB Pfad Logik
     db_folder = os.environ.get('DB_FOLDER', './data')

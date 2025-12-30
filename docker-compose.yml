@@ -12,4 +12,12 @@ services:
       - PYTHONUNBUFFERED=1
       - DB_FOLDER=/data
       - SECRET_KEY=lokaler_test_key
+      - RATELIMIT_STORAGE_URL=redis://redis:6379/0
+    restart: unless-stopped
+    depends_on:
+      - redis
+
+  redis:
+    image: "redis:alpine"
+    container_name: timesloth_redis_dev
     restart: unless-stopped

@@ -175,3 +175,21 @@ def save_settings():
         current_user.set_setting(key, val)
     db.session.commit()
     return jsonify({"status": "Settings Saved"})
+
+@main.route('/api/reset_month', methods=['POST'])
+@login_required
+def reset_month():
+    data = request.get_json()
+    month = data.get('month') # Erwartet YYYY-MM
+
+    if not month or len(month) != 7:
+        return jsonify({"error": "Ungültiges Monatsformat"}), 400
+
+    # Finde und lösche alle Einträge des Users für diesen Monat
+    entries_to_delete = Entry.query.filter_by(user_id=current_user.id).filter(Entry.date_str.like(f"{month}%")).all()
+    
+    for entry in entries_to_delete:
+        db.session.delete(entry)
+    db.session.commit()
+    
+    return jsonify({"status": "success", "message": f"{len(entries_to_delete)} Einträge gelöscht."})
