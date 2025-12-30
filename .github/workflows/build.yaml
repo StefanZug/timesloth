@@ -14,7 +14,10 @@ jobs:
         uses: "actions/checkout@v4"
 
       - name: "Build the add-on"
-        uses: "home-assistant/builder@master"
+        # Wir pinnen auf eine spezifische Version des Builders, da die 'master'-Version
+        # veraltet ist und die Caching/GitHub-Token-Funktionen entfernt wurden.
+        # Diese Version ist die letzte, die diese Funktionen unterstützt hat.
+        uses: "home-assistant/builder@a5d7e6a9870f209633857e3f8981665a0852026d"
         with:
           # Baut alle in config.yaml definierten Architekturen
           args: |
