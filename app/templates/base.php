@@ -9,55 +9,13 @@
     
     <link href="/static/css/bootstrap.css" rel="stylesheet">
     <link href="/static/css/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/custom.css" rel="stylesheet">
     
-    <style>
-        /* Fix für lokale Fonts ohne Internet */
-        @font-face {
-            font-family: "bootstrap-icons";
-            src: url("/static/fonts/bootstrap-icons.woff2") format("woff2");
-        }
-        
-        /* Sloth Theme Colors */
-        :root { --sloth-primary: #5c7cfa; }
-        body { background-color: var(--bs-body-bg); transition: background-color 0.3s; }
-        
-        .avatar-circle {
-            width: 35px; height: 35px; border-radius: 50%;
-            background-color: var(--sloth-primary); color: white;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 1.1rem;
-        }
-        .footer-sarcasm { 
-            font-size: 0.75rem; 
-            color: #888; 
-            text-align: center; 
-            margin-top: 50px; 
-            padding-bottom: 30px; 
-            opacity: 0.8;
-        }
-
-        /* Input Styling */
-        tbody td input[type="text"], 
-        tbody td input[type="time"] {
-            width: 100%; min-width: 60px;
-            background-color: transparent;
-            border: 1px solid var(--bs-border-color-translucent);
-            border-radius: 4px; padding: 2px 5px; text-align: center;
-            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
-        }
-        tbody td input[type="text"]:focus,
-        tbody td input[type="time"]:focus {
-            border-color: var(--sloth-primary); outline: 0;
-            box-shadow: 0 0 0 0.2rem rgba(92, 124, 250, 0.25);
-        }
-    </style>
-
     <script src="/static/js/bootstrap.js"></script>
     <script src="/static/js/vue.js"></script>
     <script src="/static/js/axios.js"></script>
 
     <script>
-        // Theme direkt beim Laden setzen, um Flackern zu vermeiden
         const theme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-bs-theme', theme);
     </script>
@@ -123,7 +81,6 @@
     </div>
 
     <script>
-        // Dark Mode Toggle Logik
         const themeBtn = document.getElementById('darkModeBtn');
         if(themeBtn) {
             themeBtn.addEventListener('click', () => {

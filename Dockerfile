@@ -1,6 +1,6 @@
 FROM ghcr.io/home-assistant/aarch64-base:3.21
 
-# Pakete installieren: Nginx, PHP8.4 und Extensions
+# Pakete installieren
 RUN apk add --no-cache \
     nginx \
     php84 \
@@ -17,10 +17,14 @@ RUN apk add --no-cache \
     curl \
     jq
 
-# Verlinkung erstellen
+# PHP Verlinkung
 RUN ln -sf /usr/bin/php84 /usr/bin/php
 
-# Assets (Vue, Bootstrap) laden
+# LOGGING FIX: Nginx Logs auf stdout/stderr umleiten für Home Assistant
+RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
+    ln -sf /dev/stderr /var/log/nginx/error.log
+
+# Assets laden
 RUN mkdir -p /app/public/static/js /app/public/static/css /app/public/static/fonts /app/public/static/img && \
     curl -L -o /app/public/static/js/vue.js https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js && \
     curl -L -o /app/public/static/js/axios.js https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js && \
