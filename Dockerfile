@@ -1,21 +1,24 @@
-# KORREKTUR: Der Name ist "aarch64-base" (das ist bereits Alpine basierend)
-# Wir nutzen den Tag :3.19 für Stabilität (oder :latest)
-FROM ghcr.io/home-assistant/aarch64-base:3.19
+# Wir nutzen explizit das 3.21 Image (das beinhaltet Alpine 3.21)
+FROM ghcr.io/home-assistant/aarch64-base:3.21
 
-# Pakete installieren: Nginx, PHP8.3 und notwendige Extensions
-# Hinweis: In den HA Base Images sind oft schon viele Tools drin, 
-# aber wir stellen sicher, dass wir alles haben.
+# Pakete installieren: Nginx, PHP8.4 und Extensions
+# Hinweis: Wir nutzen 'php84' Pakete.
 RUN apk add --no-cache \
     nginx \
-    php83 \
-    php83-fpm \
-    php83-sqlite3 \
-    php83-session \
-    php83-json \
-    php83-ctype \
-    php83-openssl \
+    php84 \
+    php84-fpm \
+    php84-sqlite3 \
+    php84-session \
+    php84-json \
+    php84-ctype \
+    php84-openssl \
+    php84-curl \
+    php84-mbstring \
     curl \
     jq
+
+# Verlinkung erstellen, damit 'php' Befehl funktioniert (optional, aber praktisch)
+RUN ln -sf /usr/bin/php84 /usr/bin/php
 
 # Assets (Vue, Bootstrap) laden
 RUN mkdir -p /app/public/static/js /app/public/static/css /app/public/static/fonts /app/public/static/img && \
@@ -26,8 +29,7 @@ RUN mkdir -p /app/public/static/js /app/public/static/css /app/public/static/fon
     curl -L -o /app/public/static/css/bootstrap-icons.css https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css && \
     curl -L -o /app/public/static/fonts/bootstrap-icons.woff2 https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/fonts/bootstrap-icons.woff2
 
-# Nginx Config für PHP Weiterleitung erstellen
-# Wir nutzen default.conf in /etc/nginx/http.d/ (Standard in Alpine)
+# Nginx Config
 RUN echo 'server { \
     listen 8080 default_server; \
     root /app/public; \
@@ -40,14 +42,11 @@ RUN echo 'server { \
     } \
 }' > /etc/nginx/http.d/default.conf
 
-# App Code kopieren
+# Code kopieren
 COPY app /app
 COPY icon.png /app/public/static/img/favicon.png
 COPY run.sh /run.sh
-
 RUN chmod +x /run.sh
 
-# Arbeitsverzeichnis
 WORKDIR /app
-
 CMD [ "/run.sh" ]

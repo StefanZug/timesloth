@@ -3,7 +3,7 @@ set -e
 
 CONFIG_PATH=/data/options.json
 
-# Config aus HA lesen (falls vorhanden)
+# Config aus HA lesen
 if [ -f "$CONFIG_PATH" ]; then
     export DB_FOLDER=$(jq --raw-output '.db_folder // "/data"' $CONFIG_PATH)
 else
@@ -12,17 +12,22 @@ fi
 
 # Sicherstellen, dass DB Ordner existiert
 mkdir -p "$DB_FOLDER"
-echo "🦥 TimeSloth (PHP Edition) startet..."
+
+# Rechte anpassen (User 'nobody' für PHP)
+echo "🔧 Setze Berechtigungen für $DB_FOLDER..."
+chown -R nobody:nobody "$DB_FOLDER"
+
+echo "🦥 TimeSloth (PHP 8.4 Edition) startet..."
 echo "📂 Datenbank Pfad: $DB_FOLDER/timesloth.sqlite"
 
-# PHP-FPM konfigurieren (User www-data -> root oder anpassen für HA Container)
-# Im HA Container laufen wir oft als root, PHP-FPM meckert da standardmäßig.
-# Wir erlauben root execution für simplify.
-sed -i 's/user = nobody/user = root/g' /etc/php83/php-fpm.d/www.conf
-sed -i 's/group = nobody/group = root/g' /etc/php83/php-fpm.d/www.conf
+# PHP-FPM 8.4 konfigurieren
+# Pfad ist jetzt /etc/php84/...
+# Wir setzen User auf nobody (Standard), stellen aber sicher, dass es explizit drin steht
+sed -i 's/user = nobody/user = nobody/g' /etc/php84/php-fpm.d/www.conf
+sed -i 's/group = nobody/group = nobody/g' /etc/php84/php-fpm.d/www.conf
 
-# PHP-FPM im Hintergrund starten
-php-fpm83 -D
+# PHP-FPM 8.4 starten
+php-fpm84 -D
 
-# Nginx im Vordergrund starten
+# Nginx starten
 nginx -g "daemon off;"
