@@ -1,16 +1,15 @@
 name: "TimeSloth"
-version: "0.0.20.5"
+version: "0.0.20.6" 
 slug: "timesloth"
 description: "Professional Time Tracking for Sloths."
 arch:
-  - armv7
   - aarch64
-  - amd64
 init: false
 options:
   secret_key: "CHANGE_ME_IN_ADDON_CONFIG"
   db_folder: "/data"
-  redis_url: "redis://core-redis:6379/0"
+  # HIER DIE ÄNDERUNG: memory:// statt redis://...
+  redis_url: "memory://"
 schema:
   secret_key: "password"
   db_folder: "str"

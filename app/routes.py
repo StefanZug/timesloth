@@ -4,7 +4,7 @@ from functools import wraps
 from . import db, bcrypt
 from .models import User, Entry, GlobalHoliday, LoginLog
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 main = Blueprint('main', __name__)
 

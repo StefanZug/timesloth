@@ -7,23 +7,20 @@ on:
 
 jobs:
   build:
-    name: "Build Add-on"
     runs-on: "ubuntu-latest"
     permissions:
-      # Notwendig, um den Code auszuchecken
       contents: read
-      # Notwendig, um das Docker-Image nach ghcr.io zu pushen
       packages: write
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
+      # Notwendig für ARM64 Build auf GitHub Runnern
       - name: Set up QEMU
-        # Notwendig, um Images für andere Architekturen (ARM) auf einem x86-Runner zu bauen
         uses: docker/setup-qemu-action@v3
 
+      # Notwendig für Caching & Multi-Platform
       - name: Set up Docker Buildx
-        # Richtet eine erweiterte Build-Umgebung ein
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GitHub Container Registry
@@ -33,24 +30,14 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=ref,event=branch
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push Docker image
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          # Definiert die in config.yaml festgelegten Architekturen
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          # --- HIER PASSIERT DIE CACHING-MAGIE ---
+          platforms: linux/arm64
+          # Hier setzen wir den Tag einfach direkt:
+          tags: ghcr.io/${{ github.repository }}:latest
+          # Das Caching (das den Build so schnell macht) bleibt aktiv:
           cache-from: type=gha
           cache-to: type=gha,mode=max
