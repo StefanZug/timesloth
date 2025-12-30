@@ -1,7 +1,10 @@
-# Wir nutzen das offizielle HA Alpine Base Image (leicht & sicher)
-FROM ghcr.io/home-assistant/aarch64-base-alpine:3.19
+# KORREKTUR: Der Name ist "aarch64-base" (das ist bereits Alpine basierend)
+# Wir nutzen den Tag :3.19 für Stabilität (oder :latest)
+FROM ghcr.io/home-assistant/aarch64-base:3.19
 
 # Pakete installieren: Nginx, PHP8.3 und notwendige Extensions
+# Hinweis: In den HA Base Images sind oft schon viele Tools drin, 
+# aber wir stellen sicher, dass wir alles haben.
 RUN apk add --no-cache \
     nginx \
     php83 \
@@ -14,7 +17,7 @@ RUN apk add --no-cache \
     curl \
     jq
 
-# Assets (Vue, Bootstrap) laden - wie vorher, damit UI stabil bleibt
+# Assets (Vue, Bootstrap) laden
 RUN mkdir -p /app/public/static/js /app/public/static/css /app/public/static/fonts /app/public/static/img && \
     curl -L -o /app/public/static/js/vue.js https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js && \
     curl -L -o /app/public/static/js/axios.js https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js && \
@@ -23,8 +26,8 @@ RUN mkdir -p /app/public/static/js /app/public/static/css /app/public/static/fon
     curl -L -o /app/public/static/css/bootstrap-icons.css https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css && \
     curl -L -o /app/public/static/fonts/bootstrap-icons.woff2 https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/fonts/bootstrap-icons.woff2
 
-# Konfigurationen vorbereiten
 # Nginx Config für PHP Weiterleitung erstellen
+# Wir nutzen default.conf in /etc/nginx/http.d/ (Standard in Alpine)
 RUN echo 'server { \
     listen 8080 default_server; \
     root /app/public; \
