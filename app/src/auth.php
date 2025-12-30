@@ -14,16 +14,24 @@ function handle_login() {
 
     if ($user && password_verify($password, $user['password_hash'])) {
         $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user'] = $user; // User Daten cachen
+        $_SESSION['user'] = $user;
         
-        // Log schreiben
+        // Logging
         $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'];
         $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'Unbekannt';
+        
+        // DB Log
         $stmtLog = $db->prepare("INSERT INTO login_log (user_id, ip_address, user_agent) VALUES (?, ?, ?)");
         $stmtLog->execute([$user['id'], $ip, $ua]);
         
+        // HA Console Log
+        error_log("✅ LOGIN SUCCESS: User '{$user['username']}' from {$ip}");
+        
         header('Location: /');
     } else {
+        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'];
+        error_log("❌ LOGIN FAILED: User '{$username}' from {$ip}");
+        
         $_SESSION['flash_error'] = "Login fehlgeschlagen.";
         header('Location: /login');
     }
@@ -41,7 +49,6 @@ function api_change_password() {
     $data = json_decode(file_get_contents('php://input'), true);
     $db = get_db();
     
-    // Altes PW prüfen
     $stmt = $db->prepare("SELECT password_hash FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $currentHash = $stmt->fetchColumn();
@@ -54,6 +61,7 @@ function api_change_password() {
     $stmt = $db->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
     $stmt->execute([$newHash, $_SESSION['user_id']]);
     
+    error_log("🔑 PASSWORD CHANGED: User ID {$_SESSION['user_id']}");
     echo json_encode(["status" => "success"]);
 }
 

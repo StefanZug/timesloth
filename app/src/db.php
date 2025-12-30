@@ -8,8 +8,9 @@ function get_db() {
         $dsn = 'sqlite:' . DB_PATH;
         $pdo = new PDO($dsn);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC); // Wichtig für saubere Arrays
         
-        // Tabellen erstellen (Auto-Migration)
+        // Users
         $pdo->exec("CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
@@ -18,6 +19,7 @@ function get_db() {
             settings TEXT DEFAULT '{}'
         )");
         
+        // Entries
         $pdo->exec("CREATE TABLE IF NOT EXISTS entries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
@@ -28,6 +30,7 @@ function get_db() {
             UNIQUE(user_id, date_str)
         )");
         
+        // Logs
         $pdo->exec("CREATE TABLE IF NOT EXISTS login_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
@@ -36,7 +39,14 @@ function get_db() {
             user_agent TEXT
         )");
 
-        // Admin erstellen
+        // FEHLTE VORHER: Global Holidays
+        $pdo->exec("CREATE TABLE IF NOT EXISTS global_holidays (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date_str TEXT UNIQUE,
+            name TEXT
+        )");
+
+        // Admin erstellen falls nötig
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = 'admin'");
         $stmt->execute();
         if ($stmt->fetchColumn() == 0) {

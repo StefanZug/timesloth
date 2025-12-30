@@ -1,6 +1,5 @@
 <?php
 session_start();
-// Fehler anzeigen im Addon Log (nützlich für Debugging)
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
@@ -28,7 +27,20 @@ if (str_starts_with($uri, '/api/')) {
     exit;
 }
 
-// --- AUTH ---
+// --- ADMIN API ---
+if (str_starts_with($uri, '/admin/')) {
+    if (!is_logged_in()) { http_response_code(401); exit; }
+    
+    // Einfaches Routing für Admin Actions
+    if ($method === 'POST' && $uri === '/admin/create_user') { api_admin_create_user(); exit; }
+    if ($method === 'POST' && $uri === '/admin/holiday') { api_admin_add_holiday(); exit; }
+    
+    // DELETE Handling (/admin/delete_user/123)
+    if (preg_match('#^/admin/delete_user/(\d+)$#', $uri, $m)) { api_admin_delete_user($m[1]); exit; }
+    if (preg_match('#^/admin/holiday/(\d+)$#', $uri, $m) && $method === 'DELETE') { api_admin_delete_holiday($m[1]); exit; }
+}
+
+// --- AUTH PAGES ---
 if ($uri === '/login') {
     if ($method === 'POST') { handle_login(); }
     else { render_view('login', ['hide_nav' => true]); }
@@ -37,7 +49,7 @@ if ($uri === '/login') {
 if ($uri === '/logout') { logout(); exit; }
 if ($uri === '/change_password' && $method === 'POST') { api_change_password(); exit; }
 
-// --- PAGES (HTML) ---
+// --- APP PAGES ---
 if (!is_logged_in()) { header('Location: /login'); exit; }
 
 if ($uri === '/' || $uri === '/dashboard') {
@@ -45,15 +57,19 @@ if ($uri === '/' || $uri === '/dashboard') {
 } elseif ($uri === '/settings') {
     $logs = get_login_logs($_SESSION['user']['id']);
     render_view('settings', ['user' => $_SESSION['user'], 'logs' => $logs]);
-} elseif (str_starts_with($uri, '/admin')) {
+} elseif ($uri === '/admin') {
+    // Admin Check
     if(!($_SESSION['user']['is_admin'] ?? false)) { header('Location: /'); exit; }
-    // Hier können wir später admin logic einbauen
-    echo "Admin Bereich - Coming Soon"; 
+    
+    $db = get_db();
+    $users = $db->query("SELECT * FROM users ORDER BY username")->fetchAll();
+    $holidays = $db->query("SELECT * FROM global_holidays ORDER BY date_str")->fetchAll();
+    
+    render_view('admin', ['user' => $_SESSION['user'], 'users' => $users, 'holidays' => $holidays]);
 } else {
     header('Location: /');
 }
 
-// Hilfsfunktion: Rendert Template in base.php Layout
 function render_view($template, $data = []) {
     extract($data);
     ob_start();
