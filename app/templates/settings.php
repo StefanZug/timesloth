@@ -52,7 +52,7 @@
                 <div class="card-body p-0">
                     <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                         <table class="table table-striped table-hover mb-0 align-middle" style="font-size: 0.9rem;">
-                            <thead class="table-light sticky-top">
+                            <thead class="sticky-top border-bottom">
                                 <tr>
                                     <th>Zeitpunkt</th>
                                     <th>Gerät / Browser</th>

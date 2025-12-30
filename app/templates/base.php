@@ -16,9 +16,18 @@
     <script src="/static/js/axios.js"></script>
 
     <script>
-        const theme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-bs-theme', theme);
-    </script>
+    let theme = localStorage.getItem('theme');
+    
+    if (!theme) {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            theme = 'dark';
+        } else {
+            theme = 'light';
+        }
+    }
+    
+    document.documentElement.setAttribute('data-bs-theme', theme);
+</script>
 </head>
 <body>
     
