@@ -766,6 +766,19 @@
                     this.dayStatus = isHol ? 'F' : null;
                 }
             }
+
+            async resetMonth() {
+                if(!confirm("Möchtest du wirklich alle Einträge für diesen Monat löschen?")) return;
+                
+                try {
+                    await axios.post('/api/reset_month', { month: this.isoMonth });
+                    // Daten neu laden, damit die Tabelle leer wird
+                    this.loadMonthData();
+                } catch(e) {
+                    console.error(e);
+                    alert("Fehler beim Zurücksetzen: " + (e.response?.data?.error || "Unbekannt"));
+                }
+            }
         },
         mounted() {
             this.loadMonthData();
