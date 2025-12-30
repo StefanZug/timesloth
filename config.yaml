@@ -1,5 +1,5 @@
 name: "TimeSloth"
-version: "0.0.20.6" 
+version: "0.0.20.7"
 slug: "timesloth"
 description: "Professional Time Tracking for Sloths."
 arch:
@@ -8,13 +8,9 @@ init: false
 options:
   secret_key: "CHANGE_ME_IN_ADDON_CONFIG"
   db_folder: "/data"
-  # HIER DIE ÄNDERUNG: memory:// statt redis://...
-  redis_url: "memory://"
 schema:
   secret_key: "password"
   db_folder: "str"
-  redis_url: "str"
-webui: "http://[HOST]:[PORT:8080]"
 ports:
   8080/tcp: 8080
 ports_description:
