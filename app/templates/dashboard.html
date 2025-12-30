@@ -767,26 +767,6 @@
                 }
             }
         },
-        async resetMonth() {
-            const sarcasticMessage = "Bist du sicher, dass du alle Einträge für dieses Monat löschen willst? Das ist wie ein Mini-Urknall für deine Arbeitszeit. Es gibt kein Zurück, außer du hast eine Zeitmaschine (hast du?).";
-            if(this.saveTimer) clearTimeout(this.saveTimer);
-            this.saveState = 'idle';
-
-            if (confirm(sarcasticMessage)) {
-                this.saveState = 'saving';
-                try {
-                    await axios.post('/api/reset_month', { month: this.isoMonth });
-                    // Lade die Monatsdaten neu, um die leere Ansicht zu zeigen
-                    await this.loadMonthData();
-                    this.saveState = 'saved';
-                    setTimeout(() => { if(this.saveState === 'saved') this.saveState = 'idle'; }, 2000);
-                } catch (e) {
-                    console.error("Fehler beim Zurücksetzen des Monats", e);
-                    alert("Oh nein, das Universum wehrt sich! Zurücksetzen fehlgeschlagen.");
-                    this.saveState = 'idle';
-                }
-            }
-        },
         mounted() {
             this.loadMonthData();
         }
