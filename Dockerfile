@@ -1,12 +1,12 @@
-# Wir nutzen explizit das 3.21 Image (das beinhaltet Alpine 3.21)
 FROM ghcr.io/home-assistant/aarch64-base:3.21
 
 # Pakete installieren: Nginx, PHP8.4 und Extensions
-# Hinweis: Wir nutzen 'php84' Pakete.
 RUN apk add --no-cache \
     nginx \
     php84 \
     php84-fpm \
+    php84-pdo \
+    php84-pdo_sqlite \
     php84-sqlite3 \
     php84-session \
     php84-json \
@@ -17,7 +17,7 @@ RUN apk add --no-cache \
     curl \
     jq
 
-# Verlinkung erstellen, damit 'php' Befehl funktioniert (optional, aber praktisch)
+# Verlinkung erstellen
 RUN ln -sf /usr/bin/php84 /usr/bin/php
 
 # Assets (Vue, Bootstrap) laden
@@ -42,7 +42,6 @@ RUN echo 'server { \
     } \
 }' > /etc/nginx/http.d/default.conf
 
-# Code kopieren
 COPY app /app
 COPY icon.png /app/public/static/img/favicon.png
 COPY run.sh /run.sh
