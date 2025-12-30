@@ -57,7 +57,7 @@ def login():
             # ------------------------------------------
             
             if request.is_json:
-            return jsonify({"error": "Falsche Daten"}), 401
+                return jsonify({"error": "Falsche Daten"}), 401
         flash('Login fehlgeschlagen. Prüfe User und Passwort.', 'danger')
         
     # WICHTIG: Diese Zeile muss AUßERHALB des 'if POST' Blocks stehen!
