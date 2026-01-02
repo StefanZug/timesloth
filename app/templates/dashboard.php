@@ -274,6 +274,7 @@
                     arztStart: 480, arztEnde: 972,
                     pcScroll: true,
                     useNativeWheel: false
+                    correction: 0
                 }, userSettingsRaw),
                 // Calculator Data
                 calc: {
@@ -363,13 +364,14 @@
                 return { target: this.minToString(finish), max: this.minToString(maxTime) };
             },
             quota() {
-                 let officeMinSum = 0;
+                let officeMinSum = 0;
                 let deductionTotal = 0;
                 let dynamicTarget = 0;
                 let y = this.currentDateObj.getFullYear();
                 let m = this.currentDateObj.getMonth();
                 let daysInMonth = new Date(y, m + 1, 0).getDate();
 
+                // 1. Grund-Ziel berechnen (basierend auf Wochentagen)
                 for(let d=1; d<=daysInMonth; d++) {
                     let tempDate = new Date(y, m, d);
                     let wd = tempDate.getDay();
@@ -379,6 +381,7 @@
                     }
                 }
                 
+                // 2. Abwesenheiten & Ist-Stunden sammeln
                 let allDays = new Set();
                 this.entriesCache.forEach(e => allDays.add(e.date));
                 for(let k in this.holidaysMap) if(k.startsWith(this.isoMonth)) allDays.add(k);
@@ -405,9 +408,17 @@
                     }
                 });
 
+                // 3. Manuelle Korrektur anwenden (NEU)
+                let correctionHours = parseFloat(this.settings.correction || 0);
+                let correctionQuota = correctionHours * 0.40;
+                
+                // Korrektur auf das Ziel addieren (z.B. -1.5h Korrektur senkt das Ziel)
+                dynamicTarget += correctionQuota; 
+
                 let targetAdjusted = Math.max(0, dynamicTarget - deductionTotal);
                 let currentHours = officeMinSum / 60;
                 let percent = targetAdjusted > 0 ? (currentHours / targetAdjusted) * 100 : 100;
+                
                 return {
                     current: currentHours.toFixed(2),
                     target: targetAdjusted.toFixed(2),
@@ -505,25 +516,57 @@
                 this.triggerAutoSave();
             },
 
-            // --- Ab hier die neuen Methoden von vorhin ---
             onWheel(event, block, field, day = null) {
                 if (!this.settings.pcScroll) return;
-
                 if(!block[field]) return;
+
+                // 1. Cursor Position ermitteln
+                // Dafür brauchen wir das Input Element. Event.target ist das Input.
+                const input = event.target;
+                const cursor = input.selectionStart;
                 
-                const step = event.shiftKey ? 1 : 60; 
+                // Standard: Minuten ändern
+                let step = 60; 
+                
+                // Logik: Wo ist der Cursor?
+                // Format: HH:MM oder HH:MM:SS
+                // 01234567
+                if (cursor !== null) {
+                    if (cursor <= 2) {
+                        step = 3600; // Stunden (3600 sek)
+                    } else if (cursor >= 3 && cursor <= 5) {
+                        step = 60;   // Minuten
+                    } else if (cursor >= 6) {
+                        step = 1;    // Sekunden
+                    }
+                }
+
+                // Shift erzwingt Sekunden (Override)
+                if (event.shiftKey) step = 1;
+
                 const direction = event.deltaY < 0 ? 1 : -1;
                 
                 let currentSec = this.toSeconds(block[field]);
                 if(currentSec === 0 && !block[field]) currentSec = 8 * 3600;
 
                 let newSec = currentSec + (step * direction);
+                
+                // Überlauf behandeln
                 if(newSec < 0) newSec = (24 * 3600) + newSec;
                 if(newSec >= 24 * 3600) newSec = newSec - (24 * 3600);
 
                 const showSeconds = (block.type !== 'home'); 
                 block[field] = this.secondsToString(newSec, showSeconds);
                 
+                // WICHTIG: Cursor Position und Fokus behalten!
+                // Vue rendert neu, Cursor springt sonst ans Ende.
+                // Wir nutzen nextTick (oder setTimeout), um Cursor zurückzusetzen.
+                setTimeout(() => {
+                    if(document.activeElement === input) {
+                        input.setSelectionRange(cursor, cursor);
+                    }
+                }, 0);
+
                 if (day) {
                     this.triggerListSave(day);
                 } else {

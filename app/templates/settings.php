@@ -11,48 +11,61 @@
                 <div class="card-header bg-transparent fw-bold">⏱️ Arbeitszeit & Verhalten</div>
                 <div class="card-body">
                     <form id="globalSettingsForm">
-                        <label class="form-label d-flex justify-content-between mb-2">
-                            <span>Beschäftigungsausmaß</span>
-                            <span class="fw-bold text-primary" id="lblPercent">100%</span>
-                        </label>
-                        <input type="range" class="form-range mb-4" id="rangePercent" min="10" max="100" step="5" value="100">
                         
-                        <div class="form-check form-switch mb-3 p-3 bg-body-tertiary rounded border">
-                            <input class="form-check-input" type="checkbox" id="sapModeToggle">
-                            <label class="form-check-label fw-bold" for="sapModeToggle">SAP-Modus (Kurzer Freitag)</label>
-                            <div class="form-text small mt-1">
-                                Berechnet Mo-Do länger (8h) und Fr kürzer (6.5h), um exakt mit SAP übereinzustimmen.
+                        <div class="settings-box">
+                            <h6>Basisdaten</h6>
+                            <label class="form-label d-flex justify-content-between mb-2">
+                                <span>Beschäftigungsausmaß</span>
+                                <span class="fw-bold text-primary" id="lblPercent">100%</span>
+                            </label>
+                            <input type="range" class="form-range mb-3" id="rangePercent" min="10" max="100" step="5" value="100">
+
+                            <div class="small text-muted d-flex justify-content-between border-top pt-2">
+                                <span>Wochenstunden (100%):</span><strong id="lblWeekHours">38.50 h</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-box">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="sapModeToggle">
+                                <label class="form-check-label fw-bold" for="sapModeToggle">SAP-Modus (Kurzer Freitag)</label>
+                            </div>
+                            <div class="form-text small mt-2 mb-2">
+                                Berechnet Mo-Do länger (8h) und Fr kürzer (6.5h).
+                            </div>
+                            <div class="d-flex justify-content-between small bg-body p-2 rounded border">
+                                <span>Mo-Do: <strong id="lblMoDo">8.00</strong> h</span>
+                                <div class="vr"></div>
+                                <span>Fr: <strong id="lblFr">6.50</strong> h</span>
+                            </div>
+                            
+                            <div class="mt-3 pt-2 border-top">
+                                <label class="form-label small fw-bold">Monatl. Korrektur (Netto-Arbeitszeit)</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" step="0.01" class="form-control" id="correctionInput" placeholder="0.00">
+                                    <span class="input-group-text">h</span>
+                                </div>
+                                <div class="form-text small">
+                                    Gleicht Differenzen zu SAP aus (z.B. -1.5). Wird anteilig auf die Quote angerechnet.
+                                </div>
                             </div>
                         </div>
 
-                        <div class="p-3 bg-body-tertiary rounded border mb-3">
-                            <h6 class="fw-bold mb-3"><i class="bi bi-mouse"></i> Bedienung</h6>
+                        <div class="settings-box">
+                            <h6>Bedienung</h6>
                             
                             <div class="form-check form-switch mb-2">
                                 <input class="form-check-input" type="checkbox" id="pcScrollToggle">
                                 <label class="form-check-label" for="pcScrollToggle">Maus-Rad am PC</label>
-                                <div class="form-text small">Zeiten durch Scrollen über dem Feld ändern.</div>
                             </div>
 
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="mobileWheelToggle">
-                                <label class="form-check-label" for="mobileWheelToggle">Zeit-Picker (Rad) nutzen</label>
-                                <div class="form-text small">Zeigt auf Handys das System-Uhrzeit-Rad anstatt Tastatur.</div>
+                                <label class="form-check-label" for="mobileWheelToggle">Zeit-Picker (Handy)</label>
                             </div>
                         </div>
 
-                        <div class="mt-3 small text-muted d-flex justify-content-between border-top pt-2">
-                            <span>Wochenstunden:</span><strong id="lblWeekHours">38.50 h</strong>
-                        </div>
-                        
-                        <div class="small text-muted d-flex justify-content-between mt-1">
-                            <span>Mo - Do:</span><strong id="lblMoDo">8.00 h</strong>
-                        </div>
-                        <div class="small text-muted d-flex justify-content-between">
-                            <span>Freitag:</span><strong id="lblFr">6.50 h</strong>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100 mt-4">Speichern</button>
+                        <button type="submit" class="btn btn-primary w-100 mt-2">Speichern</button>
                     </form>
                 </div>
             </div>
@@ -96,14 +109,7 @@
                                     <tr>
                                         <td><?= date('d.m.y H:i', strtotime($log['timestamp'])) ?></td>
                                         <td>
-                                            <?php 
-                                                $ua = $log['user_agent'];
-                                                if(strpos($ua, 'Windows') !== false) echo '<i class="bi bi-microsoft"></i>';
-                                                elseif(strpos($ua, 'Android') !== false) echo '<i class="bi bi-android2"></i>';
-                                                elseif(strpos($ua, 'Mac') !== false || strpos($ua, 'iPhone') !== false) echo '<i class="bi bi-apple"></i>';
-                                                else echo '<i class="bi bi-globe"></i>';
-                                            ?>
-                                            <?= htmlspecialchars(substr($ua, 0, 50)) ?>
+                                            <?= htmlspecialchars(substr($log['user_agent'], 0, 40)) ?>...
                                         </td>
                                         <td class="font-monospace small"><?= htmlspecialchars($log['ip_address']) ?></td>
                                     </tr>
@@ -118,6 +124,11 @@
     </div>
 </div>
 
+<div id="saveToast" class="toast-sloth">
+    <i class="bi bi-check-circle-fill text-success"></i>
+    <span>Gespeichert!</span>
+</div>
+
 <script>
     const currentSettings = <?= $user['settings'] ?: '{}' ?>;
     
@@ -127,8 +138,9 @@
 
     const rangePercent = document.getElementById('rangePercent');
     const sapToggle = document.getElementById('sapModeToggle');
-    const pcScrollToggle = document.getElementById('pcScrollToggle');       // NEU
-    const mobileWheelToggle = document.getElementById('mobileWheelToggle'); // NEU
+    const pcScrollToggle = document.getElementById('pcScrollToggle');
+    const mobileWheelToggle = document.getElementById('mobileWheelToggle');
+    const correctionInput = document.getElementById('correctionInput'); // NEU
     
     const lblPercent = document.getElementById('lblPercent');
     const lblWeekHours = document.getElementById('lblWeekHours');
@@ -137,17 +149,16 @@
 
     // Init Values
     if(currentSettings.percent) rangePercent.value = currentSettings.percent;
-    
-    // SAP Toggle Default Logic
+    if(currentSettings.correction) correctionInput.value = currentSettings.correction; // NEU
+
+    // Toggles
     if(currentSettings.sollMoDo && currentSettings.sollFr) {
         sapToggle.checked = (currentSettings.sollMoDo !== currentSettings.sollFr);
     } else {
         sapToggle.checked = true;
     }
-
-    // Usability Toggles Init (Default: Scroll AN, Native Wheel AUS)
-    pcScrollToggle.checked = (currentSettings.pcScroll !== false); // Default True wenn undefined
-    mobileWheelToggle.checked = (currentSettings.useNativeWheel === true); // Default False
+    pcScrollToggle.checked = (currentSettings.pcScroll !== false);
+    mobileWheelToggle.checked = (currentSettings.useNativeWheel === true);
 
     function updateCalc() {
         const pct = parseInt(rangePercent.value) / 100;
@@ -166,13 +177,20 @@
         }
 
         lblWeekHours.textContent = weekly.toFixed(2) + ' h';
-        lblMoDo.textContent = valMoDo.toFixed(2) + ' h';
-        lblFr.textContent = valFr.toFixed(2) + ' h';
+        lblMoDo.textContent = valMoDo.toFixed(2);
+        lblFr.textContent = valFr.toFixed(2);
     }
 
     rangePercent.addEventListener('input', updateCalc);
     sapToggle.addEventListener('change', updateCalc);
     updateCalc();
+
+    // TOAST LOGIC
+    function showToast() {
+        const t = document.getElementById('saveToast');
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
+    }
 
     document.getElementById('globalSettingsForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -193,10 +211,12 @@
             sollStunden: ((valMoDo * 4 + valFr) / 5).toFixed(2),
             sollMoDo: valMoDo.toFixed(2),
             sollFr: valFr.toFixed(2),
-            // NEU: Usability speichern
             pcScroll: pcScrollToggle.checked,
-            useNativeWheel: mobileWheelToggle.checked
-        }).then(() => alert("Einstellungen gespeichert!")).catch(err => alert("Fehler!"));
+            useNativeWheel: mobileWheelToggle.checked,
+            correction: correctionInput.value // NEU
+        }).then(() => {
+            showToast(); // Statt Alert
+        }).catch(err => alert("Fehler!"));
     });
 
     document.getElementById('pwChangeForm').addEventListener('submit', function(e) {
@@ -205,7 +225,7 @@
         const newPw = document.getElementById('newPw').value;
         axios.post('/change_password', { old_password: oldPw, new_password: newPw })
             .then(res => {
-                alert("Passwort erfolgreich geändert!");
+                alert("Passwort erfolgreich geändert!"); // Hier lassen wir Alert, weil wichtig
                 document.getElementById('pwChangeForm').reset();
             })
             .catch(err => alert("Fehler: " + (err.response?.data?.error || "Unbekannt")));
