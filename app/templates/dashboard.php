@@ -273,7 +273,7 @@
                     deductionPerDay: 3.08,
                     arztStart: 480, arztEnde: 972,
                     pcScroll: true,
-                    useNativeWheel: false
+                    useNativeWheel: false,
                     correction: 0,
                 }, userSettingsRaw),
                 // Calculator Data
