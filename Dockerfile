@@ -25,13 +25,15 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
 
 # Assets laden
+# Assets laden (mit Error-Check -f und Production Builds)
 RUN mkdir -p /app/public/static/js /app/public/static/css /app/public/static/fonts /app/public/static/img && \
-    curl -L -o /app/public/static/js/vue.js https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js && \
-    curl -L -o /app/public/static/js/axios.js https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js && \
-    curl -L -o /app/public/static/js/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js && \
-    curl -L -o /app/public/static/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css && \
-    curl -L -o /app/public/static/css/bootstrap-icons.css https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css && \
-    curl -L -o /app/public/static/fonts/bootstrap-icons.woff2 https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/fonts/bootstrap-icons.woff2
+    curl -f -L -o /app/public/static/js/vue.js https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js && \
+    curl -f -L -o /app/public/static/js/axios.js https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js && \
+    curl -f -L -o /app/public/static/js/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js && \
+    curl -f -L -o /app/public/static/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css && \
+    curl -f -L -o /app/public/static/css/bootstrap-icons.css https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css && \
+    curl -f -L -o /app/public/static/fonts/bootstrap-icons.woff2 https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2 && \
+    curl -f -L -o /app/public/static/fonts/bootstrap-icons.woff https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff
 
 # Nginx Config
 RUN echo 'server { \
