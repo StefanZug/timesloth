@@ -522,44 +522,46 @@
                 const input = event.target;
                 let step = 60; // Default: Minuten
 
-                // Logik je nach Input-Typ unterscheiden
                 if (input.type === 'text') {
-                    // --- VARIANTE A: Text-Feld (Präzise Cursor-Erkennung) ---
+                    // --- VARIANTE A: Text-Feld (Präzise, alles wie gehabt) ---
                     const cursor = input.selectionStart;
-                    
                     if (cursor !== null) {
-                        if (cursor <= 2) {
-                            step = 3600; // Stunden
-                        } else if (cursor >= 3 && cursor <= 5) {
-                            step = 60;   // Minuten
-                        } else if (cursor >= 6) {
-                            step = 1;    // Sekunden
-                        }
+                        if (cursor <= 2) step = 3600;
+                        else if (cursor >= 3 && cursor <= 5) step = 60;
+                        else if (cursor >= 6) step = 1;
                     }
-
-                    // Cursor-Position wiederherstellen (nur bei Textfeldern möglich)
                     setTimeout(() => {
-                        if(document.activeElement === input) {
-                            input.setSelectionRange(cursor, cursor);
-                        }
+                        if(document.activeElement === input) input.setSelectionRange(cursor, cursor);
                     }, 0);
-
                 } else {
-                    // --- VARIANTE B: Time-Input (Heuristik über Maus-Position) ---
-                    // Da wir den Cursor nicht lesen können, prüfen wir, wo die Maus im Feld ist.
+                    // --- VARIANTE B: Time-Input (Heuristik für Handy/Native Mode) ---
                     const rect = input.getBoundingClientRect();
                     const x = event.clientX - rect.left;
+                    const width = rect.width;
                     
-                    // Wenn die Maus im linken Drittel ist -> Stunden ändern
-                    if (x < (rect.width * 0.35)) {
-                        step = 3600; 
+                    // Wir prüfen, ob Sekunden überhaupt angezeigt werden
+                    const isHome = (block.type === 'home'); 
+
+                    if (isHome) {
+                        // Home Office hat nur HH:MM -> Wir teilen bei 50%
+                        if (x < (width * 0.5)) {
+                            step = 3600; 
+                        } else {
+                            step = 60;
+                        }
                     } else {
-                        step = 60;
+                        // Büro/Arzt hat HH:MM:SS -> Wir teilen in Drittel
+                        if (x < (width * 0.32)) {
+                            step = 3600; // Linkes Drittel: Stunden
+                        } else if (x > (width * 0.64)) {
+                            step = 1;    // Rechtes Drittel: Sekunden
+                        } else {
+                            step = 60;   // Mitte: Minuten
+                        }
                     }
-                    // 'setSelectionRange' hier NICHT aufrufen, um den Crash zu verhindern!
                 }
 
-                // Shift-Taste erzwingt immer Sekunden
+                // Shift-Taste erzwingt immer Sekunden (Override)
                 if (event.shiftKey) step = 1;
 
                 const direction = event.deltaY < 0 ? 1 : -1;
@@ -569,18 +571,15 @@
 
                 let newSec = currentSec + (step * direction);
                 
-                // Überlauf behandeln (00:00 -> 23:59 und umgekehrt)
+                // Überlauf behandeln
                 if(newSec < 0) newSec = (24 * 3600) + newSec;
                 if(newSec >= 24 * 3600) newSec = newSec - (24 * 3600);
 
                 const showSeconds = (block.type !== 'home'); 
                 block[field] = this.secondsToString(newSec, showSeconds);
                 
-                if (day) {
-                    this.triggerListSave(day);
-                } else {
-                    this.triggerAutoSave();
-                }
+                if (day) this.triggerListSave(day);
+                else this.triggerAutoSave();
             },
             getDailyTarget(date) {
                 const wd = date.getDay();
