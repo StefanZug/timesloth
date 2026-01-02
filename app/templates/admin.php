@@ -4,7 +4,7 @@
             <div class="card-body">
                 <h4 class="card-title mb-3">🦖 User Verwaltung</h4>
                 
-                <form id="createUserForm" class="row g-2 align-items-center mb-4 p-3 bg-light rounded">
+                <form id="createUserForm" class="row g-2 align-items-center form-box-admin">
                     <div class="col-6">
                         <input type="text" class="form-control" id="newUsername" placeholder="Username" required>
                     </div>
@@ -47,7 +47,7 @@
             <div class="card-body">
                 <h4 class="card-title mb-3">🎄 Feiertage</h4>
                 
-                <form id="createHolidayForm" class="row g-2 align-items-center mb-4 p-3 bg-light rounded">
+                <form id="createHolidayForm" class="row g-2 align-items-center form-box-admin">
                     <div class="col-5">
                         <input type="date" class="form-control" id="holDate" required>
                     </div>

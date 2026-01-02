@@ -43,25 +43,28 @@ Der User kann in den Settings sein Ausmaß einstellen (z.B. 100%, 50%).
 
 ---
 
-## 🛠 Tech Stack
+## 🛠 Tech Stack (Neu: PHP Edition)
 
-* **Backend:** Python / Flask (mit SQLAlchemy, Flask-Login, Flask-Bcrypt).
+Wir haben das Projekt von Python auf einen leichtgewichtigen, nativen PHP-Stack migriert, um die Performance zu steigern und die Image-Größe zu minimieren.
+
+* **Server:** Nginx + PHP 8.4 (via PHP-FPM).
+* **Backend:** Native PHP (kein Framework, Plain PDO für SQLite).
 * **Frontend:** HTML5 + Vue.js 3 (via CDN, Standalone-Build ohne Webpack).
 * **CSS:** Bootstrap 5 (mit Custom Dark Mode Theme).
 * **Database:** SQLite (lokal im `/data` Ordner für Persistenz).
-* **Container:** Docker (basiert auf Alpine Linux), optimiert für Home Assistant.
+* **Container:** Docker (basiert auf Alpine Linux via Home Assistant Base Image).
 
 ### Besonderheiten im Code
-* **Vue.js:** Nutzt die `[[ ]]` Delimiter statt `{{ }}`, um Konflikte mit Jinja2 zu vermeiden.
-* **Frontend-State:** Die Berechnungen (Saldo, Live-Prognose, SAP/CATS Split) passieren größtenteils client-seitig in `dashboard.html` (Vue Computed Properties) für maximale Reaktivität.
-* **Daten-Struktur:** Zeiten werden als JSON-Blobs (`blocks`) in der DB gespeichert, um flexible Mischungen (Home, Office, Arzt an einem Tag) zu ermöglichen.
+* **Vue.js:** Nutzt die `[[ ]]` Delimiter statt `{{ }}`, um Konflikte mit serverseitigem Rendering (jetzt PHP, früher Jinja2) zu vermeiden.
+* **API-Design:** Das Backend dient primär als JSON-API (`api.php`), das Frontend (`dashboard.php`) übernimmt die Rechenlogik client-seitig.
+* **Daten-Struktur:** Zeiten werden als JSON-Blobs (`blocks`) in der SQLite-Datenbank gespeichert, um flexible Mischungen (Home, Office, Arzt an einem Tag) zu ermöglichen.
 
 ---
 
 ## 🚀 Features
 
 * **Responsive Design:** "Mobile First" Ansatz mit Sticky Headers.
-* **Dark Mode:** Vollständige Unterstützung mit angepassten Pastell-Farben für Kontrast.
+* **Dark Mode:** Vollständige Unterstützung mit modernem "Slate" Theme und Transparenzen ("Nextcloud Style").
 * **Smart Input:** Unterstützt Eingaben wie `0800`, `8`, `08:00` und sogar Sekunden (werden kaufmännisch gerundet).
 * **Live Prognose:** Zeigt basierend auf dem aktuellen Startzeitpunkt an, wann das Soll (7,7h) und die gesetzliche Höchstgrenze (10h) erreicht sind.
 * **Admin Panel:** Verwaltung von Usern und globalen Feiertagen. 

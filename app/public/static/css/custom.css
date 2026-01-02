@@ -200,3 +200,25 @@ thead th {
 
 /* Progress Bar */
 .progress-sloth { height: 8px; border-radius: 4px; background-color: var(--sloth-bg-tertiary); margin-top: 5px; overflow: hidden; }
+
+/* Damit die Icons (weiß) einen farbigen Hintergrund haben */
+.bg-office { background-color: rgb(var(--rgb-office)) !important; color: white !important; border: 1px solid rgba(255,255,255,0.1); }
+.bg-home   { background-color: rgb(var(--rgb-home)) !important; color: white !important; border: 1px solid rgba(255,255,255,0.1); }
+.bg-doctor { background-color: rgb(var(--rgb-sick)) !important;   color: white !important; border: 1px solid rgba(255,255,255,0.1); }
+
+/* Quota Card Abstände verbessern */
+.quota-card {
+    padding: 20px !important; /* Mehr Innenabstand */
+    margin-bottom: 20px !important;
+    border: 1px solid var(--sloth-border-color);
+}
+
+/* Admin Panel Formulare im Darkmode fixen */
+/* Wir nutzen deine .form-box Klasse statt bg-light */
+.form-box-admin {
+    background-color: var(--sloth-bg-tertiary);
+    border: 1px solid var(--sloth-border-color);
+    border-radius: var(--sloth-radius);
+    padding: 20px !important;
+    margin-bottom: 25px;
+}
