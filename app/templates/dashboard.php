@@ -275,7 +275,7 @@
                     pcScroll: true,
                     useNativeWheel: false
                 }, userSettingsRaw),
-                // NEU: Calculator Data
+                // Calculator Data
                 calc: {
                     sapMissing: null,
                     absentDays: 0,
@@ -289,25 +289,19 @@
         computed: {
             inputType() { return this.settings.useNativeWheel ? 'time' : 'text'; },
             
-            // NEU: Calculator Logic
+            // Calculator Logic
             calcDeduction() {
-                // Berechnet Abzug basierend auf Durchschnitts-Soll (40%)
                 const dailyDed = this.settings.sollStunden * 0.40;
                 return (this.calc.absentDays * dailyDed).toFixed(2);
             },
             calcResult() {
                 if(!this.calc.sapMissing || this.calc.sapMissing <= 0) return 0;
-                
-                // 1. Echte Zielstunden (Ziel - Abzug für fehlende Tage)
                 const realMissing = this.calc.sapMissing - this.calcDeduction;
                 if(realMissing <= 0) return 0;
-                
-                // 2. Tage = Reststunden / Geplante Stunden pro Tag
-                // Da Anwesenheit 1:1 zählt, teilen wir einfach durch die geplanten Stunden
                 return (realMissing / this.calc.planHours).toFixed(1);
             },
 
-            // Bestehende Computed Props...
+            // Standard Logic
             isoDate() { return this.formatIsoDate(this.currentDateObj); },
             isoMonth() { return this.isoDate.substring(0, 7); },
             displayDateDayView() {
@@ -483,6 +477,35 @@
             }
         },
         methods: {
+            // WICHTIG: Die wiederhergestellte Funktion!
+            formatIsoDate(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            },
+            // WICHTIG: Auch diese fehlte für die Farb-Anzeige der Tabelle
+            getRowClass(day) {
+                if (day.status === 'F') return 'tr-holiday';
+                if (day.status === 'U') return 'tr-vacation';
+                if (day.status === 'K') return 'tr-sick';
+                if (day.hasOffice) return 'tr-office';
+                if (day.hasHome) return 'tr-home';
+                if (day.isWeekend) return 'tr-weekend';
+                return '';
+            },
+            // WICHTIG: Fehlt für "Eintrag hinzufügen" im Day View
+            addBlock(type) {
+                this.blocks.push({ id: Date.now(), type: type, start: '', end: '' });
+                this.triggerAutoSave();
+            },
+            // WICHTIG: Fehlt für "X" im Day View
+            removeBlock(idx) {
+                this.blocks.splice(idx, 1);
+                this.triggerAutoSave();
+            },
+
+            // --- Ab hier die neuen Methoden von vorhin ---
             onWheel(event, block, field, day = null) {
                 if (!this.settings.pcScroll) return;
 
