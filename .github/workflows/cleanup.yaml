@@ -1,0 +1,36 @@
+name: Cleanup Old Packages
+
+on:
+  workflow_dispatch:    # Erlaubt manuelles Starten
+  schedule:
+    - cron: '0 0 * * 0' # Läuft jeden Sonntag um Mitternacht
+
+jobs:
+  delete-untagged-versions:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete untagged images
+        uses: actions/delete-package-versions@v5
+        with: 
+          package-name: 'timesloth' # Dein Paketname (meist Repo-Name klein)
+          package-type: 'container'
+          min-versions-to-keep: 0
+          delete-only-untagged-versions: 'true'
+          # token: ${{ secrets.GITHUB_TOKEN }} # Ist oft automatisch dabei
+
+  # Optional: Lösche alte getaggte Versionen (Vorsicht!)
+  # delete-old-versions:
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     packages: write
+  #   steps:
+  #     - name: Delete old tagged images
+  #       uses: actions/delete-package-versions@v5
+  #       with:
+  #         package-name: 'timesloth'
+  #         package-type: 'container'
+  #         min-versions-to-keep: 10 # Behält die neuesten 5
+  #         delete-only-untagged-versions: 'false'
+  
