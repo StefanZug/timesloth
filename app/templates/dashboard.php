@@ -274,7 +274,7 @@
                     arztStart: 480, arztEnde: 972,
                     pcScroll: true,
                     useNativeWheel: false
-                    correction: 0
+                    correction: 0,
                 }, userSettingsRaw),
                 // Calculator Data
                 calc: {
