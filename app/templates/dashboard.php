@@ -50,7 +50,7 @@
         <div v-if="!isNonWorkDay && prediction.target !== '--:--'" class="card mb-3 border-0 shadow-sm">
             <div class="card-body py-2 d-flex justify-content-around align-items-center">
                 <div class="text-center">
-                    <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem">Soll ([[ todaySoll ]]h)</small>
+                    <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem">Soll ([[ formatNum(todaySoll) ]]h)</small>
                     <strong class="text-primary">[[ prediction.target ]]</strong>
                 </div>
                 <div class="vr opacity-25"></div>
@@ -268,8 +268,7 @@
                 saveTimer: null,
                 settings: Object.assign({
                     sollStunden: 7.70,
-                    sollMoDo: 7.70,
-                    sollFr: 7.70,
+                    // sollMoDo/sollFr entfernt - wir nutzen nur noch den Durchschnitt
                     deductionPerDay: 3.08,
                     arztStart: 480, arztEnde: 972,
                     pcScroll: true,
@@ -366,38 +365,36 @@
             quota() {
                 let officeMinSum = 0;
                 let deductionTotal = 0;
-                let dynamicTarget = 0;
-                let y = this.currentDateObj.getFullYear();
                 let m = this.currentDateObj.getMonth();
-                let daysInMonth = new Date(y, m + 1, 0).getDate();
-
-                // 1. Grund-Ziel berechnen (basierend auf Wochentagen)
-                for(let d=1; d<=daysInMonth; d++) {
-                    let tempDate = new Date(y, m, d);
-                    let wd = tempDate.getDay();
-                    if(wd !== 0 && wd !== 6) {
-                        let dayHours = this.getDailyTarget(tempDate);
-                        dynamicTarget += (dayHours * 0.40);
-                    }
-                }
                 
+                // 1. STATISTISCHE BASIS (Durchschnitts-Monat)
+                // Formel: Wochenstunden * 52 Wochen / 12 Monate * 40% Quote
+                let dailyAvg = parseFloat(this.settings.sollStunden);
+                let weeklyAvg = dailyAvg * 5; 
+                let monthlyAvg = weeklyAvg * 52 / 12;
+                let baseTarget = monthlyAvg * 0.40;
+
                 // 2. Abwesenheiten & Ist-Stunden sammeln
                 let allDays = new Set();
                 this.entriesCache.forEach(e => allDays.add(e.date));
+                // Wichtig: Auch reine Feiertage (ohne User-Eintrag) berücksichtigen
                 for(let k in this.holidaysMap) if(k.startsWith(this.isoMonth)) allDays.add(k);
 
                 allDays.forEach(iso => {
                     let d = new Date(iso);
                     if(d.getMonth() !== m) return;
                     let dayNum = d.getDay();
-                    if(dayNum === 0 || dayNum === 6) return;
+                    if(dayNum === 0 || dayNum === 6) return; // Wochenende ignorieren
+                    
                     let entry = this.entriesCache.find(e => e.date === iso);
                     let isHol = !!this.holidaysMap[iso];
+                    
+                    // Status ermitteln: Entweder User-Eingabe oder Feiertag aus Kalender
                     let status = entry ? entry.status : (isHol ? 'F' : null);
 
                     if(['F','U','K'].includes(status)) {
-                        let dayHours = this.getDailyTarget(d);
-                        deductionTotal += (dayHours * 0.40);
+                        // Abzug pro Fehltag: Tägliches Soll * 40%
+                        deductionTotal += (dailyAvg * 0.40);
                     } else if(entry && entry.blocks) {
                         entry.blocks.forEach(b => {
                             if(b.type === 'office') {
@@ -408,22 +405,21 @@
                     }
                 });
 
-                // 3. Manuelle Korrektur anwenden (NEU)
+                // 3. Manuelle Korrektur anwenden (Feld in Settings)
                 let correctionHours = parseFloat(this.settings.correction || 0);
                 let correctionQuota = correctionHours * 0.40;
                 
-                // Korrektur auf das Ziel addieren (z.B. -1.5h Korrektur senkt das Ziel)
-                dynamicTarget += correctionQuota; 
-
-                let targetAdjusted = Math.max(0, dynamicTarget - deductionTotal);
+                // Basis-Ziel bereinigen
+                let finalTarget = Math.max(0, baseTarget - deductionTotal + correctionQuota);
                 let currentHours = officeMinSum / 60;
-                let percent = targetAdjusted > 0 ? (currentHours / targetAdjusted) * 100 : 100;
+                
+                let percent = finalTarget > 0 ? (currentHours / finalTarget) * 100 : 100;
                 
                 return {
                     current: currentHours.toFixed(2),
-                    target: targetAdjusted.toFixed(2),
+                    target: finalTarget.toFixed(2),
                     deduction: deductionTotal.toFixed(2),
-                    needed: Math.max(0, targetAdjusted - currentHours).toFixed(2),
+                    needed: Math.max(0, finalTarget - currentHours).toFixed(2),
                     percent: Math.min(100, percent)
                 };
             },
@@ -488,14 +484,13 @@
             }
         },
         methods: {
-            // WICHTIG: Die wiederhergestellte Funktion!
+            formatNum(n) { return n ? n.toFixed(2) : '0.00'; },
             formatIsoDate(date) {
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
                 return `${year}-${month}-${day}`;
             },
-            // WICHTIG: Auch diese fehlte für die Farb-Anzeige der Tabelle
             getRowClass(day) {
                 if (day.status === 'F') return 'tr-holiday';
                 if (day.status === 'U') return 'tr-vacation';
@@ -505,12 +500,10 @@
                 if (day.isWeekend) return 'tr-weekend';
                 return '';
             },
-            // WICHTIG: Fehlt für "Eintrag hinzufügen" im Day View
             addBlock(type) {
                 this.blocks.push({ id: Date.now(), type: type, start: '', end: '' });
                 this.triggerAutoSave();
             },
-            // WICHTIG: Fehlt für "X" im Day View
             removeBlock(idx) {
                 this.blocks.splice(idx, 1);
                 this.triggerAutoSave();
@@ -539,7 +532,6 @@
                     const x = event.clientX - rect.left;
                     const width = rect.width;
                     
-                    // Wir prüfen, ob Sekunden überhaupt angezeigt werden
                     const isHome = (block.type === 'home'); 
 
                     if (isHome) {
@@ -561,7 +553,6 @@
                     }
                 }
 
-                // Shift-Taste erzwingt immer Sekunden (Override)
                 if (event.shiftKey) step = 1;
 
                 const direction = event.deltaY < 0 ? 1 : -1;
@@ -571,7 +562,6 @@
 
                 let newSec = currentSec + (step * direction);
                 
-                // Überlauf behandeln
                 if(newSec < 0) newSec = (24 * 3600) + newSec;
                 if(newSec >= 24 * 3600) newSec = newSec - (24 * 3600);
 
@@ -582,11 +572,9 @@
                 else this.triggerAutoSave();
             },
             getDailyTarget(date) {
+                // VEREINFACHT: Jeder Tag ist gleich (Durchschnittswert)
                 const wd = date.getDay();
                 if(wd === 0 || wd === 6) return 0;
-                if(this.settings.sollFr && this.settings.sollMoDo) {
-                    return (wd === 5) ? parseFloat(this.settings.sollFr) : parseFloat(this.settings.sollMoDo);
-                }
                 return parseFloat(this.settings.sollStunden);
             },
             changeBlockType(event, index, newType) {
@@ -811,8 +799,7 @@
                     this.holidaysMap = res.data.holidays || {};
                     if(res.data.settings) {
                         if(res.data.settings.sollStunden) this.settings.sollStunden = parseFloat(res.data.settings.sollStunden);
-                        if(res.data.settings.sollMoDo) this.settings.sollMoDo = parseFloat(res.data.settings.sollMoDo);
-                        if(res.data.settings.sollFr) this.settings.sollFr = parseFloat(res.data.settings.sollFr);
+                        // Alte Settings (sollMoDo, sollFr) ignorieren wir jetzt
                         if(res.data.settings.pcScroll !== undefined) this.settings.pcScroll = res.data.settings.pcScroll;
                         if(res.data.settings.useNativeWheel !== undefined) this.settings.useNativeWheel = res.data.settings.useNativeWheel;
                     }

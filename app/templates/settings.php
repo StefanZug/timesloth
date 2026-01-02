@@ -23,42 +23,28 @@
                             <div class="small text-muted d-flex justify-content-between border-top pt-2">
                                 <span>Wochenstunden (100%):</span><strong id="lblWeekHours">38.50 h</strong>
                             </div>
+                            <div class="small text-muted d-flex justify-content-between pt-1">
+                                <span>Täglich (Ø):</span><strong id="lblDaily">7.70 h</strong>
+                            </div>
                         </div>
                         
                         <div class="settings-box">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="sapModeToggle">
-                                <label class="form-check-label fw-bold" for="sapModeToggle">SAP-Modus (Kurzer Freitag)</label>
+                            <label class="form-label small fw-bold">Monatl. Korrektur (Netto-Arbeitszeit)</label>
+                            <div class="input-group input-group-sm">
+                                <input type="number" step="0.01" class="form-control" id="correctionInput" placeholder="0.00">
+                                <span class="input-group-text">h</span>
                             </div>
-                            <div class="form-text small mt-2 mb-2">
-                                Berechnet Mo-Do länger (8h) und Fr kürzer (6.5h).
-                            </div>
-                            <div class="d-flex justify-content-between small bg-body p-2 rounded border">
-                                <span>Mo-Do: <strong id="lblMoDo">8.00</strong> h</span>
-                                <div class="vr"></div>
-                                <span>Fr: <strong id="lblFr">6.50</strong> h</span>
-                            </div>
-                            
-                            <div class="mt-3 pt-2 border-top">
-                                <label class="form-label small fw-bold">Monatl. Korrektur (Netto-Arbeitszeit)</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="number" step="0.01" class="form-control" id="correctionInput" placeholder="0.00">
-                                    <span class="input-group-text">h</span>
-                                </div>
-                                <div class="form-text small">
-                                    Gleicht Differenzen zu SAP aus (z.B. -1.5). Wird anteilig auf die Quote angerechnet.
-                                </div>
+                            <div class="form-text small">
+                                Gleicht manuelle Differenzen zu SAP aus (wird zu 40% angerechnet).
                             </div>
                         </div>
 
                         <div class="settings-box">
                             <h6>Bedienung</h6>
-                            
                             <div class="form-check form-switch mb-2">
                                 <input class="form-check-input" type="checkbox" id="pcScrollToggle">
                                 <label class="form-check-label" for="pcScrollToggle">Maus-Rad am PC</label>
                             </div>
-
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="mobileWheelToggle">
                                 <label class="form-check-label" for="mobileWheelToggle">Zeit-Picker (Handy)</label>
@@ -133,30 +119,21 @@
     const currentSettings = <?= $user['settings'] ?: '{}' ?>;
     
     const BASE_WEEKLY = 38.5;
-    const BASE_MODO = 8.0; 
-    const BASE_FR = 6.5;   
 
     const rangePercent = document.getElementById('rangePercent');
-    const sapToggle = document.getElementById('sapModeToggle');
     const pcScrollToggle = document.getElementById('pcScrollToggle');
     const mobileWheelToggle = document.getElementById('mobileWheelToggle');
-    const correctionInput = document.getElementById('correctionInput'); // NEU
+    const correctionInput = document.getElementById('correctionInput');
     
     const lblPercent = document.getElementById('lblPercent');
     const lblWeekHours = document.getElementById('lblWeekHours');
-    const lblMoDo = document.getElementById('lblMoDo');
-    const lblFr = document.getElementById('lblFr');
+    const lblDaily = document.getElementById('lblDaily');
 
     // Init Values
     if(currentSettings.percent) rangePercent.value = currentSettings.percent;
-    if(currentSettings.correction) correctionInput.value = currentSettings.correction; // NEU
+    if(currentSettings.correction) correctionInput.value = currentSettings.correction;
 
     // Toggles
-    if(currentSettings.sollMoDo && currentSettings.sollFr) {
-        sapToggle.checked = (currentSettings.sollMoDo !== currentSettings.sollFr);
-    } else {
-        sapToggle.checked = true;
-    }
     pcScrollToggle.checked = (currentSettings.pcScroll !== false);
     mobileWheelToggle.checked = (currentSettings.useNativeWheel === true);
 
@@ -165,24 +142,13 @@
         lblPercent.textContent = parseInt(rangePercent.value) + '%';
         
         const weekly = BASE_WEEKLY * pct;
-        let valMoDo, valFr;
-
-        if (sapToggle.checked) {
-            valMoDo = BASE_MODO * pct;
-            valFr = BASE_FR * pct;
-        } else {
-            const daily = weekly / 5;
-            valMoDo = daily;
-            valFr = daily;
-        }
+        const daily = weekly / 5;
 
         lblWeekHours.textContent = weekly.toFixed(2) + ' h';
-        lblMoDo.textContent = valMoDo.toFixed(2);
-        lblFr.textContent = valFr.toFixed(2);
+        lblDaily.textContent = daily.toFixed(2) + ' h';
     }
 
     rangePercent.addEventListener('input', updateCalc);
-    sapToggle.addEventListener('change', updateCalc);
     updateCalc();
 
     // TOAST LOGIC
@@ -195,27 +161,20 @@
     document.getElementById('globalSettingsForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const pct = parseInt(rangePercent.value) / 100;
-        let valMoDo, valFr;
-
-        if (sapToggle.checked) {
-            valMoDo = BASE_MODO * pct;
-            valFr = BASE_FR * pct;
-        } else {
-            const daily = (BASE_WEEKLY * pct) / 5;
-            valMoDo = daily;
-            valFr = daily;
-        }
+        const weekly = BASE_WEEKLY * pct;
+        const daily = weekly / 5;
 
         axios.post('/api/settings', { 
             percent: parseInt(rangePercent.value),
-            sollStunden: ((valMoDo * 4 + valFr) / 5).toFixed(2),
-            sollMoDo: valMoDo.toFixed(2),
-            sollFr: valFr.toFixed(2),
+            sollStunden: daily.toFixed(2),
+            // Legacy Support für das Backend (falls es die Felder erwartet)
+            sollMoDo: daily.toFixed(2),
+            sollFr: daily.toFixed(2),
             pcScroll: pcScrollToggle.checked,
             useNativeWheel: mobileWheelToggle.checked,
-            correction: correctionInput.value // NEU
+            correction: correctionInput.value
         }).then(() => {
-            showToast(); // Statt Alert
+            showToast();
         }).catch(err => alert("Fehler!"));
     });
 
@@ -225,7 +184,7 @@
         const newPw = document.getElementById('newPw').value;
         axios.post('/change_password', { old_password: oldPw, new_password: newPw })
             .then(res => {
-                alert("Passwort erfolgreich geändert!"); // Hier lassen wir Alert, weil wichtig
+                alert("Passwort erfolgreich geändert!"); 
                 document.getElementById('pwChangeForm').reset();
             })
             .catch(err => alert("Fehler: " + (err.response?.data?.error || "Unbekannt")));
