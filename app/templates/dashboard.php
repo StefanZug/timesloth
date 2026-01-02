@@ -13,7 +13,7 @@
 
     <div class="row g-4">
         
-        <div class="col-12 col-xl-3 order-2 order-xl-1" v-show="isDesktop || viewMode === 'day'">
+        <div class="col-12 col-lg-3 order-2 order-lg-1" v-show="isDesktop || viewMode === 'day'">
             
             <div class="widget-card">
                 <div class="widget-header">
@@ -104,7 +104,7 @@
 
         </div>
 
-        <div class="col-12 col-xl-6 order-3 order-xl-2" v-show="isDesktop || viewMode === 'month'">
+        <div class="col-12 col-lg-6 order-3 order-lg-2" v-show="isDesktop || viewMode === 'month'">
             <div class="widget-card h-100">
                 <div class="widget-header">
                     <div class="d-flex align-items-center gap-2">
@@ -178,7 +178,7 @@
             </div>
         </div>
 
-        <div class="col-12 col-xl-3 order-1 order-xl-3 sticky-column">
+        <div class="col-12 col-lg-3 order-1 order-lg-3 sticky-column">
             
             <div class="widget-card">
                 <div class="widget-header">

@@ -65,7 +65,7 @@
     </nav>
     <?php endif; ?>
 
-    <div class="container-fluid p-0" style="max-width: 800px; margin: 0 auto;">
+    <div class="container-fluid p-0" id="main-content">
         
         <?php if (isset($_SESSION['flash_error'])): ?>
             <div class="alert alert-danger m-2 shadow-sm">

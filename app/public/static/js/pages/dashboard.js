@@ -4,7 +4,7 @@ createApp({
     delimiters: ['[[', ']]'], 
     data() {
         return {
-            isDesktop: window.innerWidth >= 1200,
+            isDesktop: window.innerWidth >= 992,
             currentDateObj: new Date(),
             viewMode: localStorage.getItem('viewMode') || 'day',
             dayStatus: null, 
@@ -485,7 +485,7 @@ createApp({
     mounted() {
         // Listener für Resize
         window.addEventListener('resize', () => {
-            this.isDesktop = window.innerWidth >= 1200;
+            this.isDesktop = window.innerWidth >= 992;
         });
         
         this.loadMonthData();
