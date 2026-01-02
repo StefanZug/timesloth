@@ -13,12 +13,12 @@
 
     <div class="row g-4">
         
-        <div class="col-12 col-lg-3 order-2 order-lg-1" v-show="isDesktop || viewMode === 'day'">
+        <div class="col-12 col-lg-3 order-2 order-lg-1 sticky-column" v-show="isDesktop || viewMode === 'day'">
             
             <div class="widget-card">
                 <div class="widget-header">
                     <span>📅 Tages-Planung</span>
-                    <button class="btn btn-sm btn-link text-muted p-0" @click="jumpToDay(isoDate)">Heute</button>
+                    <button class="btn btn-sm btn-link text-muted p-0" @click="jumpToToday()">Heute</button>
                 </div>
                 <div class="widget-body">
                     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -50,9 +50,9 @@
                                             <li><a class="dropdown-item text-danger" @click="changeBlockType($event, index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</a></li>
                                         </ul>
                                     </div>
-                                    <input :type="inputType" step="1" class="form-control form-control-sm text-center fw-bold border-0 bg-white" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'start')">
+                                    <input :type="inputType" step="1" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'start')">
                                     <span class="text-muted">-</span>
-                                    <input :type="inputType" step="1" class="form-control form-control-sm text-center fw-bold border-0 bg-white" v-model="block.end" placeholder="16:30" @blur="formatTimeInput(block, 'end')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'end')">
+                                    <input :type="inputType" step="1" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.end" placeholder="16:30" @blur="formatTimeInput(block, 'end')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'end')">
                                     <button class="btn btn-link text-muted p-0 ms-auto" @click="removeBlock(index)"><i class="bi bi-x-lg"></i></button>
                                 </div>
                             </div>

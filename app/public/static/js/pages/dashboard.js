@@ -377,6 +377,11 @@ createApp({
             this.viewMode = 'day';
             this.loadFromCache();
         },
+        jumpToToday() {
+            this.currentDateObj = new Date();
+            this.viewMode = 'day';
+            this.loadFromCache();
+        },
         toggleStatus(s) {
             this.dayStatus = (this.dayStatus === s) ? null : s;
             this.triggerAutoSave();

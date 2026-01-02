@@ -83,9 +83,38 @@
 
         <?= $content ?? '' ?>
         
-        <div class="footer-sarcasm">
-            TimeSloth Inc. &copy; <?= date('Y') ?> - Wir speichern Daten, meistens.<br>
-            Keine Haftung für verpasste SAP-Einträge, Eheprobleme oder Burnout.
+        <div class="app-footer">
+            <div class="mb-2">
+                <i class="bi bi-clock-history"></i> <span class="fw-bold">TimeSloth</span> v0.1.4.1
+            </div>
+            
+            <div class="mb-2">
+                <?php 
+                $quotes = [
+                    "Zeit ist Geld, aber Faulheit ist unbezahlbar. 🦥",
+                    "Wir zählen die Stunden, damit du es nicht musst.",
+                    "Keine Haftung bei versehentlicher Produktivität.",
+                    "Programmiert mit ❤️ und viel Koffein.",
+                    "Heute schon nichts getan? Wir verurteilen dich nicht.",
+                    "Wenn du das hier liest, arbeitest du gerade nicht. 👀",
+                    "Lade Arbeitsmoral... Fehler 404.",
+                    "Schneller arbeiten bringt auch nicht mehr Feierabend.",
+                    "SAP glaubt dir. Wir auch. Meistens.",
+                    "Wir tracken deine Zeit, nicht deine Motivation.",
+                    "TimeSloth: Weil 'Ich hab vergessen zu buchen' keine Ausrede mehr ist.",
+                    "Deine Büro-Quote weint leise im Hintergrund.",
+                    "Zuhause ist es am schönsten, aber SAP will dich im Büro sehen.",
+                    "Work-Life-Balance? Wir bevorzugen Life-Life-Balance.",
+                    "Wir unterstützen proaktives Nichtstun.",
+                    "Wir machens, weils SAP nicht kann."
+                ];
+                echo $quotes[array_rand($quotes)]; 
+                ?>
+            </div>
+
+            <div>
+                &copy; <?= date('Y') ?> • <a href="https://github.com/StefanZug/timesloth" target="_blank" class="text-reset text-decoration-none border-bottom border-secondary">GitHub</a>
+            </div>
         </div>
     </div>
 
