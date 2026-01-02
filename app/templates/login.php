@@ -27,9 +27,6 @@
         </form>
     </div>
 
-    <div class="mt-4 text-center opacity-50 small animate-fade" style="animation-delay: 0.2s;">
-        <i class="bi bi-shield-lock"></i> Private System
-    </div>
 </div>
 
 <script src="/static/js/pages/login.js"></script>
