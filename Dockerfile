@@ -49,6 +49,7 @@ RUN echo 'server { \
 
 COPY app /app
 COPY icon.png /app/public/static/img/favicon.png
+COPY logo.png /app/public/static/img/logo.png
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
 

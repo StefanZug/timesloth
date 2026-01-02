@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TimeSloth</title>
     
-    <link rel="icon" href="/static/img/favicon.png">
+    <link rel="icon" href="/static/img/logo.png">
     
     <link href="/static/css/bootstrap.css" rel="stylesheet">
     <link href="/static/css/bootstrap-icons.css" rel="stylesheet">
@@ -35,7 +35,7 @@
     <nav class="navbar navbar-expand bg-body-tertiary shadow-sm mb-3 border-bottom sticky-top" style="z-index: 1050;">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold d-flex align-items-center" href="/">
-                <img src="/static/img/favicon.png" alt="Logo" width="30" height="30" class="me-2 rounded-circle">
+                <img src="/static/img/logo.png" alt="Logo" width="30" height="30" class="me-2 rounded-circle">
                 TimeSloth
             </a>
             
@@ -86,7 +86,7 @@
         <div class="app-footer">
             <div class="mb-2 d-flex align-items-center justify-content-center gap-2">
                 <span>&copy; <?= date('Y') ?> • <span class="fw-bold">TimeSloth</span></span>
-                <img src="/static/img/favicon.png" alt="Logo" width="24" height="24" 
+                <img src="/static/img/logo.png" alt="Logo" width="24" height="24" 
                      style="filter: grayscale(1); opacity: 0.7; transition: all 0.3s;">
             </div>
             
