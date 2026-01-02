@@ -5,11 +5,18 @@
         <div class="quota-card mb-3">
             <div class="d-flex justify-content-between align-items-center mb-1">
                 <span class="text-muted small fw-bold text-uppercase">Büro-Quote (40%)</span>
-                <span class="text-danger fw-bold fs-5">[[ quota.needed ]] h</span>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="text-danger fw-bold fs-5">[[ quota.needed ]] h</span>
+                    <button class="btn btn-sm btn-outline-secondary border-0 p-0 ms-1" 
+                            data-bs-toggle="modal" data-bs-target="#calcModal" title="Quick Rechner">
+                        <i class="bi bi-calculator fs-6"></i>
+                    </button>
+                </div>
             </div>
+            
             <div class="d-flex justify-content-between small mb-1 text-muted">
                 <span>Ist: [[ quota.current ]] h</span>
-                <span>Ziel (dynamisch): [[ quota.target ]] h</span>
+                <span>Ziel: [[ quota.target ]] h</span>
             </div>
             <div class="progress-sloth">
                 <div class="progress-bar-sloth" :style="{ width: quota.percent + '%' }"></div>
@@ -43,7 +50,7 @@
         <div v-if="!isNonWorkDay && prediction.target !== '--:--'" class="card mb-3 border-0 shadow-sm">
             <div class="card-body py-2 d-flex justify-content-around align-items-center">
                 <div class="text-center">
-                    <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem">Soll ([[ settings.sollStunden ]]h)</small>
+                    <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem">Soll ([[ todaySoll ]]h)</small>
                     <strong class="text-primary">[[ prediction.target ]]</strong>
                 </div>
                 <div class="vr opacity-25"></div>
@@ -74,9 +81,9 @@
                                 <li><a class="dropdown-item text-danger" @click="changeBlockType($event, index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</a></li>
                             </ul>
                         </div>
-                        <input type="text" class="form-control text-center p-1 fw-bold" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave">
+                        <input :type="inputType" step="1" class="form-control text-center p-1 fw-bold" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'start')">
                         <span>-</span>
-                        <input type="text" class="form-control text-center p-1 fw-bold" v-model="block.end" placeholder="16:30" @blur="formatTimeInput(block, 'end')" @input="triggerAutoSave">
+                        <input :type="inputType" step="1" class="form-control text-center p-1 fw-bold" v-model="block.end" placeholder="16:30" @blur="formatTimeInput(block, 'end')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'end')">
                         <button class="btn btn-link text-muted p-0 ms-auto" @click="removeBlock(index)"><i class="bi bi-x-lg"></i></button>
                     </div>
                 </div>
@@ -145,8 +152,8 @@
                                             <li><a class="dropdown-item text-danger" @click="changeListBlockType($event, day, index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</a></li>
                                         </ul>
                                     </div>
-                                    <input type="text" class="table-input" v-model="block.start" @blur="formatListTime(day, index, 'start')" @input="triggerListSave(day)">
-                                    <input type="text" class="table-input" v-model="block.end" @blur="formatListTime(day, index, 'end')" @input="triggerListSave(day)">
+                                    <input :type="inputType" step="1" class="table-input" v-model="block.start" @blur="formatListTime(day, index, 'start')" @input="triggerListSave(day)" @wheel.prevent="onWheel($event, block, 'start', day)">
+                                    <input :type="inputType" step="1" class="table-input" v-model="block.end" @blur="formatListTime(day, index, 'end')" @input="triggerListSave(day)" @wheel.prevent="onWheel($event, block, 'end', day)">
                                     <button class="btn btn-link text-danger p-0" @click="removeListBlock(day, index)"><i class="bi bi-x"></i></button>
                                 </div>
                                 <button class="btn btn-sm btn-outline-secondary border-dashed w-100 mt-1" @click="addListBlock(day, 'office')" style="border-style: dashed; opacity: 0.7;">
@@ -179,13 +186,64 @@
             </a>
         </div>
     </div>
-
+    
     <div style="position: fixed; bottom: 20px; right: 20px; z-index: 99;">
         <div v-if="saveState === 'saved'" class="text-success bg-white rounded-circle shadow p-2">
             <i class="bi bi-check-lg fs-4"></i>
         </div>
         <div v-if="saveState === 'saving'" class="text-warning bg-white rounded-circle shadow p-2">
             <div class="spinner-border spinner-border-sm"></div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="calcModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold">🧮 Büro-Planer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-4">
+                        Stimmt TimeSloth nicht mit SAP überein? Rechne hier aus, wie oft du noch kommen musst, um dein Ziel zu erreichen.
+                    </p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Offene Büro-Stunden (laut SAP)</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" class="form-control" v-model.number="calc.sapMissing" placeholder="z.B. 31.42">
+                            <span class="input-group-text">h</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold d-flex justify-content-between">
+                            <span>Abwesenheit (Krank/Urlaub)</span>
+                            <span class="text-success" v-if="calcDeduction > 0">- [[ calcDeduction ]] h</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="number" step="1" class="form-control" v-model.number="calc.absentDays" placeholder="0">
+                            <span class="input-group-text">Tage</span>
+                        </div>
+                        <div class="form-text small">Tage, die noch nicht in SAP verbucht sind.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold d-flex justify-content-between">
+                            <span>Geplante Bürozeit pro Tag</span>
+                            <span class="text-primary">[[ calc.planHours ]] h</span>
+                        </label>
+                        <input type="range" class="form-range" min="4" max="10" step="0.25" v-model.number="calc.planHours">
+                    </div>
+
+                    <div class="alert alert-primary text-center border-0 shadow-sm mb-0">
+                        <small class="text-uppercase text-muted" style="font-size: 0.7rem;">Du musst noch ins Büro für:</small>
+                        <div class="fs-2 fw-bold mt-1">
+                            [[ calcResult ]] <span class="fs-6 fw-normal text-muted">Tage</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -210,18 +268,46 @@
                 saveTimer: null,
                 settings: Object.assign({
                     sollStunden: 7.70,
+                    sollMoDo: 7.70,
+                    sollFr: 7.70,
                     deductionPerDay: 3.08,
-                    arztStart: 480, arztEnde: 972
-                }, userSettingsRaw)
+                    arztStart: 480, arztEnde: 972,
+                    pcScroll: true,
+                    useNativeWheel: false
+                }, userSettingsRaw),
+                // NEU: Calculator Data
+                calc: {
+                    sapMissing: null,
+                    absentDays: 0,
+                    planHours: 8.0
+                }
             }
         },
         watch: {
             viewMode(newVal) { localStorage.setItem('viewMode', newVal); }
         },
         computed: {
-            deductionPerDay() {
-                return (this.settings.sollStunden * 0.40).toFixed(2);
+            inputType() { return this.settings.useNativeWheel ? 'time' : 'text'; },
+            
+            // NEU: Calculator Logic
+            calcDeduction() {
+                // Berechnet Abzug basierend auf Durchschnitts-Soll (40%)
+                const dailyDed = this.settings.sollStunden * 0.40;
+                return (this.calc.absentDays * dailyDed).toFixed(2);
             },
+            calcResult() {
+                if(!this.calc.sapMissing || this.calc.sapMissing <= 0) return 0;
+                
+                // 1. Echte Zielstunden (Ziel - Abzug für fehlende Tage)
+                const realMissing = this.calc.sapMissing - this.calcDeduction;
+                if(realMissing <= 0) return 0;
+                
+                // 2. Tage = Reststunden / Geplante Stunden pro Tag
+                // Da Anwesenheit 1:1 zählt, teilen wir einfach durch die geplanten Stunden
+                return (realMissing / this.calc.planHours).toFixed(1);
+            },
+
+            // Bestehende Computed Props...
             isoDate() { return this.formatIsoDate(this.currentDateObj); },
             isoMonth() { return this.isoDate.substring(0, 7); },
             displayDateDayView() {
@@ -236,6 +322,9 @@
                 if(this.dayStatus === 'U') return 'alert-warning';
                 if(this.dayStatus === 'K') return 'alert-danger';
                 return '';
+            },
+            todaySoll() {
+                return this.getDailyTarget(this.currentDateObj);
             },
             totals() {
                 let sapMin = 0; let catsMin = 0;
@@ -254,7 +343,8 @@
                 let pause = 0;
                 if (sapMin > 360) { pause = 30; sapMin -= 30; catsMin -= 30; }
                 let ist = sapMin / 60;
-                let saldoVal = this.isNonWorkDay ? 0 : (ist - this.settings.sollStunden);
+                let target = this.isNonWorkDay ? 0 : this.todaySoll;
+                let saldoVal = ist - target;
                 return { sapTime: Math.max(0, sapMin), catsTime: Math.max(0, catsMin), pause, saldo: (saldoVal > 0 ? '+' : '') + saldoVal.toFixed(2) + ' h' };
             },
             prediction() {
@@ -267,37 +357,52 @@
                 });
                 if (firstStart === 9999) return { target: '--:--', max: '--:--' };
                 let currentNetto = this.totals.sapTime;
-                let remaining = (this.settings.sollStunden * 60) - currentNetto;
+                let remaining = (this.todaySoll * 60) - currentNetto;
                 if (remaining <= 0) return { target: '✔', max: '...' };
                 let finish = lastEnd + remaining;
                 if (this.totals.pause === 0 && (currentNetto + remaining) > 360) finish += 30;
                 let base = (lastEnd > 0 && lastEnd > firstStart) ? lastEnd : firstStart;
                 if(base === firstStart) { 
-                    finish = firstStart + (this.settings.sollStunden * 60) + (this.settings.sollStunden > 6 ? 30 : 0);
+                    finish = firstStart + (this.todaySoll * 60) + (this.todaySoll > 6 ? 30 : 0);
                 }
                 let maxTime = firstStart + 630; 
                 return { target: this.minToString(finish), max: this.minToString(maxTime) };
             },
             quota() {
-                let officeMinSum = 0;
-                let deductionCount = 0;
+                 let officeMinSum = 0;
+                let deductionTotal = 0;
+                let dynamicTarget = 0;
                 let y = this.currentDateObj.getFullYear();
                 let m = this.currentDateObj.getMonth();
                 let daysInMonth = new Date(y, m + 1, 0).getDate();
-                let workDaysCount = 0;
+
                 for(let d=1; d<=daysInMonth; d++) {
                     let tempDate = new Date(y, m, d);
                     let wd = tempDate.getDay();
-                    if(wd !== 0 && wd !== 6) workDaysCount++;
+                    if(wd !== 0 && wd !== 6) {
+                        let dayHours = this.getDailyTarget(tempDate);
+                        dynamicTarget += (dayHours * 0.40);
+                    }
                 }
-                let dynamicTarget = workDaysCount * this.settings.sollStunden * 0.40;
-                this.entriesCache.forEach(e => {
-                    const d = new Date(e.date);
-                    const dayNum = d.getDay();
-                    const isWeekend = (dayNum === 0 || dayNum === 6);
-                    if(['F','U','K'].includes(e.status) && !isWeekend) deductionCount++;
-                    else {
-                        (e.blocks || []).forEach(b => {
+                
+                let allDays = new Set();
+                this.entriesCache.forEach(e => allDays.add(e.date));
+                for(let k in this.holidaysMap) if(k.startsWith(this.isoMonth)) allDays.add(k);
+
+                allDays.forEach(iso => {
+                    let d = new Date(iso);
+                    if(d.getMonth() !== m) return;
+                    let dayNum = d.getDay();
+                    if(dayNum === 0 || dayNum === 6) return;
+                    let entry = this.entriesCache.find(e => e.date === iso);
+                    let isHol = !!this.holidaysMap[iso];
+                    let status = entry ? entry.status : (isHol ? 'F' : null);
+
+                    if(['F','U','K'].includes(status)) {
+                        let dayHours = this.getDailyTarget(d);
+                        deductionTotal += (dayHours * 0.40);
+                    } else if(entry && entry.blocks) {
+                        entry.blocks.forEach(b => {
                             if(b.type === 'office') {
                                 let s = this.toMin(b.start); let e = this.toMin(b.end);
                                 if(e>s) officeMinSum += (e - s);
@@ -305,14 +410,7 @@
                         });
                     }
                 });
-                for(let dateStr in this.holidaysMap) {
-                    if(!this.entriesCache.find(e => e.date === dateStr)) {
-                        const d = new Date(dateStr);
-                        const dayNum = d.getDay();
-                        if(dayNum !== 0 && dayNum !== 6) deductionCount++;
-                    }
-                }
-                let deductionTotal = deductionCount * this.deductionPerDay;
+
                 let targetAdjusted = Math.max(0, dynamicTarget - deductionTotal);
                 let currentHours = officeMinSum / 60;
                 let percent = targetAdjusted > 0 ? (currentHours / targetAdjusted) * 100 : 100;
@@ -385,6 +483,38 @@
             }
         },
         methods: {
+            onWheel(event, block, field, day = null) {
+                if (!this.settings.pcScroll) return;
+
+                if(!block[field]) return;
+                
+                const step = event.shiftKey ? 1 : 60; 
+                const direction = event.deltaY < 0 ? 1 : -1;
+                
+                let currentSec = this.toSeconds(block[field]);
+                if(currentSec === 0 && !block[field]) currentSec = 8 * 3600;
+
+                let newSec = currentSec + (step * direction);
+                if(newSec < 0) newSec = (24 * 3600) + newSec;
+                if(newSec >= 24 * 3600) newSec = newSec - (24 * 3600);
+
+                const showSeconds = (block.type !== 'home'); 
+                block[field] = this.secondsToString(newSec, showSeconds);
+                
+                if (day) {
+                    this.triggerListSave(day);
+                } else {
+                    this.triggerAutoSave();
+                }
+            },
+            getDailyTarget(date) {
+                const wd = date.getDay();
+                if(wd === 0 || wd === 6) return 0;
+                if(this.settings.sollFr && this.settings.sollMoDo) {
+                    return (wd === 5) ? parseFloat(this.settings.sollFr) : parseFloat(this.settings.sollMoDo);
+                }
+                return parseFloat(this.settings.sollStunden);
+            },
             changeBlockType(event, index, newType) {
                 let oldBlock = this.blocks[index];
                 this.blocks.splice(index, 1, { ...oldBlock, type: newType });
@@ -422,75 +552,83 @@
                 }
             },
             formatListTime(day, index, field) {
+                if (this.settings.useNativeWheel) {
+                    this.triggerListSave(day);
+                    return;
+                }
                 let block = day.blocks[index];
-                let val = block[field];
-                if(!val) return;
-                let clean = val.replace(/[^0-9]/g, '');
-                let h = 0, m = 0;
-                if(clean.length >= 5) {
-                    h = parseInt(clean.substring(0,2)); m = parseInt(clean.substring(2,4));
-                    if(parseInt(clean.substring(4,6)) >= 30) m++;
-                } else if (clean.length === 4) { h = parseInt(clean.substring(0,2)); m = parseInt(clean.substring(2,4));
-                } else if (clean.length === 3) { h = parseInt(clean.substring(0,1)); m = parseInt(clean.substring(1,3));
-                } else { h = parseInt(clean); }
-                if(h > 23) h = 23; if(m > 59) m = 59;
-                block[field] = h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
+                this.smartFormat(block, field);
                 this.triggerListSave(day);
             },
-            triggerListSave(day) {
-                this.saveState = 'saving';
-                if(this.saveTimer) clearTimeout(this.saveTimer);
-                this.saveTimer = setTimeout(() => {
-                    let entry = this.entriesCache.find(e => e.date === day.iso);
-                    if (!entry) {
-                        entry = { date: day.iso, blocks: [], status: null, comment: day.comment };
-                        this.entriesCache.push(entry);
-                    }
-                    entry.blocks = day.blocks;
-                    entry.status = day.status;
-                    this.saveSingleEntry(entry);
-                }, 350);
-            },
-            formatIsoDate(date) {
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
-            },
-            getRowClass(day) {
-                if (day.status === 'F') return 'tr-holiday';
-                if (day.status === 'U') return 'tr-vacation';
-                if (day.status === 'K') return 'tr-sick';
-                if (day.hasOffice) return 'tr-office';
-                if (day.hasHome) return 'tr-home';
-                if (day.isWeekend) return 'tr-weekend';
-                return '';
-            },
             formatTimeInput(block, field) {
+                if (this.settings.useNativeWheel) {
+                    this.triggerAutoSave();
+                    return;
+                }
+                this.smartFormat(block, field);
+                this.triggerAutoSave();
+            },
+            smartFormat(block, field) {
                 let val = block[field];
                 if(!val) return;
+                
                 let clean = val.replace(/[^0-9]/g, '');
-                let h = 0, m = 0;
+                let h = 0, m = 0, s = 0;
+
                 if(clean.length >= 5) {
                     h = parseInt(clean.substring(0,2));
                     m = parseInt(clean.substring(2,4));
-                    let s = parseInt(clean.substring(4,6));
-                    if(s >= 30) m++;
+                    s = parseInt(clean.substring(4,6) || '0');
                 } else if (clean.length === 4) {
-                    h = parseInt(clean.substring(0,2)); m = parseInt(clean.substring(2,4));
+                    h = parseInt(clean.substring(0,2)); 
+                    m = parseInt(clean.substring(2,4));
                 } else if (clean.length === 3) {
-                    h = parseInt(clean.substring(0,1)); m = parseInt(clean.substring(1,3));
-                } else {
+                    h = parseInt(clean.substring(0,1)); 
+                    m = parseInt(clean.substring(1,3));
+                } else if (clean.length <= 2) {
                     h = parseInt(clean);
                 }
-                if(h > 23) h = 23; if(m > 59) m = 59;
-                block[field] = h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
-                this.triggerAutoSave();
+
+                if(h > 23) h = 23; 
+                if(m > 59) m = 59;
+                if(s > 59) s = 59;
+
+                if(block.type === 'home') s = 0;
+
+                const showSeconds = (block.type !== 'home');
+                const pad = (n) => n.toString().padStart(2,'0');
+                
+                if(showSeconds) {
+                    block[field] = `${pad(h)}:${pad(m)}:${pad(s)}`;
+                } else {
+                    block[field] = `${pad(h)}:${pad(m)}`;
+                }
+            },
+            toSeconds(str) {
+                if (!str) return 0;
+                const parts = str.split(':');
+                let h = parseInt(parts[0] || 0);
+                let m = parseInt(parts[1] || 0);
+                let s = parseInt(parts[2] || 0);
+                return (h * 3600) + (m * 60) + s;
+            },
+            secondsToString(totalSeconds, withSeconds = false) {
+                let h = Math.floor(totalSeconds / 3600);
+                let rem = totalSeconds % 3600;
+                let m = Math.floor(rem / 60);
+                let s = rem % 60;
+                
+                const pad = (n) => n.toString().padStart(2,'0');
+                if(withSeconds) return `${pad(h)}:${pad(m)}:${pad(s)}`;
+                return `${pad(h)}:${pad(m)}`;
             },
             toMin(str) {
                 if (!str || str.length < 3) return 0;
-                let clean = str.replace(':','').padStart(4, '0');
-                return (parseInt(clean.substr(0,2))*60) + parseInt(clean.substr(2,2));
+                const totalSec = this.toSeconds(str);
+                const minutesFull = Math.floor(totalSec / 60);
+                const secondsRest = totalSec % 60;
+                if (secondsRest >= 30) return minutesFull + 1;
+                else return minutesFull;
             },
             minToString(min) {
                 let h = Math.floor(min / 60); let m = min % 60;
@@ -551,17 +689,19 @@
                 }
                 this.saveSingleEntry(entry);
             },
-            addBlock(type) {
-                this.blocks.push({ id: Date.now(), type: type, start: '', end: '' });
-                this.triggerAutoSave();
-            },
-            removeBlock(idx) {
-                this.blocks.splice(idx, 1);
-                this.triggerAutoSave();
-            },
-            updateBlock(block, field, val) {
-                block[field] = val;
-                this.triggerAutoSave();
+            triggerListSave(day) {
+                this.saveState = 'saving';
+                if(this.saveTimer) clearTimeout(this.saveTimer);
+                this.saveTimer = setTimeout(() => {
+                    let entry = this.entriesCache.find(e => e.date === day.iso);
+                    if (!entry) {
+                        entry = { date: day.iso, blocks: [], status: null, comment: day.comment };
+                        this.entriesCache.push(entry);
+                    }
+                    entry.blocks = day.blocks;
+                    entry.status = day.status;
+                    this.saveSingleEntry(entry);
+                }, 350);
             },
             triggerAutoSave() {
                 this.saveState = 'saving';
@@ -595,9 +735,12 @@
                     const res = await axios.get(`/api/get_entries?month=${this.isoMonth}`);
                     this.entriesCache = res.data.entries;
                     this.holidaysMap = res.data.holidays || {};
-                    if(res.data.settings && res.data.settings.sollStunden) {
-                        this.settings.sollStunden = parseFloat(res.data.settings.sollStunden);
-                        Object.assign(this.settings, res.data.settings);
+                    if(res.data.settings) {
+                        if(res.data.settings.sollStunden) this.settings.sollStunden = parseFloat(res.data.settings.sollStunden);
+                        if(res.data.settings.sollMoDo) this.settings.sollMoDo = parseFloat(res.data.settings.sollMoDo);
+                        if(res.data.settings.sollFr) this.settings.sollFr = parseFloat(res.data.settings.sollFr);
+                        if(res.data.settings.pcScroll !== undefined) this.settings.pcScroll = res.data.settings.pcScroll;
+                        if(res.data.settings.useNativeWheel !== undefined) this.settings.useNativeWheel = res.data.settings.useNativeWheel;
                     }
                     this.loadFromCache();
                 } catch(e) { console.error(e); }
