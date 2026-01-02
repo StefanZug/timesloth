@@ -9,9 +9,9 @@ TimeSloth ist ein spezialisiertes Zeiterfassungstool, optimiert für komplexe Gl
 
 ---
 
-## 🧠 Business Logic & Rechenregeln (WICHTIG FÜR AI)
+## 🧠 Business Logic & Rechenregeln
 
-Wenn du als AI diesen Code bearbeitest, beachte bitte zwingend folgende Logik-Regeln, die in diesem Projekt hart definiert sind:
+*Hinweis: Seit v0.1.3.0 ist die Rechenlogik zentral in `app/public/static/js/core/TimeLogic.js` isoliert.*
 
 ### 1. SAP vs. CATS (Das Zwei-Konten-Modell)
 Das System unterscheidet strikt zwischen zwei Zeit-Typen:
@@ -30,19 +30,9 @@ Um Diskrepanzen zu SAP zu vermeiden, nutzen wir **nicht** die echten Kalendertag
 
 * **Basis-Berechnung:** `Monats-Soll = (Wochenstunden * 52 Wochen) / 12 Monate`
 * **Quote (40%):** `Büro-Ziel = Monats-Soll * 0,40`
-* **Abzüge (Deduction):**
-  Jeder Tag mit Status **F** (Feiertag), **U** (Urlaub) oder **K** (Krank) reduziert das *Büro-Ziel* sofort um den jeweiligen Tageswert.
-* **Tageswert:**
-  Es gibt keine Unterscheidung mehr zwischen Mo-Do und Fr. Jeder Tag zählt pauschal: `Wochenstunden / 5`.
+* **Abzüge (Deduction):** Jeder Tag mit Status **F** (Feiertag), **U** (Urlaub) oder **K** (Krank) reduziert das *Büro-Ziel* sofort um den jeweiligen Tageswert.
 
-*Warum?* Damit TimeSloth auch in langen Monaten (wie Januar) exakt das gleiche Ziel anzeigt wie SAP, welches mit Durchschnittswerten rechnet.
-
-### 4. Beschäftigungsausmaß
-Der User kann in den Settings sein Ausmaß einstellen (Slider 10-100%).
-* **Basis (100%):** 38,5h Woche / 7,70h Tag.
-* Alle Berechnungen (Soll, Quoten-Abzug, Statistik) skalieren automatisch linear anhand dieses Prozentsatzes.
-
-### 5. Pausen-Automatik
+### 4. Pausen-Automatik
 * Ab **6,01 Stunden** reiner Arbeitszeit (SAP) werden automatisch **30 Minuten** abgezogen.
 * Bei exakt **6,00 Stunden** oder weniger erfolgt kein Abzug.
 
@@ -50,18 +40,35 @@ Der User kann in den Settings sein Ausmaß einstellen (Slider 10-100%).
 
 ## 🛠 Tech Stack & Architektur
 
-Wir nutzen einen leichtgewichtigen PHP-Stack ohne großes Framework ("Keep it simple").
+Wir nutzen einen leichtgewichtigen PHP-Stack mit Service-Architektur.
 
 * **Server:** Nginx + PHP 8.4 (via PHP-FPM) auf Alpine Linux.
-* **Backend:** Native PHP (`/app/src/`), keine Router-Libraries, Plain PDO für SQLite.
-* **Frontend:** HTML5 + Vue.js 3 (`/app/templates/`), via CDN, Standalone-Build ohne Webpack/Build-Steps.
-* **Styling:** Bootstrap 5 mit Custom CSS ("Nextcloud-Style", Dark Mode Support).
+* **Backend:** PHP mit Service-Klassen (`/app/src/Services/`), Plain PDO für SQLite.
+* **Frontend:** Vue.js 3 (CDN) + Bootstrap 5. Die Logik ist vom View getrennt (`/static/js/pages/`).
 * **Datenbank:** SQLite (`/data/timesloth.sqlite`) für Persistenz.
 
-### Besonderheiten im Code
-* **Vue.js:** Nutzt die `[[ ]]` Delimiter statt `{{ }}`, um Konflikte mit PHP-Templating zu vermeiden.
-* **API-Design:** Das Backend dient primär als JSON-API (`api.php`). Die Rechenlogik (Prognosen, Summen) liegt größtenteils im Frontend (`dashboard.php`) in Vue Computed Properties.
-* **Speicherung:** Zeitblöcke werden als JSON-Blob in der Spalte `data` gespeichert.
+### Projektstruktur (v0.1.3+)
+
+```text
+/app
+  /src
+    /Services        # PHP Geschäftslogik (EntryService, UserService...)
+    /db.php          # Datenbank-Verbindung
+    /auth.php        # Session-Handling
+  /templates         # PHP Views (HTML Gerüst)
+  /public
+    /static
+      /js
+        /core        # Reine JS-Rechenlogik (TimeLogic.js)
+        /pages       # Vue-App Logik pro Seite (dashboard.js)
+      /css           # Custom Styling
+    index.php        # Router & Controller (API)
+
+## API & Datenfluss
+* **Frontend:** Vue.js lädt Daten via JSON von /api/*.
+* **Router:** index.php nimmt den Request entgegen.
+* **Services:** Die Logik (SQL, Validierung) wird von den Klassen unter /src/Services ausgeführt.
+* **Response:** JSON geht zurück an das Frontend.
 
 ### Datenbank Schema (SQLite)
 
@@ -85,9 +92,8 @@ Wir nutzen einen leichtgewichtigen PHP-Stack ohne großes Framework ("Keep it si
 
 ---
 
-## 🚀 Wichtige Features für Debugging
-
+## 🚀 Features
 * **Responsive Design:** "Mobile First" Ansatz mit Sticky Headers.
-* **Smart Input:** Unterstützt Eingaben wie `0800`, `8`, `08:00` und Mausrad-Support.
+* **Smart Input:** Unterstützt Eingaben wie 0800, 8, 08:00 und Mausrad-Support.
 * **Live Prognose:** Zeigt im Dashboard an, wann man gehen darf (Soll) und wann man gehen muss (10h Limit).
 * **Admin Panel:** Verwaltung von Usern und globalen Feiertagen.
