@@ -515,33 +515,51 @@
                 this.blocks.splice(idx, 1);
                 this.triggerAutoSave();
             },
-
             onWheel(event, block, field, day = null) {
                 if (!this.settings.pcScroll) return;
                 if(!block[field]) return;
 
-                // 1. Cursor Position ermitteln
-                // Dafür brauchen wir das Input Element. Event.target ist das Input.
                 const input = event.target;
-                const cursor = input.selectionStart;
-                
-                // Standard: Minuten ändern
-                let step = 60; 
-                
-                // Logik: Wo ist der Cursor?
-                // Format: HH:MM oder HH:MM:SS
-                // 01234567
-                if (cursor !== null) {
-                    if (cursor <= 2) {
-                        step = 3600; // Stunden (3600 sek)
-                    } else if (cursor >= 3 && cursor <= 5) {
-                        step = 60;   // Minuten
-                    } else if (cursor >= 6) {
-                        step = 1;    // Sekunden
+                let step = 60; // Default: Minuten
+
+                // Logik je nach Input-Typ unterscheiden
+                if (input.type === 'text') {
+                    // --- VARIANTE A: Text-Feld (Präzise Cursor-Erkennung) ---
+                    const cursor = input.selectionStart;
+                    
+                    if (cursor !== null) {
+                        if (cursor <= 2) {
+                            step = 3600; // Stunden
+                        } else if (cursor >= 3 && cursor <= 5) {
+                            step = 60;   // Minuten
+                        } else if (cursor >= 6) {
+                            step = 1;    // Sekunden
+                        }
                     }
+
+                    // Cursor-Position wiederherstellen (nur bei Textfeldern möglich)
+                    setTimeout(() => {
+                        if(document.activeElement === input) {
+                            input.setSelectionRange(cursor, cursor);
+                        }
+                    }, 0);
+
+                } else {
+                    // --- VARIANTE B: Time-Input (Heuristik über Maus-Position) ---
+                    // Da wir den Cursor nicht lesen können, prüfen wir, wo die Maus im Feld ist.
+                    const rect = input.getBoundingClientRect();
+                    const x = event.clientX - rect.left;
+                    
+                    // Wenn die Maus im linken Drittel ist -> Stunden ändern
+                    if (x < (rect.width * 0.35)) {
+                        step = 3600; 
+                    } else {
+                        step = 60;
+                    }
+                    // 'setSelectionRange' hier NICHT aufrufen, um den Crash zu verhindern!
                 }
 
-                // Shift erzwingt Sekunden (Override)
+                // Shift-Taste erzwingt immer Sekunden
                 if (event.shiftKey) step = 1;
 
                 const direction = event.deltaY < 0 ? 1 : -1;
@@ -551,22 +569,13 @@
 
                 let newSec = currentSec + (step * direction);
                 
-                // Überlauf behandeln
+                // Überlauf behandeln (00:00 -> 23:59 und umgekehrt)
                 if(newSec < 0) newSec = (24 * 3600) + newSec;
                 if(newSec >= 24 * 3600) newSec = newSec - (24 * 3600);
 
                 const showSeconds = (block.type !== 'home'); 
                 block[field] = this.secondsToString(newSec, showSeconds);
                 
-                // WICHTIG: Cursor Position und Fokus behalten!
-                // Vue rendert neu, Cursor springt sonst ans Ende.
-                // Wir nutzen nextTick (oder setTimeout), um Cursor zurückzusetzen.
-                setTimeout(() => {
-                    if(document.activeElement === input) {
-                        input.setSelectionRange(cursor, cursor);
-                    }
-                }, 0);
-
                 if (day) {
                     this.triggerListSave(day);
                 } else {
