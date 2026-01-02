@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TimeSloth 🦥</title>
+    <title>TimeSloth</title>
     
     <link rel="icon" href="/static/img/favicon.png">
     
@@ -84,14 +84,16 @@
         <?= $content ?? '' ?>
         
         <div class="app-footer">
-            <div class="mb-2">
-                <i class="bi bi-clock-history"></i> <span class="fw-bold">TimeSloth</span> v0.1.4.1
+            <div class="mb-2 d-flex align-items-center justify-content-center gap-2">
+                <span>&copy; <?= date('Y') ?> • <span class="fw-bold">TimeSloth</span></span>
+                <img src="/static/img/favicon.png" alt="Logo" width="24" height="24" 
+                     style="filter: grayscale(1); opacity: 0.7; transition: all 0.3s;">
             </div>
             
             <div class="mb-2">
                 <?php 
                 $quotes = [
-                    "Zeit ist Geld, aber Faulheit ist unbezahlbar. 🦥",
+                    "Zeit ist Geld, aber Faulheit ist unbezahlbar.",
                     "Wir zählen die Stunden, damit du es nicht musst.",
                     "Keine Haftung bei versehentlicher Produktivität.",
                     "Programmiert mit ❤️ und viel Koffein.",
@@ -110,10 +112,6 @@
                 ];
                 echo $quotes[array_rand($quotes)]; 
                 ?>
-            </div>
-
-            <div>
-                &copy; <?= date('Y') ?> • <a href="https://github.com/StefanZug/timesloth" target="_blank" class="text-reset text-decoration-none border-bottom border-secondary">GitHub</a>
             </div>
         </div>
     </div>

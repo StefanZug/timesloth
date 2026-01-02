@@ -54,6 +54,19 @@ body {
     color: var(--sloth-text-main);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
+    
+    /* FIX: Sticky Footer Setup */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Der Hauptcontainer muss wachsen, um den Footer nach unten zu drücken */
+#main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
 }
 
 h1, h2, h3, h4, h5, h6, .card-title, strong { color: var(--sloth-text-main); }
@@ -211,11 +224,10 @@ thead th {
 }
 .toast-sloth.show { opacity: 1; visibility: visible; bottom: 40px; }
 
-/* --- 8. DASHBOARD GRID SYSTEM (v0.1.4.2) --- */
-/* WICHTIG: overflow visible, damit Dropdowns überlappen können! */
+/* --- 8. DASHBOARD GRID SYSTEM (v0.1.4.3) --- */
 .widget-card { 
     margin-bottom: 20px; 
-    overflow: visible; 
+    overflow: visible; /* Wichtig für Dropdowns */
 }
 
 .widget-header {
@@ -224,7 +236,6 @@ thead th {
     color: var(--sloth-text-muted);
     border-bottom: 1px solid var(--sloth-border-color);
     background-color: var(--sloth-bg-tertiary);
-    /* Radius oben wiederherstellen, da overflow visible ist */
     border-top-left-radius: var(--sloth-radius);
     border-top-right-radius: var(--sloth-radius);
     display: flex; justify-content: space-between; align-items: center;
@@ -235,10 +246,11 @@ thead th {
 @media (min-width: 992px) {
     .sticky-column {
         position: sticky; 
-        top: 80px; /* Mehr Abstand wegen Navbar */
+        /* FIX: Abstand erhöht von 80px auf 100px */
+        /* Verhindert, dass die Überschrift unter die Navbar rutscht */
+        top: 100px; 
         height: fit-content; 
-        /* Max-Height entfernt, damit nichts abgeschnitten wird! */
-        z-index: 100;
+        z-index: 900; /* Kleiner als Navbar (meist 1000+), aber über normalem Content */
     }
 }
 
@@ -262,26 +274,54 @@ thead th {
 
 .table-compact td, .table-compact th { padding: 0.4rem 0.3rem; font-size: 0.85rem; }
 
-/* FIX: Uhr-Icon in Inputs ausblenden für bessere Maus-Scroll-Area */
-input[type="time"]::-webkit-calendar-picker-indicator {
-    display: none;
-}
-/* Für Firefox (falls nötig) */
-input[type="time"] {
-    -moz-appearance: textfield;
-}
+/* Uhr-Icon ausblenden für bessere Scroll-Area */
+input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
+input[type="time"] { -moz-appearance: textfield; }
 
 /* --- 9. FOOTER --- */
 .app-footer { 
     font-size: 0.75rem; 
     color: var(--sloth-text-muted); 
-    text-align: center;
-    margin-top: auto; 
+    /* FIX: Force Center und volle Breite */
+    text-align: center !important;
+    width: 100%;
+    margin-top: auto; /* Drückt Footer bei Flex-Layout nach unten */
     padding: 40px 20px; 
     opacity: 0.6; 
-    width: 100%;
 }
 .app-footer:hover { 
     opacity: 1; 
     transition: opacity 0.3s ease; 
+}
+.app-footer:hover img {
+    filter: grayscale(0) !important;
+    opacity: 1 !important;
+    transform: rotate(10deg); /* Kleiner Wackler zum Hallo-Sagen */
+}
+
+/* --- 10. ANIMATIONEN (Login & Interaktion) --- */
+
+/* Fade In Animation (für sanftes Laden von Seiten) */
+.animate-fade {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Sloth Spin Animation (Easter Egg) */
+.spin-animation {
+    animation: slothSpin 1s ease-in-out;
+}
+
+@keyframes slothSpin {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); } /* Kleiner "Pop" Effekt */
+    100% { transform: rotate(360deg) scale(1); }
 }
