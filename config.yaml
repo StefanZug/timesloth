@@ -1,7 +1,8 @@
 name: "TimeSloth"
-version: "0.1.2.0"
+version: "0.1.2.1"
 slug: "timesloth"
 description: "Professional Time Tracking for Sloths."
+url: "https://github.com/StefanZug/timesloth"
 arch:
   - aarch64
 init: false

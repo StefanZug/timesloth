@@ -6,7 +6,7 @@
             <div class="d-flex justify-content-between align-items-center mb-1">
                 <span class="text-muted small fw-bold text-uppercase">Büro-Quote (40%)</span>
                 <div class="d-flex gap-2 align-items-center">
-                    <span class="text-danger fw-bold fs-5">[[ quota.needed ]] h</span>
+                    <span class="text-danger fw-bold fs-5">[[ formatNum(quota.needed) ]] h</span>
                     <button class="btn btn-sm btn-outline-secondary border-0 p-0 ms-1" 
                             data-bs-toggle="modal" data-bs-target="#calcModal" title="Quick Rechner">
                         <i class="bi bi-calculator fs-6"></i>
@@ -15,15 +15,15 @@
             </div>
             
             <div class="d-flex justify-content-between small mb-1 text-muted">
-                <span>Ist: [[ quota.current ]] h</span>
-                <span>Ziel: [[ quota.target ]] h</span>
+                <span>Ist: [[ formatNum(quota.current) ]] h</span>
+                <span>Ziel: [[ formatNum(quota.target) ]] h</span>
             </div>
             <div class="progress-sloth">
                 <div class="progress-bar-sloth" :style="{ width: quota.percent + '%' }"></div>
             </div>
             <div class="text-end mt-2">
                 <span class="badge bg-secondary opacity-75 fw-normal" style="font-size: 0.7rem;">
-                    Abzüge (F/U/K): [[ quota.deduction ]] h
+                    Abzüge (F/U/K): [[ formatNum(quota.deduction) ]] h
                 </span>
             </div>
         </div>
@@ -219,7 +219,7 @@
                     <div class="mb-3">
                         <label class="form-label small fw-bold d-flex justify-content-between">
                             <span>Abwesenheit (Krank/Urlaub)</span>
-                            <span class="text-success" v-if="calcDeduction > 0">- [[ calcDeduction ]] h</span>
+                            <span class="text-success" v-if="calcDeduction > 0">- [[ formatNum(calcDeduction) ]] h</span>
                         </label>
                         <div class="input-group">
                             <input type="number" step="1" class="form-control" v-model.number="calc.absentDays" placeholder="0">
@@ -231,7 +231,7 @@
                     <div class="mb-4">
                         <label class="form-label small fw-bold d-flex justify-content-between">
                             <span>Geplante Bürozeit pro Tag</span>
-                            <span class="text-primary">[[ calc.planHours ]] h</span>
+                            <span class="text-primary">[[ formatNum(calc.planHours) ]] h</span>
                         </label>
                         <input type="range" class="form-range" min="4" max="10" step="0.25" v-model.number="calc.planHours">
                     </div>
@@ -239,7 +239,7 @@
                     <div class="alert alert-primary text-center border-0 shadow-sm mb-0">
                         <small class="text-uppercase text-muted" style="font-size: 0.7rem;">Du musst noch ins Büro für:</small>
                         <div class="fs-2 fw-bold mt-1">
-                            [[ calcResult ]] <span class="fs-6 fw-normal text-muted">Tage</span>
+                            [[ formatNum(calcResult) ]] <span class="fs-6 fw-normal text-muted">Tage</span>
                         </div>
                     </div>
                 </div>
@@ -268,7 +268,6 @@
                 saveTimer: null,
                 settings: Object.assign({
                     sollStunden: 7.70,
-                    // sollMoDo/sollFr entfernt - wir nutzen nur noch den Durchschnitt
                     deductionPerDay: 3.08,
                     arztStart: 480, arztEnde: 972,
                     pcScroll: true,
@@ -292,13 +291,13 @@
             // Calculator Logic
             calcDeduction() {
                 const dailyDed = this.settings.sollStunden * 0.40;
-                return (this.calc.absentDays * dailyDed).toFixed(2);
+                return (this.calc.absentDays * dailyDed);
             },
             calcResult() {
                 if(!this.calc.sapMissing || this.calc.sapMissing <= 0) return 0;
                 const realMissing = this.calc.sapMissing - this.calcDeduction;
                 if(realMissing <= 0) return 0;
-                return (realMissing / this.calc.planHours).toFixed(1);
+                return (realMissing / this.calc.planHours);
             },
 
             // Standard Logic
@@ -339,7 +338,13 @@
                 let ist = sapMin / 60;
                 let target = this.isNonWorkDay ? 0 : this.todaySoll;
                 let saldoVal = ist - target;
-                return { sapTime: Math.max(0, sapMin), catsTime: Math.max(0, catsMin), pause, saldo: (saldoVal > 0 ? '+' : '') + saldoVal.toFixed(2) + ' h' };
+                let prefix = saldoVal > 0 ? '+' : '';
+                return { 
+                    sapTime: Math.max(0, sapMin), 
+                    catsTime: Math.max(0, catsMin), 
+                    pause, 
+                    saldo: prefix + this.formatNum(saldoVal) + ' h' 
+                };
             },
             prediction() {
                 if (this.blocks.length === 0 || this.isNonWorkDay) return { target: '--:--', max: '--:--' };
@@ -367,17 +372,16 @@
                 let deductionTotal = 0;
                 let m = this.currentDateObj.getMonth();
                 
-                // 1. STATISTISCHE BASIS (Durchschnitts-Monat)
-                // Formel: Wochenstunden * 52 Wochen / 12 Monate * 40% Quote
+                // 1. STATISTISCHE BASIS (SAP Standard)
+                // Formel: Wochenstunden * 4.33 Wochen (kaufmännisch)
                 let dailyAvg = parseFloat(this.settings.sollStunden);
                 let weeklyAvg = dailyAvg * 5; 
-                let monthlyAvg = weeklyAvg * 52 / 12;
+                let monthlyAvg = weeklyAvg * 4.33; // SAP Standard (statt 52/12)
                 let baseTarget = monthlyAvg * 0.40;
 
                 // 2. Abwesenheiten & Ist-Stunden sammeln
                 let allDays = new Set();
                 this.entriesCache.forEach(e => allDays.add(e.date));
-                // Wichtig: Auch reine Feiertage (ohne User-Eintrag) berücksichtigen
                 for(let k in this.holidaysMap) if(k.startsWith(this.isoMonth)) allDays.add(k);
 
                 allDays.forEach(iso => {
@@ -389,11 +393,9 @@
                     let entry = this.entriesCache.find(e => e.date === iso);
                     let isHol = !!this.holidaysMap[iso];
                     
-                    // Status ermitteln: Entweder User-Eingabe oder Feiertag aus Kalender
                     let status = entry ? entry.status : (isHol ? 'F' : null);
 
                     if(['F','U','K'].includes(status)) {
-                        // Abzug pro Fehltag: Tägliches Soll * 40%
                         deductionTotal += (dailyAvg * 0.40);
                     } else if(entry && entry.blocks) {
                         entry.blocks.forEach(b => {
@@ -405,21 +407,21 @@
                     }
                 });
 
-                // 3. Manuelle Korrektur anwenden (Feld in Settings)
+                // 3. Manuelle Korrektur
                 let correctionHours = parseFloat(this.settings.correction || 0);
                 let correctionQuota = correctionHours * 0.40;
                 
-                // Basis-Ziel bereinigen
                 let finalTarget = Math.max(0, baseTarget - deductionTotal + correctionQuota);
                 let currentHours = officeMinSum / 60;
                 
                 let percent = finalTarget > 0 ? (currentHours / finalTarget) * 100 : 100;
                 
+                // Wir returnen hier Zahlen, formatiert wird im Template via formatNum
                 return {
-                    current: currentHours.toFixed(2),
-                    target: finalTarget.toFixed(2),
-                    deduction: deductionTotal.toFixed(2),
-                    needed: Math.max(0, finalTarget - currentHours).toFixed(2),
+                    current: currentHours,
+                    target: finalTarget,
+                    deduction: deductionTotal,
+                    needed: Math.max(0, finalTarget - currentHours),
                     percent: Math.min(100, percent)
                 };
             },
@@ -484,7 +486,15 @@
             }
         },
         methods: {
-            formatNum(n) { return n ? n.toFixed(2) : '0.00'; },
+            // HELPER: DEUTSCHE FORMATIERUNG MIT KOMMA
+            formatNum(n) { 
+                if(n === null || n === undefined) return '0,00';
+                return n.toFixed(2).replace('.', ','); 
+            },
+            formatH(min) { 
+                return (min / 60).toFixed(2).replace('.', ','); 
+            },
+            
             formatIsoDate(date) {
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -516,7 +526,6 @@
                 let step = 60; // Default: Minuten
 
                 if (input.type === 'text') {
-                    // --- VARIANTE A: Text-Feld (Präzise, alles wie gehabt) ---
                     const cursor = input.selectionStart;
                     if (cursor !== null) {
                         if (cursor <= 2) step = 3600;
@@ -527,7 +536,6 @@
                         if(document.activeElement === input) input.setSelectionRange(cursor, cursor);
                     }, 0);
                 } else {
-                    // --- VARIANTE B: Time-Input (Heuristik für Handy/Native Mode) ---
                     const rect = input.getBoundingClientRect();
                     const x = event.clientX - rect.left;
                     const width = rect.width;
@@ -535,21 +543,11 @@
                     const isHome = (block.type === 'home'); 
 
                     if (isHome) {
-                        // Home Office hat nur HH:MM -> Wir teilen bei 50%
-                        if (x < (width * 0.5)) {
-                            step = 3600; 
-                        } else {
-                            step = 60;
-                        }
+                        if (x < (width * 0.5)) { step = 3600; } else { step = 60; }
                     } else {
-                        // Büro/Arzt hat HH:MM:SS -> Wir teilen in Drittel
-                        if (x < (width * 0.32)) {
-                            step = 3600; // Linkes Drittel: Stunden
-                        } else if (x > (width * 0.64)) {
-                            step = 1;    // Rechtes Drittel: Sekunden
-                        } else {
-                            step = 60;   // Mitte: Minuten
-                        }
+                        if (x < (width * 0.32)) { step = 3600; } 
+                        else if (x > (width * 0.64)) { step = 1; } 
+                        else { step = 60; }
                     }
                 }
 
@@ -572,7 +570,6 @@
                 else this.triggerAutoSave();
             },
             getDailyTarget(date) {
-                // VEREINFACHT: Jeder Tag ist gleich (Durchschnittswert)
                 const wd = date.getDay();
                 if(wd === 0 || wd === 6) return 0;
                 return parseFloat(this.settings.sollStunden);
@@ -696,7 +693,6 @@
                 let h = Math.floor(min / 60); let m = min % 60;
                 return h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
             },
-            formatH(min) { return (min / 60).toFixed(2); },
             getTypeIcon(t) { return (t==='office'?'bi-building':(t==='home'?'bi-house':'bi-bandaid')); },
             getStatusText(s) { return (s==='F'?'Feiertag 🎄':(s==='U'?'Urlaub 🌴':(s==='K'?'Krank 🤒':''))); },
             getKw(d) {
@@ -799,7 +795,6 @@
                     this.holidaysMap = res.data.holidays || {};
                     if(res.data.settings) {
                         if(res.data.settings.sollStunden) this.settings.sollStunden = parseFloat(res.data.settings.sollStunden);
-                        // Alte Settings (sollMoDo, sollFr) ignorieren wir jetzt
                         if(res.data.settings.pcScroll !== undefined) this.settings.pcScroll = res.data.settings.pcScroll;
                         if(res.data.settings.useNativeWheel !== undefined) this.settings.useNativeWheel = res.data.settings.useNativeWheel;
                     }

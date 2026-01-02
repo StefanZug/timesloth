@@ -21,17 +21,17 @@
                             <input type="range" class="form-range mb-3" id="rangePercent" min="10" max="100" step="5" value="100">
 
                             <div class="small text-muted d-flex justify-content-between border-top pt-2">
-                                <span>Wochenstunden (100%):</span><strong id="lblWeekHours">38.50 h</strong>
+                                <span>Wochenstunden (100%):</span><strong id="lblWeekHours">38,50 h</strong>
                             </div>
                             <div class="small text-muted d-flex justify-content-between pt-1">
-                                <span>Täglich (Ø):</span><strong id="lblDaily">7.70 h</strong>
+                                <span>Täglich (Ø):</span><strong id="lblDaily">7,70 h</strong>
                             </div>
                         </div>
                         
                         <div class="settings-box">
                             <label class="form-label small fw-bold">Monatl. Korrektur (Netto-Arbeitszeit)</label>
                             <div class="input-group input-group-sm">
-                                <input type="number" step="0.01" class="form-control" id="correctionInput" placeholder="0.00">
+                                <input type="number" step="0.01" class="form-control" id="correctionInput" placeholder="0,00">
                                 <span class="input-group-text">h</span>
                             </div>
                             <div class="form-text small">
@@ -137,6 +137,10 @@
     pcScrollToggle.checked = (currentSettings.pcScroll !== false);
     mobileWheelToggle.checked = (currentSettings.useNativeWheel === true);
 
+    function formatDe(num) {
+        return num.toFixed(2).replace('.', ',');
+    }
+
     function updateCalc() {
         const pct = parseInt(rangePercent.value) / 100;
         lblPercent.textContent = parseInt(rangePercent.value) + '%';
@@ -144,8 +148,8 @@
         const weekly = BASE_WEEKLY * pct;
         const daily = weekly / 5;
 
-        lblWeekHours.textContent = weekly.toFixed(2) + ' h';
-        lblDaily.textContent = daily.toFixed(2) + ' h';
+        lblWeekHours.textContent = formatDe(weekly) + ' h';
+        lblDaily.textContent = formatDe(daily) + ' h';
     }
 
     rangePercent.addEventListener('input', updateCalc);
@@ -167,7 +171,7 @@
         axios.post('/api/settings', { 
             percent: parseInt(rangePercent.value),
             sollStunden: daily.toFixed(2),
-            // Legacy Support für das Backend (falls es die Felder erwartet)
+            // Legacy Support
             sollMoDo: daily.toFixed(2),
             sollFr: daily.toFixed(2),
             pcScroll: pcScrollToggle.checked,
