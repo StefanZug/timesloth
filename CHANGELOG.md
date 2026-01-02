@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.4.0 (The UI/UX Update)
+
+**Design & UX:**
+- **Neues Dashboard Layout:** Auf großen Bildschirmen (Desktop) wechselt TimeSloth nun automatisch in ein 3-Spalten-Grid ("Cockpit View").
+- **Sticky Sidebar:** Die Statistik- und Quoten-Boxen bleiben am PC beim Scrollen sichtbar.
+- **Dark Mode 2.0:** Komplettes Redesign des Darkmodes. Transparenzen wurden durch feste High-Contrast-Farben ersetzt (bessere Lesbarkeit, inspirieret von GitHub).
+- **Settings Redesign:** Die Einstellungen wurden komplett überarbeitet und in übersichtliche Tabs (Berechnung, Interface, Account) gegliedert.
+- **Widget-Look:** Einführung von "Widget Cards" für eine konsistentere Optik.
+
+**Technical:**
+- **Refactoring:** Die JavaScript-Logik der Einstellungsseite wurde von PHP getrennt und in `static/js/pages/settings.js` ausgelagert.
+- **CSS Variablen:** Einführung zentraler CSS-Variablen für Status-Farben (Office, Home, Sick), die sich automatisch dem Theme anpassen.
+
 ## 0.1.3.0 (The Refactoring Release) (https://github.com/StefanZug/timesloth/issues/18)
 
 **Technical Debt & Architecture:**

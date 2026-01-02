@@ -1,196 +1,167 @@
-<div class="container mt-4">
+<div id="settingsApp" class="container mt-4" style="max-width: 800px;" v-cloak>
+    
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>⚙️ Einstellungen</h2>
-        <a href="/" class="btn btn-outline-secondary">Zurück</a>
+        <h2 class="fw-bold m-0"><i class="bi bi-sliders"></i> Einstellungen</h2>
+        <a href="/" class="btn btn-outline-secondary border-0"><i class="bi bi-x-lg"></i> Schließen</a>
     </div>
 
-    <div class="row">
-        <div class="col-md-5 mb-4">
-            
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-transparent fw-bold">⏱️ Arbeitszeit & Verhalten</div>
-                <div class="card-body">
-                    <form id="globalSettingsForm">
-                        
-                        <div class="settings-box">
-                            <h6>Basisdaten</h6>
-                            <label class="form-label d-flex justify-content-between mb-2">
-                                <span>Beschäftigungsausmaß</span>
-                                <span class="fw-bold text-primary" id="lblPercent">100%</span>
-                            </label>
-                            <input type="range" class="form-range mb-3" id="rangePercent" min="10" max="100" step="5" value="100">
+    <ul class="nav nav-tabs nav-fill mb-4" id="settingTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold" id="calc-tab" data-bs-toggle="tab" data-bs-target="#calc-content" type="button" role="tab">
+                <i class="bi bi-calculator"></i> Berechnung
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="interface-tab" data-bs-toggle="tab" data-bs-target="#interface-content" type="button" role="tab">
+                <i class="bi bi-display"></i> Interface
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold text-danger" id="security-tab" data-bs-toggle="tab" data-bs-target="#security-content" type="button" role="tab">
+                <i class="bi bi-shield-lock"></i> Account
+            </button>
+        </li>
+    </ul>
 
-                            <div class="small text-muted d-flex justify-content-between border-top pt-2">
-                                <span>Wochenstunden (100%):</span><strong id="lblWeekHours">38,50 h</strong>
-                            </div>
-                            <div class="small text-muted d-flex justify-content-between pt-1">
-                                <span>Täglich (Ø):</span><strong id="lblDaily">7,70 h</strong>
+    <div class="tab-content" id="settingTabsContent">
+        
+        <div class="tab-pane fade show active" id="calc-content" role="tabpanel">
+            <div class="widget-card">
+                <div class="widget-header">⏱️ Arbeitszeit Modell</div>
+                <div class="widget-body">
+                    
+                    <label class="form-label d-flex justify-content-between mb-2">
+                        <span>Beschäftigungsausmaß</span>
+                        <span class="fw-bold text-primary fs-5">[[ settings.percent ]]%</span>
+                    </label>
+                    <input type="range" class="form-range mb-4" min="10" max="100" step="5" v-model.number="settings.percent">
+
+                    <div class="row g-3 text-center mb-4">
+                        <div class="col-6">
+                            <div class="p-3 bg-body-tertiary rounded border">
+                                <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Wochenstunden</small>
+                                <strong class="fs-5">[[ formatNum(calc.weekly) ]] h</strong>
                             </div>
                         </div>
-                        
-                        <div class="settings-box">
-                            <label class="form-label small fw-bold">Monatl. Korrektur (Netto-Arbeitszeit)</label>
-                            <div class="input-group input-group-sm">
-                                <input type="number" step="0.01" class="form-control" id="correctionInput" placeholder="0,00">
+                        <div class="col-6">
+                            <div class="p-3 bg-body-tertiary rounded border">
+                                <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Täglich (Ø)</small>
+                                <strong class="fs-5 text-primary">[[ formatNum(calc.daily) ]] h</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light border p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold m-0">Monatliche Korrektur</label>
+                            <div class="input-group input-group-sm" style="width: 120px;">
+                                <input type="number" step="0.01" class="form-control" v-model.number="settings.correction">
                                 <span class="input-group-text">h</span>
                             </div>
-                            <div class="form-text small">
-                                Gleicht manuelle Differenzen zu SAP aus (wird zu 40% angerechnet).
-                            </div>
                         </div>
+                        <p class="small text-muted m-0" style="line-height: 1.4;">
+                            Nutze dies, um manuelle Zeitgutschriften (z.B. Dienstreisen, Sonderurlaub) auszugleichen. 
+                            Der Wert wird zu 40% auf deine Büro-Quote angerechnet.
+                        </p>
+                    </div>
 
-                        <div class="settings-box">
-                            <h6>Bedienung</h6>
-                            <div class="form-check form-switch mb-2">
-                                <input class="form-check-input" type="checkbox" id="pcScrollToggle">
-                                <label class="form-check-label" for="pcScrollToggle">Maus-Rad am PC</label>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="mobileWheelToggle">
-                                <label class="form-check-label" for="mobileWheelToggle">Zeit-Picker (Handy)</label>
-                            </div>
-                        </div>
+                    <button class="btn btn-primary w-100 py-2 fw-bold" @click="saveSettings">
+                        <span v-if="saveState === 'saving'" class="spinner-border spinner-border-sm me-2"></span>
+                        <span v-if="saveState === 'saved'"><i class="bi bi-check-lg"></i> Gespeichert</span>
+                        <span v-else>Speichern</span>
+                    </button>
 
-                        <button type="submit" class="btn btn-primary w-100 mt-2">Speichern</button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-transparent fw-bold text-danger">🔑 Passwort ändern</div>
-                <div class="card-body">
-                    <form id="pwChangeForm">
-                        <div class="mb-2">
-                            <input type="password" class="form-control" id="oldPw" placeholder="Altes Passwort" required>
-                        </div>
-                        <div class="mb-2">
-                            <input type="password" class="form-control" id="newPw" placeholder="Neues Passwort (min. 8 Zeichen)" required>
-                        </div>
-                        <button type="submit" class="btn btn-outline-danger w-100">Passwort ändern</button>
-                    </form>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-7">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center">
-                    <span>📜 Logins (letzte 30)</span>
+        <div class="tab-pane fade" id="interface-content" role="tabpanel">
+            <div class="widget-card">
+                <div class="widget-header">🖱️ Bedienung & Optik</div>
+                <div class="widget-body">
+                    
+                    <div class="form-check form-switch mb-3 p-3 bg-body-tertiary rounded border">
+                        <input class="form-check-input ms-0 me-3" type="checkbox" role="switch" v-model="settings.pcScroll" style="float: none;">
+                        <label class="form-check-label fw-bold">Maus-Rad Support (PC)</label>
+                        <div class="small text-muted mt-1">
+                            Erlaubt das Ändern von Zeiten durch Scrollen über dem Eingabefeld.
+                            <br><i>Links: Stunden, Mitte: Minuten, Rechts: Minuten-Genau.</i>
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch mb-3 p-3 bg-body-tertiary rounded border">
+                        <input class="form-check-input ms-0 me-3" type="checkbox" role="switch" v-model="settings.useNativeWheel" style="float: none;">
+                        <label class="form-check-label fw-bold">Native Zeit-Picker (Handy)</label>
+                        <div class="small text-muted mt-1">
+                            Deaktiviert die Texteingabe und nutzt die Uhr-Auswahl von iOS/Android.
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button class="btn btn-outline-primary w-100" @click="saveSettings">Einstellungen speichern</button>
+                    </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                        <table class="table table-striped table-hover mb-0 align-middle" style="font-size: 0.9rem;">
-                            <thead class="sticky-top border-bottom">
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="security-content" role="tabpanel">
+            
+            <div class="widget-card mb-4 border-danger">
+                <div class="widget-header bg-danger text-white">🔑 Passwort ändern</div>
+                <div class="widget-body">
+                    <form @submit.prevent="changePassword">
+                        <div class="mb-2">
+                            <input type="password" class="form-control" v-model="passwords.old" placeholder="Altes Passwort" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="password" class="form-control" v-model="passwords.new" placeholder="Neues Passwort (min. 8 Zeichen)" required>
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100">Passwort ändern</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="widget-card">
+                <div class="widget-header">📜 Login Historie (Letzte 30)</div>
+                <div class="widget-body p-0">
+                    <div class="table-responsive" style="max-height: 300px;">
+                        <table class="table table-striped table-sm mb-0 align-middle small">
+                            <thead class="bg-body-tertiary sticky-top">
                                 <tr>
-                                    <th>Zeitpunkt</th>
-                                    <th>Gerät / Browser</th>
-                                    <th>IP-Adresse</th>
+                                    <th class="ps-3 py-2">Zeit</th>
+                                    <th>IP</th>
+                                    <th>Browser</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if(empty($logs)): ?>
-                                    <tr><td colspan="3" class="text-center py-3">Keine Daten vorhanden.</td></tr>
-                                <?php else: ?>
-                                    <?php foreach($logs as $log): ?>
-                                    <tr>
-                                        <td><?= date('d.m.y H:i', strtotime($log['timestamp'])) ?></td>
-                                        <td>
-                                            <?= htmlspecialchars(substr($log['user_agent'], 0, 40)) ?>...
-                                        </td>
-                                        <td class="font-monospace small"><?= htmlspecialchars($log['ip_address']) ?></td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
+                                <?php foreach($logs as $log): ?>
+                                <tr>
+                                    <td class="ps-3 text-nowrap"><?= date('d.m.y H:i', strtotime($log['timestamp'])) ?></td>
+                                    <td class="font-monospace"><?= htmlspecialchars($log['ip_address']) ?></td>
+                                    <td class="text-muted text-truncate" style="max-width: 150px;" title="<?= htmlspecialchars($log['user_agent']) ?>">
+                                        <?= htmlspecialchars(substr($log['user_agent'], 0, 30)) ?>...
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
-</div>
+    
+    <div class="toast-sloth" :class="{show: saveState === 'saved'}">
+        <i class="bi bi-check-circle-fill text-success"></i>
+        <span>Gespeichert!</span>
+    </div>
 
-<div id="saveToast" class="toast-sloth">
-    <i class="bi bi-check-circle-fill text-success"></i>
-    <span>Gespeichert!</span>
 </div>
 
 <script>
-    const currentSettings = <?= $user['settings'] ?: '{}' ?>;
-    
-    const BASE_WEEKLY = 38.5;
-
-    const rangePercent = document.getElementById('rangePercent');
-    const pcScrollToggle = document.getElementById('pcScrollToggle');
-    const mobileWheelToggle = document.getElementById('mobileWheelToggle');
-    const correctionInput = document.getElementById('correctionInput');
-    
-    const lblPercent = document.getElementById('lblPercent');
-    const lblWeekHours = document.getElementById('lblWeekHours');
-    const lblDaily = document.getElementById('lblDaily');
-
-    // Init Values
-    if(currentSettings.percent) rangePercent.value = currentSettings.percent;
-    if(currentSettings.correction) correctionInput.value = currentSettings.correction;
-
-    // Toggles
-    pcScrollToggle.checked = (currentSettings.pcScroll !== false);
-    mobileWheelToggle.checked = (currentSettings.useNativeWheel === true);
-
-    function formatDe(num) {
-        return num.toFixed(2).replace('.', ',');
-    }
-
-    function updateCalc() {
-        const pct = parseInt(rangePercent.value) / 100;
-        lblPercent.textContent = parseInt(rangePercent.value) + '%';
-        
-        const weekly = BASE_WEEKLY * pct;
-        const daily = weekly / 5;
-
-        lblWeekHours.textContent = formatDe(weekly) + ' h';
-        lblDaily.textContent = formatDe(daily) + ' h';
-    }
-
-    rangePercent.addEventListener('input', updateCalc);
-    updateCalc();
-
-    // TOAST LOGIC
-    function showToast() {
-        const t = document.getElementById('saveToast');
-        t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 2000);
-    }
-
-    document.getElementById('globalSettingsForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const pct = parseInt(rangePercent.value) / 100;
-        const weekly = BASE_WEEKLY * pct;
-        const daily = weekly / 5;
-
-        axios.post('/api/settings', { 
-            percent: parseInt(rangePercent.value),
-            sollStunden: daily.toFixed(2),
-            // Legacy Support
-            sollMoDo: daily.toFixed(2),
-            sollFr: daily.toFixed(2),
-            pcScroll: pcScrollToggle.checked,
-            useNativeWheel: mobileWheelToggle.checked,
-            correction: correctionInput.value
-        }).then(() => {
-            showToast();
-        }).catch(err => alert("Fehler!"));
-    });
-
-    document.getElementById('pwChangeForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const oldPw = document.getElementById('oldPw').value;
-        const newPw = document.getElementById('newPw').value;
-        axios.post('/change_password', { old_password: oldPw, new_password: newPw })
-            .then(res => {
-                alert("Passwort erfolgreich geändert!"); 
-                document.getElementById('pwChangeForm').reset();
-            })
-            .catch(err => alert("Fehler: " + (err.response?.data?.error || "Unbekannt")));
-    });
+    window.slothData = {
+        settings: <?= $user['settings'] ?: '{}' ?>
+    };
 </script>
+<script src="/static/js/pages/settings.js"></script>

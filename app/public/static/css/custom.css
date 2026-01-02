@@ -1,17 +1,10 @@
-/* --- 1. DEFINITIONEN & VARIABLEN (Nextcloud Style) --- */
+/* --- 1. DEFINITIONEN & VARIABLEN --- */
 :root {
     --sloth-primary: #5c7cfa;
     --sloth-radius: 10px;
-    
-    /* Basis-Farben für Stati (RGB Werte für Transparenz-Berechnung) */
-    --rgb-office: 40, 167, 69;    /* Grün */
-    --rgb-home: 23, 162, 184;     /* Cyan */
-    --rgb-vacation: 255, 193, 7;  /* Gelb */
-    --rgb-sick: 220, 53, 69;      /* Rot */
-    --rgb-holiday: 108, 117, 125; /* Grau */
 }
 
-/* LIGHT THEME */
+/* LIGHT THEME (Clean & Bright) */
 [data-bs-theme="light"] {
     --sloth-bg-body: #f0f2f5;
     --sloth-bg-card: #ffffff;
@@ -23,27 +16,36 @@
     --sloth-border-color: #e5e7eb;
     --sloth-input-bg: #ffffff;
     
-    /* Zeilen-Hintergründe: Hell und transparent */
-    --row-opacity: 0.15;
-    --row-text-color: inherit; /* Bleibt dunkel */
+    /* Status Farben (Pastell-artig für Light Mode) */
+    --bg-office: #dcfce7;   --text-office: #166534;
+    --bg-home: #cff4fc;     --text-home: #055160;
+    --bg-sick: #fce8e6;     --text-sick: #991b1b;
+    --bg-vacation: #fef9c3; --text-vacation: #854d0e;
+    --bg-holiday: #e9ecef;  --text-holiday: #495057;
+    
+    --input-hover-bg: #f8f9fa;
 }
 
-/* DARK THEME (Modern Slate / GitHub Dimmed) */
+/* DARK THEME (Crisp & High Contrast - GitHub Style) */
 [data-bs-theme="dark"] {
-    --sloth-bg-body: #0d1117;       /* Sehr dunkles Blau-Grau */
-    --sloth-bg-card: #161b22;       /* Karten etwas heller */
-    --sloth-bg-tertiary: #21262d;
+    --sloth-bg-body: #0d1117;       /* Deep Space Blue */
+    --sloth-bg-card: #161b22;       /* Card Background */
+    --sloth-bg-tertiary: #21262d;   /* Headers / Inputs */
     
-    --sloth-text-main: #e6edf3;     /* Off-White, augenschonend */
-    --sloth-text-muted: #8b949e;
+    --sloth-text-main: #e6edf3;     /* Off-White */
+    --sloth-text-muted: #8b949e;    /* Cool Grey */
     
     --sloth-border-color: #30363d;
     --sloth-input-bg: #0d1117;
     
-    /* Zeilen-Hintergründe: Dunkel mit Farbstich */
-    /* Trick: Wir nutzen die Farbe nur als Tönung, Schrift bleibt weiß! */
-    --row-opacity: 0.25;
-    --row-text-color: var(--sloth-text-main); 
+    /* Status Farben (Dunkel & Gesättigt + Heller Text) */
+    --bg-office: #11291c;   --text-office: #7ee787; /* Neon Grün auf Dunkelgrün */
+    --bg-home: #132736;     --text-home: #79c0ff;   /* Cyan auf Dunkelblau */
+    --bg-sick: #381619;     --text-sick: #ff7b72;   /* Rot auf Dunkelrot */
+    --bg-vacation: #382800; --text-vacation: #d29922; /* Gold auf Dunkelbraun */
+    --bg-holiday: #252a30;  --text-holiday: #8b949e;
+    
+    --input-hover-bg: #30363d;
 }
 
 /* --- 2. GLOBAL LAYOUT --- */
@@ -54,15 +56,6 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.card, .quota-card, .admin-card { 
-    background-color: var(--sloth-bg-card); 
-    border: 1px solid var(--sloth-border-color);
-    border-radius: var(--sloth-radius);
-    color: var(--sloth-text-main);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-/* Fix für Textfarben in Cards */
 h1, h2, h3, h4, h5, h6, .card-title, strong { color: var(--sloth-text-main); }
 .text-muted { color: var(--sloth-text-muted) !important; }
 
@@ -74,7 +67,7 @@ h1, h2, h3, h4, h5, h6, .card-title, strong { color: var(--sloth-text-main); }
     border-radius: 6px;
 }
 
-.form-control:focus {
+.form-control:focus, .form-select:focus {
     background-color: var(--sloth-input-bg);
     border-color: var(--sloth-primary);
     color: var(--sloth-text-main);
@@ -82,27 +75,25 @@ h1, h2, h3, h4, h5, h6, .card-title, strong { color: var(--sloth-text-main); }
 }
 
 /* Inputs IN der Tabelle */
-tbody td input[type="text"], 
-tbody td input[type="time"] {
+.table-input {
     width: 100%; 
-    min-width: 60px;
-    background-color: rgba(127, 127, 127, 0.05); /* Ganz leicht hinterlegt */
-    border: 1px solid transparent; /* Erst sichtbar bei Hover/Focus */
+    min-width: 50px;
+    background-color: transparent;
+    border: 1px solid transparent; 
     border-radius: 4px; 
-    padding: 4px 5px; 
     text-align: center;
-    color: var(--sloth-text-main);
+    color: inherit; /* Nimmt Textfarbe der Zeile an (wichtig für Darkmode!) */
+    font-weight: 600;
     transition: all 0.2s;
 }
 
-tbody td input[type="text"]:hover, 
-tbody td input[type="time"]:hover {
+.table-input:hover {
     border-color: var(--sloth-border-color);
-    background-color: var(--sloth-input-bg);
+    background-color: var(--input-hover-bg);
+    color: var(--sloth-text-main); /* Bei Hover wieder Standard-Farbe */
 }
 
-tbody td input[type="text"]:focus,
-tbody td input[type="time"]:focus {
+.table-input:focus {
     border-color: var(--sloth-primary);
     background-color: var(--sloth-input-bg);
     color: var(--sloth-text-main);
@@ -110,16 +101,15 @@ tbody td input[type="time"]:focus {
     box-shadow: 0 0 0 2px rgba(92, 124, 250, 0.25);
 }
 
-/* --- 4. TABELLEN & ZEILEN-FARBEN (Der wichtige Teil) --- */
+/* --- 4. TABELLEN & ZEILEN-FARBEN --- */
 .table {
-    --bs-table-color: var(--sloth-text-main);
     --bs-table-bg: transparent;
     --bs-table-border-color: var(--sloth-border-color);
+    color: var(--sloth-text-main);
 }
 
-/* Header Fix */
 thead th {
-    background-color: var(--sloth-bg-card) !important;
+    background-color: var(--sloth-bg-tertiary) !important;
     color: var(--sloth-text-muted) !important;
     border-bottom: 2px solid var(--sloth-border-color) !important;
     font-weight: 600;
@@ -127,12 +117,12 @@ thead th {
     font-size: 0.8rem;
 }
 
-/* Dynamische Zeilenfarben mit Variablen */
-.tr-office   { background-color: rgba(var(--rgb-office), var(--row-opacity)) !important; color: var(--row-text-color) !important; }
-.tr-home     { background-color: rgba(var(--rgb-home), var(--row-opacity)) !important; color: var(--row-text-color) !important; }
-.tr-vacation { background-color: rgba(var(--rgb-vacation), var(--row-opacity)) !important; color: var(--row-text-color) !important; }
-.tr-sick     { background-color: rgba(var(--rgb-sick), var(--row-opacity)) !important; color: var(--row-text-color) !important; }
-.tr-holiday  { background-color: rgba(var(--rgb-holiday), var(--row-opacity)) !important; color: var(--row-text-color) !important; }
+/* Die neuen Farb-Klassen (ohne Transparenz-Tricks) */
+.tr-office   { background-color: var(--bg-office) !important; color: var(--text-office) !important; }
+.tr-home     { background-color: var(--bg-home) !important; color: var(--text-home) !important; }
+.tr-vacation { background-color: var(--bg-vacation) !important; color: var(--text-vacation) !important; }
+.tr-sick     { background-color: var(--bg-sick) !important; color: var(--text-sick) !important; }
+.tr-holiday  { background-color: var(--bg-holiday) !important; color: var(--text-holiday) !important; }
 
 /* Wochenende */
 .tr-weekend { 
@@ -143,15 +133,15 @@ thead th {
     background-color: rgba(255,255,255,0.02) !important; 
 }
 
-/* Dropdown Menüs im Darkmode hübsch machen */
+/* Dropdown Menüs */
 .dropdown-menu {
     background-color: var(--sloth-bg-card);
     border-color: var(--sloth-border-color);
 }
 .dropdown-item { color: var(--sloth-text-main); }
 .dropdown-item:hover {
-    background-color: var(--sloth-bg-tertiary);
-    color: var(--sloth-text-main);
+    background-color: var(--sloth-primary);
+    color: white;
 }
 
 /* --- 5. KOMPONENTEN --- */
@@ -163,110 +153,102 @@ thead th {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-.sticky-header {
-    position: sticky; top: 56px; z-index: 900;
-    background-color: var(--sloth-bg-body); /* Damit man nicht durchsieht beim Scrollen */
-    padding-top: 15px; padding-bottom: 5px; margin-bottom: 10px;
-    transition: background-color 0.3s ease;
-}
-
-.footer-sarcasm { 
-    font-size: 0.75rem; color: var(--sloth-text-muted); text-align: center; 
-    margin-top: 50px; padding-bottom: 30px; opacity: 0.7; 
-}
-
-/* View Switcher */
-.view-switcher { background: var(--sloth-bg-tertiary); border-radius: 20px; padding: 4px; display: inline-flex; border: 1px solid var(--sloth-border-color); }
-.view-btn { border: none; background: transparent; padding: 5px 15px; border-radius: 16px; font-size: 0.9rem; color: var(--sloth-text-muted); transition: all 0.2s; }
-.view-btn.active { background: var(--sloth-bg-card); color: var(--sloth-text-main); font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-[data-bs-theme="dark"] .view-btn.active { color: white; background: #30363d; }
-
-/* Status Buttons */
+/* Status Buttons (Tagesansicht & Schnellwahl) */
 .btn-xs-status {
-    width: 30px; height: 30px; border-radius: 8px; 
-    font-size: 0.75rem; font-weight: bold;
+    border-radius: 6px; 
+    font-weight: bold;
     display: inline-flex; align-items: center; justify-content: center;
     cursor: pointer; transition: all 0.2s;
     border: 1px solid var(--sloth-border-color); 
-    background-color: var(--sloth-bg-card); opacity: 0.6; color: var(--sloth-text-muted);
+    background-color: var(--sloth-bg-card); 
+    color: var(--sloth-text-muted);
+    opacity: 0.7;
 }
-.btn-xs-status:hover { transform: scale(1.1); opacity: 1; border-color: var(--sloth-text-muted); }
-.btn-xs-status.active { opacity: 1; border-color: transparent; color: white !important; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.btn-xs-status:hover { transform: translateY(-1px); opacity: 1; border-color: var(--sloth-text-muted); }
 
-/* Farben für aktive Buttons */
-.st-f.active { background-color: rgb(var(--rgb-holiday)); }
-.st-u.active { background-color: rgb(var(--rgb-vacation)); color: black !important; }
-.st-k.active { background-color: rgb(var(--rgb-sick)); }
+/* Aktive Status Buttons (Invertiert für besseren Kontrast) */
+.st-f.active { background-color: var(--text-holiday); color: var(--bg-holiday); border-color: transparent; opacity: 1; }
+.st-u.active { background-color: var(--text-vacation); color: black; border-color: transparent; opacity: 1; }
+.st-k.active { background-color: var(--text-sick); color: white; border-color: transparent; opacity: 1; }
+
+/* Type Cards (in der linken Spalte) */
+.type-office { border-left: 4px solid var(--text-office) !important; }
+.type-home { border-left: 4px solid var(--text-home) !important; }
+.type-doctor { border-left: 4px solid var(--text-sick) !important; }
 
 /* Progress Bar */
-.progress-sloth { height: 8px; border-radius: 4px; background-color: var(--sloth-bg-tertiary); margin-top: 5px; overflow: hidden; }
+.progress-sloth { height: 8px; border-radius: 4px; background-color: var(--sloth-bg-tertiary); overflow: hidden; }
+.progress-bar-sloth { height: 100%; background-color: var(--sloth-primary); transition: width 0.5s ease; }
 
-/* Damit die Icons (weiß) einen farbigen Hintergrund haben */
-.bg-office { background-color: rgb(var(--rgb-office)) !important; color: white !important; border: 1px solid rgba(255,255,255,0.1); }
-.bg-home   { background-color: rgb(var(--rgb-home)) !important; color: white !important; border: 1px solid rgba(255,255,255,0.1); }
-.bg-doctor { background-color: rgb(var(--rgb-sick)) !important;   color: white !important; border: 1px solid rgba(255,255,255,0.1); }
+/* Helper Classes */
+.cursor-pointer { cursor: pointer; }
+.bg-body-tertiary { background-color: var(--sloth-bg-tertiary) !important; }
 
-/* Quota Card Abstände verbessern */
-.quota-card {
-    padding: 20px !important; /* Mehr Innenabstand */
-    margin-bottom: 20px !important;
-    border: 1px solid var(--sloth-border-color);
-}
-
-/* Admin Panel Formulare im Darkmode fixen */
-/* Wir nutzen deine .form-box Klasse statt bg-light */
-.form-box-admin {
-    background-color: var(--sloth-bg-tertiary);
+/* --- 6. SPEZIAL-SEITEN (Login, Admin, Settings) --- */
+.card, .widget-card { 
+    background-color: var(--sloth-bg-card); 
     border: 1px solid var(--sloth-border-color);
     border-radius: var(--sloth-radius);
-    padding: 20px !important;
-    margin-bottom: 25px;
-}
-
-/* --- 7. TOAST NOTIFICATIONS & SETTINGS --- */
-
-/* Der "Stilles Speichern" Toast */
-.toast-sloth {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: var(--sloth-bg-card);
     color: var(--sloth-text-main);
-    padding: 10px 20px;
-    border-radius: 30px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    border: 1px solid var(--sloth-primary);
-    z-index: 1060;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: bold;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.toast-sloth.show {
-    opacity: 1;
-    visibility: visible;
-    bottom: 40px; /* Leichter Slide-Up Effekt */
-}
-
-/* Settings Boxen vereinheitlichen */
 .settings-box {
     background-color: var(--sloth-bg-tertiary);
     border: 1px solid var(--sloth-border-color);
     border-radius: var(--sloth-radius);
-    padding: 15px;
-    margin-bottom: 15px;
+    padding: 15px; margin-bottom: 15px;
 }
-.settings-box h6 {
-    opacity: 0.8;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    font-weight: bold;
-    margin-bottom: 15px;
+
+/* --- 7. TOAST NOTIFICATIONS --- */
+.toast-sloth {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background-color: var(--sloth-bg-card); color: var(--sloth-text-main);
+    padding: 10px 20px; border-radius: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 1px solid var(--sloth-primary);
+    z-index: 1060; opacity: 0; visibility: hidden; transition: all 0.3s ease;
+    display: flex; align-items: center; gap: 10px; font-weight: bold;
+}
+.toast-sloth.show { opacity: 1; visibility: visible; bottom: 40px; }
+
+/* --- 8. DASHBOARD GRID SYSTEM (v0.1.4) --- */
+.widget-card { margin-bottom: 0; overflow: hidden; }
+
+.widget-header {
+    padding: 10px 15px;
+    font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--sloth-text-muted);
     border-bottom: 1px solid var(--sloth-border-color);
-    padding-bottom: 5px;
+    background-color: var(--sloth-bg-tertiary);
+    display: flex; justify-content: space-between; align-items: center;
 }
+.widget-body { padding: 15px; }
+
+/* Sticky Column für Desktop */
+@media (min-width: 1200px) {
+    .sticky-column {
+        position: sticky; top: 20px;
+        height: fit-content; max-height: calc(100vh - 40px);
+        overflow-y: auto; scrollbar-width: thin;
+    }
+}
+
+/* View Switcher */
+.view-switcher { 
+    background: var(--sloth-bg-tertiary); border-radius: 20px; padding: 4px; display: inline-flex; border: 1px solid var(--sloth-border-color); 
+}
+.view-btn { 
+    border: none; background: transparent; padding: 5px 15px; border-radius: 16px; 
+    font-size: 0.9rem; color: var(--sloth-text-muted); transition: all 0.2s; 
+}
+.view-btn.active { 
+    background: var(--sloth-bg-card); color: var(--sloth-text-main); font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+}
+[data-bs-theme="dark"] .view-btn.active { background: #30363d; color: white; }
+
+.mobile-only-switcher { display: block; }
+@media (min-width: 1200px) {
+    .mobile-only-switcher { display: none !important; }
+}
+
+.table-compact td, .table-compact th { padding: 0.4rem 0.3rem; font-size: 0.85rem; }

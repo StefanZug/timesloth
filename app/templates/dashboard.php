@@ -1,197 +1,259 @@
-<div id="app" class="container mt-3 mb-5" v-cloak>
+<div id="app" class="container-fluid px-3 px-xl-5 mt-3 mb-5" v-cloak>
 
-    <div class="sticky-header">
-        
-        <div class="quota-card mb-3">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="text-muted small fw-bold text-uppercase">Büro-Quote (40%)</span>
-                <div class="d-flex gap-2 align-items-center">
-                    <span class="text-danger fw-bold fs-5">[[ formatNum(quota.needed) ]] h</span>
-                    <button class="btn btn-sm btn-outline-secondary border-0 p-0 ms-1" 
-                            data-bs-toggle="modal" data-bs-target="#calcModal" title="Quick Rechner">
-                        <i class="bi bi-calculator fs-6"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="d-flex justify-content-between small mb-1 text-muted">
-                <span>Ist: [[ formatNum(quota.current) ]] h</span>
-                <span>Ziel: [[ formatNum(quota.target) ]] h</span>
-            </div>
-            <div class="progress-sloth">
-                <div class="progress-bar-sloth" :style="{ width: quota.percent + '%' }"></div>
-            </div>
-            <div class="text-end mt-2">
-                <span class="badge bg-secondary opacity-75 fw-normal" style="font-size: 0.7rem;">
-                    Abzüge (F/U/K): [[ formatNum(quota.deduction) ]] h
-                </span>
-            </div>
-        </div>
-
-        <div class="text-center">
-            <div class="view-switcher">
-                <button class="view-btn" :class="{active: viewMode === 'day'}" @click="viewMode = 'day'">
-                    <i class="bi bi-calendar-day"></i> Tag
-                </button>
-                <button class="view-btn" :class="{active: viewMode === 'month'}" @click="viewMode = 'month'">
-                    <i class="bi bi-table"></i> Liste
-                </button>
-            </div>
+    <div class="mobile-only-switcher text-center mb-3">
+        <div class="view-switcher shadow-sm">
+            <button class="view-btn" :class="{active: viewMode === 'day'}" @click="viewMode = 'day'">
+                <i class="bi bi-calendar-day"></i> Tag
+            </button>
+            <button class="view-btn" :class="{active: viewMode === 'month'}" @click="viewMode = 'month'">
+                <i class="bi bi-table"></i> Monat
+            </button>
         </div>
     </div>
-    
-    <div v-show="viewMode === 'day'" class="animate-fade">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <button class="btn btn-outline-secondary btn-sm rounded-circle shadow-sm" @click="shiftDay(-1)"><i class="bi bi-chevron-left"></i></button>
-            <h5 class="m-0 fw-bold">[[ displayDateDayView ]]</h5>
-            <button class="btn btn-outline-secondary btn-sm rounded-circle shadow-sm" @click="shiftDay(1)"><i class="bi bi-chevron-right"></i></button>
-        </div>
 
-        <div v-if="!isNonWorkDay && prediction.target !== '--:--'" class="card mb-3 border-0 shadow-sm">
-            <div class="card-body py-2 d-flex justify-content-around align-items-center">
-                <div class="text-center">
-                    <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem">Soll ([[ formatNum(todaySoll) ]]h)</small>
-                    <strong class="text-primary">[[ prediction.target ]]</strong>
+    <div class="row g-4">
+        
+        <div class="col-12 col-xl-3 order-2 order-xl-1" v-show="isDesktop || viewMode === 'day'">
+            
+            <div class="widget-card">
+                <div class="widget-header">
+                    <span>📅 Tages-Planung</span>
+                    <button class="btn btn-sm btn-link text-muted p-0" @click="jumpToDay(isoDate)">Heute</button>
                 </div>
-                <div class="vr opacity-25"></div>
-                <div class="text-center">
-                    <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem">Max (10h)</small>
-                    <strong class="text-danger">[[ prediction.max ]]</strong>
-                </div>
-            </div>
-        </div>
-
-        <div class="d-flex justify-content-center gap-2 mb-4">
-            <div class="btn-xs-status st-f" :class="{active: dayStatus === 'F'}" style="width:50px; height:40px; font-size:1rem; opacity: 1; border: 1px solid var(--sloth-border-color);" @click="toggleStatus('F')">F</div>
-            <div class="btn-xs-status st-u" :class="{active: dayStatus === 'U'}" style="width:50px; height:40px; font-size:1rem; opacity: 1; border: 1px solid var(--sloth-border-color);" @click="toggleStatus('U')">U</div>
-            <div class="btn-xs-status st-k" :class="{active: dayStatus === 'K'}" style="width:50px; height:40px; font-size:1rem; opacity: 1; border: 1px solid var(--sloth-border-color);" @click="toggleStatus('K')">K</div>
-        </div>
-
-        <div v-if="!isNonWorkDay">
-            <transition-group name="list" tag="div">
-                <div v-for="(block, index) in blocks" :key="block.id" class="card mb-2 shadow-sm border" :class="'type-' + block.type">
-                    <div class="card-body p-2 d-flex align-items-center gap-2">
-                        <div class="dropdown">
-                            <button class="btn btn-sm dropdown-toggle text-white shadow-sm" :class="'bg-' + block.type" type="button" data-bs-toggle="dropdown" style="width: 40px;">
-                                <i class="bi" :class="getTypeIcon(block.type)"></i>
-                            </button>
-                            <ul class="dropdown-menu shadow">
-                                <li><a class="dropdown-item" @click="changeBlockType($event, index, 'office')"><i class="bi bi-building me-2 text-success"></i>Büro</a></li>
-                                <li><a class="dropdown-item" @click="changeBlockType($event, index, 'home')"><i class="bi bi-house me-2 text-info"></i>Home</a></li>
-                                <li><a class="dropdown-item text-danger" @click="changeBlockType($event, index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</a></li>
-                            </ul>
+                <div class="widget-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <button class="btn btn-outline-secondary btn-sm rounded-circle" @click="shiftDay(-1)"><i class="bi bi-chevron-left"></i></button>
+                        <div class="text-center">
+                            <h5 class="m-0 fw-bold">[[ displayDateDayView ]]</h5>
+                            <small class="text-muted" v-if="isNonWorkDay">[[ getStatusText(dayStatus) ]]</small>
                         </div>
-                        <input :type="inputType" step="1" class="form-control text-center p-1 fw-bold" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'start')">
-                        <span>-</span>
-                        <input :type="inputType" step="1" class="form-control text-center p-1 fw-bold" v-model="block.end" placeholder="16:30" @blur="formatTimeInput(block, 'end')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'end')">
-                        <button class="btn btn-link text-muted p-0 ms-auto" @click="removeBlock(index)"><i class="bi bi-x-lg"></i></button>
+                        <button class="btn btn-outline-secondary btn-sm rounded-circle" @click="shiftDay(1)"><i class="bi bi-chevron-right"></i></button>
                     </div>
-                </div>
-            </transition-group>
 
-            <div class="d-grid gap-2 mt-3">
-                <button class="btn btn-outline-secondary border-dashed" @click="addBlock('office')" style="border-style: dashed; opacity: 0.7;">
-                    <i class="bi bi-plus-lg"></i> Eintrag
-                </button>
-            </div>
-            
-            <div class="text-center mt-4 small p-2 rounded shadow-sm border" style="background-color: var(--sloth-bg-card); color: var(--sloth-text-muted);">
-                <div class="d-flex justify-content-center gap-3">
-                    <span>SAP: <strong>[[ formatH(totals.sapTime) ]]</strong></span>
-                    <div class="vr"></div>
-                    <span>CATS: <strong>[[ formatH(totals.catsTime) ]]</strong></span>
-                </div>
-                <div v-if="totals.pause > 0" class="text-warning mt-1" style="font-size: 0.8rem;">
-                    <i class="bi bi-cup-hot"></i> Pause: -[[ totals.pause ]]m
-                </div>
-                <div class="fw-bold mt-2 text-primary fs-6 border-top pt-1">Saldo: [[ totals.saldo ]]</div>
-            </div>
-        </div>
-        
-        <div v-else class="alert text-center mt-3 shadow-sm border" :class="statusAlertClass">
-            <h5 class="m-0">[[ getStatusText(dayStatus) ]]</h5>
-        </div>
-    </div>
+                    <div class="d-flex justify-content-center gap-2 mb-4">
+                        <div class="btn-xs-status st-f" :class="{active: dayStatus === 'F'}" style="width:50px; height:40px; font-size:1rem; opacity: 1;" @click="toggleStatus('F')">F</div>
+                        <div class="btn-xs-status st-u" :class="{active: dayStatus === 'U'}" style="width:50px; height:40px; font-size:1rem; opacity: 1;" @click="toggleStatus('U')">U</div>
+                        <div class="btn-xs-status st-k" :class="{active: dayStatus === 'K'}" style="width:50px; height:40px; font-size:1rem; opacity: 1;" @click="toggleStatus('K')">K</div>
+                    </div>
 
-    <div v-show="viewMode === 'month'" class="animate-fade">
-        <div class="d-flex justify-content-between align-items-center mb-3 sloth-header-card">
-            <button class="btn btn-sm btn-outline-secondary" @click="shiftMonth(-1)"><i class="bi bi-chevron-left"></i></button>
-            <h5 class="m-0 fw-bold">[[ displayMonthName ]]</h5>
-            <button class="btn btn-sm btn-outline-secondary" @click="shiftMonth(1)"><i class="bi bi-chevron-right"></i></button>
-        </div>
-
-        <div class="table-responsive rounded shadow-sm border" style="background-color: var(--sloth-bg-card);">
-            <table class="table mb-0 text-center align-middle" style="font-size: 0.9rem; border-collapse: collapse;">
-                <thead>
-                    <tr>
-                        <th class="text-start ps-3 py-3 align-middle">Datum</th>
-                        <th colspan="2" style="min-width: 220px;" class="align-middle">Zeiten</th>
-                        <th class="text-center align-middle">SAP</th>
-                        <th style="min-width: 110px;">Status</th>
-                        <th style="min-width: 100px;" class="text-start">Kommentar</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="day in monthDays" :key="day.iso" :class="getRowClass(day)">
-                        <td class="text-start ps-3 cursor-pointer" @click="jumpToDay(day.iso)">
-                            <div class="fw-bold" :class="{'text-primary': day.isToday}">
-                                [[ day.dayShort ]]., [[ day.dateNum ]].
-                            </div>
-                            <div class="opacity-75" style="font-size: 0.7rem;">KW [[ day.kw ]]</div>
-                        </td>
-                        <td colspan="2" class="p-1 align-top" style="min-width: 220px;">
-                            <div v-if="!day.status">
-                                <div v-for="(block, index) in day.blocks" :key="block.id" class="d-flex align-items-center gap-1 mb-1">
+                    <div v-if="!isNonWorkDay">
+                        <transition-group name="list" tag="div">
+                            <div v-for="(block, index) in blocks" :key="block.id" class="card mb-2 shadow-sm border-0 bg-body-tertiary" :class="'type-' + block.type">
+                                <div class="card-body p-2 d-flex align-items-center gap-2">
                                     <div class="dropdown">
-                                        <button class="btn btn-sm dropdown-toggle text-white shadow-sm" :class="'bg-' + block.type" type="button" data-bs-toggle="dropdown" style="width: 35px; height: 35px;">
+                                        <button class="btn btn-sm dropdown-toggle text-white shadow-sm" :class="'bg-' + block.type" type="button" data-bs-toggle="dropdown" style="width: 36px;">
                                             <i class="bi" :class="getTypeIcon(block.type)"></i>
                                         </button>
                                         <ul class="dropdown-menu shadow">
-                                            <li><a class="dropdown-item" @click="changeListBlockType($event, day, index, 'office')"><i class="bi bi-building me-2 text-success"></i>Büro</a></li>
-                                            <li><a class="dropdown-item" @click="changeListBlockType($event, day, index, 'home')"><i class="bi bi-house me-2 text-info"></i>Home</a></li>
-                                            <li><a class="dropdown-item text-danger" @click="changeListBlockType($event, day, index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</a></li>
+                                            <li><a class="dropdown-item" @click="changeBlockType($event, index, 'office')"><i class="bi bi-building me-2 text-success"></i>Büro</a></li>
+                                            <li><a class="dropdown-item" @click="changeBlockType($event, index, 'home')"><i class="bi bi-house me-2 text-info"></i>Home</a></li>
+                                            <li><a class="dropdown-item text-danger" @click="changeBlockType($event, index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</a></li>
                                         </ul>
                                     </div>
-                                    <input :type="inputType" step="1" class="table-input" v-model="block.start" @blur="formatListTime(day, index, 'start')" @input="triggerListSave(day)" @wheel.prevent="onWheel($event, block, 'start', day)">
-                                    <input :type="inputType" step="1" class="table-input" v-model="block.end" @blur="formatListTime(day, index, 'end')" @input="triggerListSave(day)" @wheel.prevent="onWheel($event, block, 'end', day)">
-                                    <button class="btn btn-link text-danger p-0" @click="removeListBlock(day, index)"><i class="bi bi-x"></i></button>
+                                    <input :type="inputType" step="1" class="form-control form-control-sm text-center fw-bold border-0 bg-white" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'start')">
+                                    <span class="text-muted">-</span>
+                                    <input :type="inputType" step="1" class="form-control form-control-sm text-center fw-bold border-0 bg-white" v-model="block.end" placeholder="16:30" @blur="formatTimeInput(block, 'end')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'end')">
+                                    <button class="btn btn-link text-muted p-0 ms-auto" @click="removeBlock(index)"><i class="bi bi-x-lg"></i></button>
                                 </div>
-                                <button class="btn btn-sm btn-outline-secondary border-dashed w-100 mt-1" @click="addListBlock(day, 'office')" style="border-style: dashed; opacity: 0.7;">
-                                    <i class="bi bi-plus-lg"></i>
-                                </button>
                             </div>
-                        </td>
-                        <td class="cursor-pointer fw-bold" @click="jumpToDay(day.iso)" style="color: inherit;">
-                            [[ day.sapTime > 0 ? formatH(day.sapTime) : '0' ]]
-                        </td>
-                        <td>
-                            <div class="d-flex justify-content-center gap-1">
-                                <div class="btn-xs-status st-f" :class="{active: day.status === 'F'}" @click.stop="quickToggle(day, 'F')">F</div>
-                                <div class="btn-xs-status st-u" :class="{active: day.status === 'U'}" @click.stop="quickToggle(day, 'U')">U</div>
-                                <div class="btn-xs-status st-k" :class="{active: day.status === 'K'}" @click.stop="quickToggle(day, 'K')">K</div>
+                        </transition-group>
+
+                        <button class="btn btn-outline-secondary btn-sm w-100 border-dashed mt-3" @click="addBlock('office')" style="border-style: dashed; opacity: 0.7;">
+                            <i class="bi bi-plus-lg"></i> Eintrag hinzufügen
+                        </button>
+                    </div>
+                    
+                    <div v-else class="alert text-center mt-3 shadow-sm border mb-0" :class="statusAlertClass">
+                        <h6 class="m-0">[[ getStatusText(dayStatus) ]]</h6>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget-card" v-if="!isNonWorkDay">
+                <div class="widget-header">📊 Tages-Fazit</div>
+                <div class="widget-body text-center">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="p-2 bg-body-tertiary rounded">
+                                <small class="d-block text-muted" style="font-size:0.7rem">SAP (Netto)</small>
+                                <strong class="text-primary">[[ formatH(totals.sapTime) ]]</strong>
                             </div>
-                        </td>
-                        <td>
-                            <input type="text" class="comment-input" v-model.lazy="day.comment" 
-                                   :placeholder="day.placeholder" @change="updateComment(day)">
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 bg-body-tertiary rounded">
+                                <small class="d-block text-muted" style="font-size:0.7rem">CATS (Kunde)</small>
+                                <strong>[[ formatH(totals.catsTime) ]]</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div v-if="totals.pause > 0" class="badge bg-warning text-dark mb-2">
+                        <i class="bi bi-cup-hot"></i> Pause: -[[ totals.pause ]]m
+                    </div>
+
+                    <div class="border-top pt-2 mt-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small">Gleitzeit Saldo:</span>
+                            <span class="fw-bold fs-5" :class="{'text-success': totals.saldo.includes('+'), 'text-danger': totals.saldo.includes('-')}">
+                                [[ totals.saldo ]]
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <div class="text-center mt-4">
-            <a href="#" @click.prevent="resetMonth" class="text-danger opacity-75 small">
-                <i class="bi bi-radioactive"></i> Dieses Monat zurücksetzen
-            </a>
+        <div class="col-12 col-xl-6 order-3 order-xl-2" v-show="isDesktop || viewMode === 'month'">
+            <div class="widget-card h-100">
+                <div class="widget-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0" @click="shiftMonth(-1)"><i class="bi bi-chevron-left"></i></button>
+                        <span>🗓️ [[ displayMonthName ]]</span>
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0" @click="shiftMonth(1)"><i class="bi bi-chevron-right"></i></button>
+                    </div>
+                    <button class="btn btn-sm btn-link text-danger p-0" @click="resetMonth" title="Monat leeren"><i class="bi bi-trash"></i></button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover table-compact align-middle mb-0" style="font-size: 0.9rem;">
+                        <thead class="bg-body-tertiary">
+                            <tr>
+                                <th class="ps-3">Datum</th>
+                                <th>Zeiten</th>
+                                <th class="text-center">SAP</th>
+                                <th class="text-center">Status</th>
+                                <th>Notiz</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="day in monthDays" :key="day.iso" :class="getRowClass(day)">
+                                <td class="ps-3 cursor-pointer text-nowrap" @click="jumpToDay(day.iso)">
+                                    <div class="fw-bold" :class="{'text-primary': day.isToday}">
+                                        [[ day.dayShort ]] [[ day.dateNum ]].
+                                    </div>
+                                    <div class="opacity-50" style="font-size: 0.65rem;">KW [[ day.kw ]]</div>
+                                </td>
+                                
+                                <td style="min-width: 180px;">
+                                    <div v-if="!day.status">
+                                        <div v-for="(block, index) in day.blocks" :key="block.id" class="d-flex align-items-center gap-1 mb-1">
+                                            <i class="bi" :class="getTypeIcon(block.type)" :style="{color: block.type === 'office' ? 'var(--sloth-primary)' : 'inherit'}" style="font-size: 0.8rem; width: 15px;"></i>
+                                            
+                                            <input :type="inputType" step="1" class="table-input py-0 px-1" style="height: 24px; font-size: 0.8rem;" v-model="block.start" @blur="formatListTime(day, index, 'start')" @input="triggerListSave(day)">
+                                            <span style="font-size: 0.8rem">-</span>
+                                            <input :type="inputType" step="1" class="table-input py-0 px-1" style="height: 24px; font-size: 0.8rem;" v-model="block.end" @blur="formatListTime(day, index, 'end')" @input="triggerListSave(day)">
+                                            
+                                            <i class="bi bi-x text-danger cursor-pointer ms-1" style="font-size: 1rem;" @click="removeListBlock(day, index)"></i>
+                                        </div>
+                                        <div class="text-muted small cursor-pointer hover-text-primary" @click="addListBlock(day, 'office')" v-if="day.blocks.length === 0">
+                                            <i class="bi bi-plus-circle"></i> Zeit
+                                        </div>
+                                        <div class="text-end" v-if="day.blocks.length > 0">
+                                             <i class="bi bi-plus text-muted cursor-pointer" @click="addListBlock(day, 'office')"></i>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td class="text-center fw-bold cursor-pointer" @click="jumpToDay(day.iso)">
+                                    [[ day.sapTime > 0 ? formatH(day.sapTime) : '-' ]]
+                                </td>
+                                
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <div class="btn-xs-status st-f" :class="{active: day.status === 'F'}" style="width:24px; height:24px; font-size:0.7rem;" @click.stop="quickToggle(day, 'F')">F</div>
+                                        <div class="btn-xs-status st-u" :class="{active: day.status === 'U'}" style="width:24px; height:24px; font-size:0.7rem;" @click.stop="quickToggle(day, 'U')">U</div>
+                                        <div class="btn-xs-status st-k" :class="{active: day.status === 'K'}" style="width:24px; height:24px; font-size:0.7rem;" @click.stop="quickToggle(day, 'K')">K</div>
+                                    </div>
+                                </td>
+                                
+                                <td>
+                                    <input type="text" class="form-control form-control-sm border-0 bg-transparent p-0" style="font-size: 0.85rem;" 
+                                           v-model.lazy="day.comment" :placeholder="day.placeholder" @change="updateComment(day)">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-3 order-1 order-xl-3 sticky-column">
+            
+            <div class="widget-card">
+                <div class="widget-header">
+                    <span class="text-primary"><i class="bi bi-buildings-fill"></i> Büro-Quote</span>
+                    <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="modal" data-bs-target="#calcModal"><i class="bi bi-calculator"></i></button>
+                </div>
+                <div class="widget-body">
+                    <div class="d-flex justify-content-between align-items-end mb-2">
+                        <span class="fs-2 fw-bold text-dark">[[ quota.percent.toFixed(1) ]]%</span>
+                        <span class="text-muted small mb-1">Ziel: 40%</span>
+                    </div>
+                    
+                    <div class="progress-sloth mb-3" style="height: 10px;">
+                        <div class="progress-bar-sloth" :style="{ width: quota.percent + '%' }"></div>
+                    </div>
+
+                    <div class="d-flex justify-content-between text-muted small border-top pt-2">
+                        <span>Ist: <strong class="text-dark">[[ formatNum(quota.current) ]]h</strong></span>
+                        <span>Soll: <strong>[[ formatNum(quota.target) ]]h</strong></span>
+                    </div>
+                    
+                    <div class="alert alert-light border mt-3 mb-0 p-2 d-flex align-items-center gap-2" v-if="quota.needed > 0">
+                        <i class="bi bi-info-circle text-primary"></i>
+                        <div style="font-size: 0.8rem; line-height: 1.2;">
+                            Du musst noch <strong>[[ formatNum(quota.needed) ]]h</strong> ins Büro.
+                        </div>
+                    </div>
+                    <div class="alert alert-success border mt-3 mb-0 p-2 d-flex align-items-center gap-2" v-else>
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <div style="font-size: 0.8rem; line-height: 1.2;">
+                            Quote erfüllt! 🥳
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget-card" v-if="!isNonWorkDay && prediction.target !== '--:--'">
+                <div class="widget-header">🚀 Live Prognose</div>
+                <div class="widget-body">
+                    <div class="row text-center">
+                        <div class="col-6 border-end">
+                            <small class="text-muted text-uppercase" style="font-size: 0.65rem;">Gehen (Soll)</small>
+                            <div class="fs-3 fw-bold text-primary">[[ prediction.target ]]</div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted text-uppercase" style="font-size: 0.65rem;">Max (10h)</small>
+                            <div class="fs-3 fw-bold text-danger">[[ prediction.max ]]</div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-2 pt-2 border-top">
+                        <small class="text-muted" style="font-size: 0.75rem;">
+                            Basierend auf [[ formatNum(todaySoll) ]]h Tagessoll
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget-card">
+                <div class="widget-header">📉 Abzüge (F/U/K)</div>
+                <div class="widget-body d-flex justify-content-between align-items-center">
+                     <span class="text-muted small">Reduktion Sollarbeitszeit:</span>
+                     <span class="badge bg-secondary">-[[ formatNum(quota.deduction) ]] h</span>
+                </div>
+            </div>
+
         </div>
     </div>
-    
-    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 99;">
-        <div v-if="saveState === 'saved'" class="text-success bg-white rounded-circle shadow p-2">
-            <i class="bi bi-check-lg fs-4"></i>
-        </div>
-        <div v-if="saveState === 'saving'" class="text-warning bg-white rounded-circle shadow p-2">
+
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+        <transition name="fade">
+            <div v-if="saveState === 'saved'" class="bg-success text-white rounded-circle shadow d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <i class="bi bi-check-lg fs-5"></i>
+            </div>
+        </transition>
+        <div v-if="saveState === 'saving'" class="bg-warning text-white rounded-circle shadow d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
             <div class="spinner-border spinner-border-sm"></div>
         </div>
     </div>
@@ -205,9 +267,8 @@
                 </div>
                 <div class="modal-body">
                     <p class="text-muted small mb-4">
-                        Stimmt TimeSloth nicht mit SAP überein? Rechne hier aus, wie oft du noch kommen musst, um dein Ziel zu erreichen.
+                        Stimmt TimeSloth nicht mit SAP überein? Rechne hier aus, wie oft du noch kommen musst.
                     </p>
-                    
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Offene Büro-Stunden (laut SAP)</label>
                         <div class="input-group">
@@ -215,19 +276,14 @@
                             <span class="input-group-text">h</span>
                         </div>
                     </div>
-                    
                     <div class="mb-3">
                         <label class="form-label small fw-bold d-flex justify-content-between">
                             <span>Abwesenheit (Krank/Urlaub)</span>
                             <span class="text-success" v-if="calcDeduction > 0">- [[ formatNum(calcDeduction) ]] h</span>
                         </label>
-                        <div class="input-group">
-                            <input type="number" step="1" class="form-control" v-model.number="calc.absentDays" placeholder="0">
-                            <span class="input-group-text">Tage</span>
-                        </div>
+                        <input type="number" step="1" class="form-control" v-model.number="calc.absentDays" placeholder="Tage">
                         <div class="form-text small">Tage, die noch nicht in SAP verbucht sind.</div>
                     </div>
-
                     <div class="mb-4">
                         <label class="form-label small fw-bold d-flex justify-content-between">
                             <span>Geplante Bürozeit pro Tag</span>
@@ -235,7 +291,6 @@
                         </label>
                         <input type="range" class="form-range" min="4" max="10" step="0.25" v-model.number="calc.planHours">
                     </div>
-
                     <div class="alert alert-primary text-center border-0 shadow-sm mb-0">
                         <small class="text-uppercase text-muted" style="font-size: 0.7rem;">Du musst noch ins Büro für:</small>
                         <div class="fs-2 fw-bold mt-1">
@@ -248,12 +303,11 @@
     </div>
 
 </div>
+
 <script>
     window.slothData = {
         settings: <?= $user['settings'] ?: '{}' ?>
     };
 </script>
-
 <script src="/static/js/core/TimeLogic.js"></script>
-
 <script src="/static/js/pages/dashboard.js"></script>

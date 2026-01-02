@@ -49,7 +49,6 @@ Wir nutzen einen leichtgewichtigen PHP-Stack mit Service-Architektur.
 
 ### Projektstruktur (v0.1.3+)
 
-```text
 /app
   /src
     /Services        # PHP Geschäftslogik (EntryService, UserService...)
@@ -64,36 +63,36 @@ Wir nutzen einen leichtgewichtigen PHP-Stack mit Service-Architektur.
       /css           # Custom Styling
     index.php        # Router & Controller (API)
 
-## API & Datenfluss
-* **Frontend:** Vue.js lädt Daten via JSON von /api/*.
-* **Router:** index.php nimmt den Request entgegen.
-* **Services:** Die Logik (SQL, Validierung) wird von den Klassen unter /src/Services ausgeführt.
-* **Response:** JSON geht zurück an das Frontend.
+
+### API & Datenfluss
+1. **Frontend:** Vue.js lädt Daten via JSON von `/api/*`.
+2. **Router:** `index.php` nimmt den Request entgegen.
+3. **Services:** Die Logik (SQL, Validierung) wird von den Klassen unter `/src/Services` ausgeführt.
+4. **Response:** JSON geht zurück an das Frontend.
 
 ### Datenbank Schema (SQLite)
 
 **Table `users`**
-* `id` (INT, PK)
-* `username` (TEXT)
-* `password_hash` (TEXT)
+* `id` (INT, PK), `username` (TEXT), `password_hash` (TEXT)
 * `settings` (TEXT, JSON) -> Enthält `percent`, `sollStunden`, `correction` etc.
 * `is_admin` (INT)
 
 **Table `entries`**
 * `user_id` (INT, FK)
-* `date_str` (TEXT, "YYYY-MM-DD") -> Eindeutig pro User
-* `data` (TEXT, JSON) -> Array von Blöcken: `[{type: 'office', start: '08:00', end: '16:00'}, ...]`
+* `date_str` (TEXT, "YYYY-MM-DD")
+* `data` (TEXT, JSON) -> Array von Zeitblöcken
 * `status` (TEXT) -> 'F', 'U', 'K' oder NULL
 * `comment` (TEXT)
 
 **Table `global_holidays`**
-* `date_str` (TEXT, "YYYY-MM-DD")
-* `name` (TEXT)
+* `date_str` (TEXT), `name` (TEXT)
 
 ---
 
 ## 🚀 Features
-* **Responsive Design:** "Mobile First" Ansatz mit Sticky Headers.
-* **Smart Input:** Unterstützt Eingaben wie 0800, 8, 08:00 und Mausrad-Support.
+
+* **Responsive Design:** "Mobile First" für Unterwegs, plus mächtiges 3-Spalten-Cockpit für den Desktop.
+* **Smart Input:** Unterstützt Eingaben wie `0800`, `8`, `08:00` und Mausrad-Support.
 * **Live Prognose:** Zeigt im Dashboard an, wann man gehen darf (Soll) und wann man gehen muss (10h Limit).
+* **Quota-Rechner:** Berechnet, wie viele Tage man noch ins Büro muss, um das 40% Ziel zu erreichen.
 * **Admin Panel:** Verwaltung von Usern und globalen Feiertagen.
