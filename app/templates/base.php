@@ -2,7 +2,7 @@
 <html lang="de" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TimeSloth</title>
     
     <link rel="icon" href="/static/img/logo.png">
@@ -28,10 +28,15 @@
     <?php if (isset($_SESSION['user'])): ?>
     <nav class="navbar navbar-expand bg-body-tertiary shadow-sm mb-3 border-bottom sticky-top" style="z-index: 1050;">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="/">
-                <img src="/static/img/logo.png" alt="Logo" width="30" height="30" class="me-2 rounded-circle sloth-logo" style="cursor: pointer;">
-                TimeSloth
-            </a>
+            <div class="d-flex align-items-center">
+                <img src="/static/img/logo.png" alt="Logo" width="30" height="30" 
+                     class="me-2 rounded-circle sloth-logo" 
+                     style="cursor: pointer;">
+
+                <a class="navbar-brand fw-bold" href="/">
+                    TimeSloth
+                </a>
+            </div>
             
             <div class="d-flex align-items-center gap-3">
                 <i class="bi bi-moon-stars-fill" id="darkModeBtn" style="cursor: pointer;"></i>
@@ -121,7 +126,12 @@
             const sloths = document.querySelectorAll('.sloth-logo');
             
             sloths.forEach(sloth => {
-                sloth.addEventListener('click', () => {
+                sloth.addEventListener('click', (e) => { // 'e' als Parameter hinzufügen
+                
+                    // Verhindert, dass Klicks z.B. einen Link auslösen (wichtig für den Footer!)
+                    e.preventDefault(); 
+                    e.stopPropagation();
+                    
                     // Verhindern, dass Animation neu startet während sie läuft
                     if(sloth.classList.contains('spin-animation')) return;
                     
