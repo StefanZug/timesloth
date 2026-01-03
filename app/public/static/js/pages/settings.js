@@ -4,54 +4,44 @@ createApp({
     delimiters: ['[[', ']]'],
     data() {
         return {
-            // Settings aus der PHP-Bridge laden
             settings: Object.assign({
                 percent: 100,
                 sollStunden: 7.70,
-                // correction: 0, // Legacy Support, wird aber im UI nicht mehr gezeigt
                 pcScroll: true,
                 useNativeWheel: false
             }, window.slothData.settings || {}),
             
             passwords: { old: '', new: '' },
             
-            // --- FAULTIER GAME STATE ---
+            // GAME STATE
             pwGameSolved: false,
             gameClicks: 0,
             gameMessage: '',
             gameError: false,
             lastClickedId: null,
-            // ---------------------------
 
             calc: { baseWeekly: 38.5, weekly: 38.5, daily: 7.70 },
-            
-            saveState: 'idle' // idle, saving, saved, error
+            saveState: 'idle'
         }
     },
     watch: {
-        'settings.percent'() {
-            this.updateCalc();
-        }
+        'settings.percent'() { this.updateCalc(); }
     },
     methods: {
         updateCalc() {
             const pct = parseInt(this.settings.percent) / 100;
             this.calc.weekly = this.calc.baseWeekly * pct;
             this.calc.daily = this.calc.weekly / 5;
-            
-            // Automatisch das Soll setzen
             this.settings.sollStunden = this.calc.daily.toFixed(2);
         },
+        formatNum(n) { return n.toFixed(2).replace('.', ','); },
         
-        formatNum(n) {
-            return n.toFixed(2).replace('.', ',');
-        },
-        
-        // --- FAULTIER SPIEL LOGIK ---
+        // --- GAME LOGIC ---
         handleSlothClick(id, event) {
-            const el = event.target.closest('.sloth-logo'); // Sicherstellen dass wir das Bild haben
-            
-            // Wackel-Animation Helper
+            // WICHTIG: Neue Klasse verwenden
+            const el = event.target.closest('.sloth-game-img');
+            if(!el) return; 
+
             const shake = () => {
                 el.style.transition = 'transform 0.1s';
                 el.style.transform = 'translateX(5px) rotate(5deg)';
@@ -61,47 +51,37 @@ createApp({
             };
 
             if (this.gameClicks === 0) {
-                // ERSTER KLICK: IMMER FALSCH
+                // Erster Klick -> Immer falsch
                 this.gameClicks++;
                 this.lastClickedId = id;
                 this.gameError = true;
                 this.gameMessage = "Das ist falsch!"; 
                 shake();
             } else {
-                // ZWEITER (oder weiterer) KLICK
                 if (id === this.lastClickedId) {
-                    // User hat nochmal das gleiche (falsche) geklickt
+                    // Gleiches nochmal geklickt -> Falsch
                     this.gameMessage = "Nein, das ANDERE!";
                     this.gameError = true;
                     shake();
                 } else {
-                    // User hat das andere geklickt -> RICHTIG
+                    // Richtig!
                     this.gameError = false;
                     this.gameMessage = "Das macht niemand. Wurde auch NIE gesagt. Wie kommst du drauf?";
-                    
-                    // Kurze Pause zum Lesen, dann Formular zeigen
-                    setTimeout(() => {
-                        this.pwGameSolved = true;
-                    }, 3000); // 3 Sekunden Zeit den Text zu genießen
+                    setTimeout(() => { this.pwGameSolved = true; }, 3000);
                 }
             }
         },
-        // -----------------------------
 
         async saveSettings() {
             this.saveState = 'saving';
             try {
-                // Payload senden
                 const payload = {
                     ...this.settings,
-                    sollMoDo: this.settings.sollStunden, // Legacy Support
+                    sollMoDo: this.settings.sollStunden,
                     sollFr: this.settings.sollStunden
                 };
-                
                 await axios.post('/api/settings', payload);
                 this.saveState = 'saved';
-                
-                // State zurücksetzen
                 setTimeout(() => { this.saveState = 'idle'; }, 2000);
             } catch (e) {
                 console.error(e);
@@ -116,9 +96,7 @@ createApp({
                     old_password: this.passwords.old,
                     new_password: this.passwords.new
                 });
-                alert("Passwort erfolgreich geändert! Bitte neu einloggen.");
-                this.passwords.old = '';
-                this.passwords.new = '';
+                alert("Passwort geändert! Bitte neu einloggen.");
                 window.location.href = '/logout';
             } catch (e) {
                 alert("Fehler: " + (e.response?.data?.error || "Unbekannt"));

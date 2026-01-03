@@ -4,7 +4,10 @@ require_once __DIR__ . '/Services/EntryService.php';
 require_once __DIR__ . '/Services/UserService.php';
 require_once __DIR__ . '/Services/AdminService.php';
 
-// Hilfsfunktion für JSON Response
+define('APP_ROOT', dirname(__DIR__));
+define('TEMPLATE_PATH', APP_ROOT . '/templates');
+define('DB_PATH', getenv('DB_FOLDER') . '/timesloth.sqlite');
+
 function json_response($data) {
     echo json_encode($data);
     exit;
@@ -17,34 +20,36 @@ function json_error($msg, $code = 400) {
 }
 
 // --- ROUTING ---
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$method = $_SERVER['REQUEST_METHOD'];
 
 // 1. ENTRY API
-function api_get_entries() {
+if ($uri === '/api/get_entries') {
+    if (!is_logged_in()) { json_error('Unauthorized', 401); }
     $service = new EntryService();
     $data = $service->getMonthEntries($_SESSION['user']['id'], $_GET['month'] ?? date('Y-m'));
     json_response($data);
 }
-
-function api_save_entry() {
+if ($uri === '/api/save_entry' && $method === 'POST') {
+    if (!is_logged_in()) { json_error('Unauthorized', 401); }
     $input = json_decode(file_get_contents('php://input'), true);
     $service = new EntryService();
     $res = $service->saveEntry($_SESSION['user']['id'], $input);
     json_response($res);
 }
-
-function api_reset_month() {
+if ($uri === '/api/reset_month' && $method === 'POST') {
+    if (!is_logged_in()) { json_error('Unauthorized', 401); }
     $input = json_decode(file_get_contents('php://input'), true);
     $service = new EntryService();
     try {
         $res = $service->resetMonth($_SESSION['user']['id'], $input['month'] ?? '');
         json_response($res);
-    } catch (Exception $e) {
-        json_error($e->getMessage());
-    }
+    } catch (Exception $e) { json_error($e->getMessage()); }
 }
 
 // 2. USER API
-function api_save_settings() {
+if ($uri === '/api/settings' && $method === 'POST') {
+    if (!is_logged_in()) { json_error('Unauthorized', 401); }
     $input = json_decode(file_get_contents('php://input'), true);
     $service = new UserService();
     $res = $service->updateSettings($_SESSION['user']['id'], $input);
@@ -52,48 +57,49 @@ function api_save_settings() {
 }
 
 // 3. ADMIN API
-function api_admin_create_user() {
-    if (!($_SESSION['user']['is_admin'] ?? false)) json_error('Forbidden', 403);
+if (str_starts_with($uri, '/admin/')) {
+    if (!($_SESSION['user']['is_admin'] ?? false)) { json_error('Forbidden', 403); }
     
+    $service = new AdminService();
     $input = json_decode(file_get_contents('php://input'), true);
-    $service = new AdminService();
-    try {
-        $res = $service->createUser($input['username'], $input['password'], !empty($input['is_admin']));
-        json_response($res);
-    } catch (Exception $e) {
-        json_error($e->getMessage());
-    }
-}
 
-function api_admin_delete_user($id) {
-    if (!($_SESSION['user']['is_admin'] ?? false)) json_error('Forbidden', 403);
-    
-    $service = new AdminService();
-    try {
-        $res = $service->deleteUser($id, $_SESSION['user']['id']);
-        json_response($res);
-    } catch (Exception $e) {
-        json_error($e->getMessage());
+    // Basic Actions
+    if ($method === 'POST' && $uri === '/admin/create_user') { 
+        try {
+            $res = $service->createUser($input['username'], $input['password'], !empty($input['is_admin']));
+            json_response($res);
+        } catch (Exception $e) { json_error($e->getMessage()); }
     }
-}
-
-function api_admin_add_holiday() {
-    if (!($_SESSION['user']['is_admin'] ?? false)) json_error('Forbidden', 403);
-    
-    $input = json_decode(file_get_contents('php://input'), true);
-    $service = new AdminService();
-    try {
-        $res = $service->addHoliday($input['date'], $input['name']);
-        json_response($res);
-    } catch (Exception $e) {
-        json_error($e->getMessage());
+    if ($method === 'POST' && $uri === '/admin/holiday') { 
+        try {
+            $res = $service->addHoliday($input['date'], $input['name']);
+            json_response($res);
+        } catch (Exception $e) { json_error($e->getMessage()); }
     }
-}
-
-function api_admin_delete_holiday($id) {
-    if (!($_SESSION['user']['is_admin'] ?? false)) json_error('Forbidden', 403);
     
-    $service = new AdminService();
-    $res = $service->deleteHoliday($id);
-    json_response($res);
+    // Stats & Cleanup
+    if ($uri === '/admin/stats') {
+        json_response($service->getSystemStats());
+    }
+    if ($method === 'POST' && $uri === '/admin/cleanup') {
+        json_response($service->clearOldLogs());
+    }
+
+    // ID Actions
+    if (preg_match('#^/admin/delete_user/(\d+)$#', $uri, $m)) { 
+        try { json_response($service->deleteUser($m[1], $_SESSION['user']['id'])); }
+        catch (Exception $e) { json_error($e->getMessage()); }
+    }
+    if (preg_match('#^/admin/holiday/(\d+)$#', $uri, $m) && $method === 'DELETE') { 
+        json_response($service->deleteHoliday($m[1])); 
+    }
+    // NEU: Toggle & Reset
+    if (preg_match('#^/admin/toggle_active/(\d+)$#', $uri, $m) && $method === 'POST') {
+        try { json_response($service->toggleActive($m[1], $_SESSION['user']['id'])); }
+        catch (Exception $e) { json_error($e->getMessage()); }
+    }
+    if (preg_match('#^/admin/reset_password/(\d+)$#', $uri, $m) && $method === 'POST') {
+        try { json_response($service->resetUserPassword($m[1])); }
+        catch (Exception $e) { json_error($e->getMessage()); }
+    }
 }

@@ -29,25 +29,17 @@
             <div class="widget-card">
                 <div class="widget-header">Bedienung & Optik</div>
                 <div class="widget-body">
-                    
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" role="switch" v-model="settings.pcScroll">
                         <label class="form-check-label fw-bold">Maus-Rad Support (PC)</label>
-                        <div class="small text-muted">
-                            Erlaubt das Ändern von Zeiten durch Scrollen über dem Eingabefeld.
-                        </div>
+                        <div class="small text-muted">Erlaubt das Ändern von Zeiten durch Scrollen.</div>
                     </div>
-                    
                     <hr class="my-3 text-secondary opacity-25">
-
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" role="switch" v-model="settings.useNativeWheel">
                         <label class="form-check-label fw-bold">Native Zeit-Picker (Handy)</label>
-                        <div class="small text-muted">
-                            Deaktiviert die Texteingabe und nutzt die Uhr-Auswahl von iOS/Android.
-                        </div>
+                        <div class="small text-muted">Nutzt die Uhr-Auswahl des Smartphones.</div>
                     </div>
-                    
                 </div>
             </div>
         </div>
@@ -71,11 +63,11 @@
                         
                         <div class="d-flex justify-content-center gap-5 align-items-center">
                             <div class="text-center cursor-pointer position-relative" @click="handleSlothClick(1, $event)">
-                                <img src="/static/img/logo.png" width="80" class="sloth-logo" id="sloth-1" title="Bin ich es?">
+                                <img src="/static/img/logo.png" width="80" class="sloth-game-img" id="sloth-1" title="Bin ich es?">
                             </div>
                             
                             <div class="text-center cursor-pointer position-relative" @click="handleSlothClick(2, $event)">
-                                <img src="/static/img/logo.png" width="80" class="sloth-logo" id="sloth-2" title="Oder ich?">
+                                <img src="/static/img/logo.png" width="80" class="sloth-game-img" id="sloth-2" title="Oder ich?">
                             </div>
                         </div>
                         
@@ -133,7 +125,6 @@
             <div class="widget-card">
                 <div class="widget-header">Modell & Stunden</div>
                 <div class="widget-body">
-                    
                     <label class="form-label d-flex justify-content-between mb-2">
                         <span>Beschäftigungsausmaß</span>
                         <span class="fw-bold text-primary fs-5">[[ settings.percent ]]%</span>
@@ -154,7 +145,7 @@
                             </div>
                         </div>
                     </div>
-                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -168,12 +159,9 @@
             </button>
         </div>
     </div>
-
 </div>
 
 <script>
-    window.slothData = {
-        settings: <?= $user['settings'] ?: '{}' ?>
-    };
+    window.slothData = { settings: <?= $user['settings'] ?: '{}' ?> };
 </script>
 <script src="/static/js/pages/settings.js"></script>
