@@ -137,10 +137,11 @@
                                 
                                 <td style="min-width: 180px;">
                                     <div v-if="!day.status">
-                                        <div v-for="(block, index) in day.blocks" :key="block.id" class="d-flex align-items-center gap-1 mb-1">
-                                            <div class="dropdown d-inline-block me-1">
-                                                <button class="btn btn-sm p-0 border-0" type="button" data-bs-toggle="dropdown" aria-label="Typ ändern">
-                                                    <i class="bi" :class="getTypeIcon(block.type)" :style="{color: block.type === 'office' ? 'var(--sloth-primary)' : 'inherit'}" style="font-size: 0.9rem;"></i>
+                                        <div v-for="(block, index) in day.blocks" :key="block.id" class="d-flex align-items-center gap-1 mb-2">
+                                            
+                                            <div class="dropdown d-inline-block" style="width: 24px;">
+                                                <button class="btn btn-sm p-0 border-0 w-100" type="button" data-bs-toggle="dropdown" aria-label="Typ ändern">
+                                                    <i class="bi" :class="getTypeIcon(block.type)" :style="{color: block.type === 'office' ? 'var(--sloth-primary)' : 'inherit'}" style="font-size: 1rem;"></i>
                                                 </button>
                                                 <ul class="dropdown-menu shadow">
                                                     <li><button type="button" class="dropdown-item" @click="changeListBlockType($event, day, index, 'office')"><i class="bi bi-building me-2 text-success"></i>Büro</button></li>
@@ -149,18 +150,18 @@
                                                 </ul>
                                             </div>
                                             
-                                            <input :type="inputType" step="1" class="table-input py-0 px-1" style="height: 24px; font-size: 0.8rem;" v-model="block.start" @blur="formatListTime(day, index, 'start')" @input="triggerListSave(day)" :aria-label="'Startzeit ' + day.dayShort + ' ' + day.dateNum + '.'">
-                                            <span style="font-size: 0.8rem">-</span>
-                                            <input :type="inputType" step="1" class="table-input py-0 px-1" style="height: 24px; font-size: 0.8rem;" v-model="block.end" @blur="formatListTime(day, index, 'end')" @input="triggerListSave(day)" :aria-label="'Endzeit ' + day.dayShort + ' ' + day.dateNum + '.'">
+                                            <input :type="inputType" step="1" class="table-input" v-model="block.start" @blur="formatListTime(day, index, 'start')" @input="triggerListSave(day)" :aria-label="'Startzeit ' + day.dayShort">
+                                            <span class="text-muted" style="font-size: 0.8rem">-</span>
+                                            <input :type="inputType" step="1" class="table-input" v-model="block.end" @blur="formatListTime(day, index, 'end')" @input="triggerListSave(day)" :aria-label="'Endzeit ' + day.dayShort">
                                             
-                                            <i class="bi bi-x text-danger cursor-pointer ms-1" style="font-size: 1rem;" @click="removeListBlock(day, index)" role="button" aria-label="Eintrag löschen"></i>
+                                            <button class="btn btn-link text-danger p-0 ms-1" style="font-size: 1rem; line-height: 1;" @click="removeListBlock(day, index)" aria-label="Löschen">
+                                                <i class="bi bi-x"></i>
+                                            </button>
                                         </div>
-                                        <div class="text-muted small cursor-pointer hover-text-primary" @click="addListBlock(day, 'office')" v-if="day.blocks.length === 0">
-                                            <i class="bi bi-plus-circle"></i> Zeit
-                                        </div>
-                                        <div class="text-end" v-if="day.blocks.length > 0">
-                                             <i class="bi bi-plus text-muted cursor-pointer" @click="addListBlock(day, 'office')" role="button" aria-label="Eintrag hinzufügen"></i>
-                                        </div>
+                                
+                                        <button class="btn btn-dashed btn-sm w-100 py-1 mt-1" @click="addListBlock(day, 'office')" title="Eintrag hinzufügen">
+                                            <i class="bi bi-plus-lg"></i>
+                                        </button>
                                     </div>
                                 </td>
                                 
