@@ -150,15 +150,27 @@
                                                 </ul>
                                             </div>
                                             
-                                            <input :type="inputType" step="1" class="table-input" v-model="block.start" @blur="formatListTime(day, index, 'start')" @input="triggerListSave(day)" :aria-label="'Startzeit ' + day.dayShort">
+                                            <input :type="inputType" step="1" class="table-input" 
+                                                   v-model="block.start" 
+                                                   @blur="formatListTime(day, index, 'start')" 
+                                                   @input="triggerListSave(day)" 
+                                                   @wheel.prevent="onWheel($event, block, 'start', day)"
+                                                   :aria-label="'Startzeit ' + day.dayShort">
+                                
                                             <span class="text-muted" style="font-size: 0.8rem">-</span>
-                                            <input :type="inputType" step="1" class="table-input" v-model="block.end" @blur="formatListTime(day, index, 'end')" @input="triggerListSave(day)" :aria-label="'Endzeit ' + day.dayShort">
+                                
+                                            <input :type="inputType" step="1" class="table-input" 
+                                                   v-model="block.end" 
+                                                   @blur="formatListTime(day, index, 'end')" 
+                                                   @input="triggerListSave(day)" 
+                                                   @wheel.prevent="onWheel($event, block, 'end', day)"
+                                                   :aria-label="'Endzeit ' + day.dayShort">
                                             
                                             <button class="btn btn-link text-danger p-0 ms-1" style="font-size: 1rem; line-height: 1;" @click="removeListBlock(day, index)" aria-label="Löschen">
                                                 <i class="bi bi-x"></i>
                                             </button>
                                         </div>
-                                
+                                        
                                         <button class="btn btn-dashed btn-sm w-100 py-1 mt-1" @click="addListBlock(day, 'office')" title="Eintrag hinzufügen">
                                             <i class="bi bi-plus-lg"></i>
                                         </button>

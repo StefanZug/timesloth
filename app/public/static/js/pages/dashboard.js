@@ -207,62 +207,66 @@ createApp({
         onWheel(event, block, field, day = null) {
             if (!this.settings.pcScroll) return;
             if(!block[field]) return;
+            
             const input = event.target;
-            let step = 60; 
+            const rect = input.getBoundingClientRect();
+            // Mausposition im Element (0 bis Breite)
+            const x = event.clientX - rect.left; 
+            const width = rect.width;
+            const percent = x / width;
 
-            if (input.type === 'text') {
-                const cursor = input.selectionStart;
-                if (cursor !== null) {
-                    if (cursor <= 2) step = 3600;
-                    else if (cursor >= 3 && cursor <= 5) step = 60;
-                    else if (cursor >= 6) step = 1;
-                }
-                setTimeout(() => {
-                    if(document.activeElement === input) input.setSelectionRange(cursor, cursor);
-                }, 0);
+            let step = 60; // Standard: Minuten
+
+            // Unterscheidung nach Format (HH:MM oder HH:MM:SS)
+            // Wir prüfen einfach: Hat der String Sekunden? (Länge > 5)
+            const hasSeconds = block[field].length > 5;
+
+            if (hasSeconds) {
+                // 3 Zonen: Stunden | Minuten | Sekunden
+                if (percent < 0.33) step = 3600;      // Links: Stunden
+                else if (percent > 0.66) step = 1;    // Rechts: Sekunden
+                else step = 60;                       // Mitte: Minuten
             } else {
-                const rect = input.getBoundingClientRect();
-                const x = event.clientX - rect.left;
-                const width = rect.width;
-                const isHome = (block.type === 'home'); 
-
-                if (isHome) {
-                    if (x < (width * 0.5)) { step = 3600; } else { step = 60; }
-                } else {
-                    if (x < (width * 0.32)) { step = 3600; } 
-                    else if (x > (width * 0.64)) { step = 1; } 
-                    else { step = 60; }
-                }
+                // 2 Zonen: Stunden | Minuten
+                if (percent < 0.5) step = 3600;       // Links: Stunden
+                else step = 60;                       // Rechts: Minuten
             }
-            if (event.shiftKey) step = 1;
+
+            if (event.shiftKey) step = 1; // Shift erzwingt immer Sekunden/Feinheit
 
             const direction = event.deltaY < 0 ? 1 : -1;
-            // TimeLogic Helper nutzen
+            
+            // Berechnung der neuen Zeit in Sekunden
             let currentSec = TimeLogic.toMinutes(block[field]) * 60; 
-            if(currentSec === 0 && !block[field]) currentSec = 8 * 3600;
+            // Falls Sekunden im String sind, diese auch parsen (TimeLogic.toMinutes macht evtl. nur Minuten)
+            // Da TimeLogic.toMinutes runden KÖNNTE, parsen wir hier lieber lokal exakt für das Scrollen
+            const parts = block[field].split(':');
+            let h = parseInt(parts[0] || 0);
+            let m = parseInt(parts[1] || 0);
+            let s = parseInt(parts[2] || 0);
+            currentSec = (h * 3600) + (m * 60) + s;
 
             let newSec = currentSec + (step * direction);
-            if(newSec < 0) newSec = (24 * 3600) + newSec;
-            if(newSec >= 24 * 3600) newSec = newSec - (24 * 3600);
-
-            const showSeconds = (block.type !== 'home'); 
-            // Hier müssen wir händisch formatieren oder eine Helper funktion in TimeLogic bauen,
-            // aber da es UI-spezifisch ist (Input Feld), kann man auch toTimeStr Logic nutzen.
-            // Wir nutzen einfach die existierende Logik via TimeLogic Helper, aber müssen sec->hh:mm wandeln
-            // Einfachheitshalber nutzen wir TimeLogic.minutesToString für hh:mm
-            // Für Sekunden müssten wir das erweitern, aber lassen wir die Logik hier kurz lokal
-            // oder erweitern TimeLogic.
             
-            // Fix: Einfach lokale Logik behalten oder TimeLogic nutzen.
-            // Da minutesToString nur HH:MM liefert, und wir manchmal sekunden brauchen:
-            let h = Math.floor(newSec / 3600);
+            // Tages-Überlauf behandeln (00:00 <-> 23:59)
+            if(newSec < 0) newSec = (24 * 3600) + newSec;
+            if(newSec >= 24 * 3600) newSec = newSec % (24 * 3600);
+
+            // Zurück in String formatieren
+            h = Math.floor(newSec / 3600);
             let rem = newSec % 3600;
-            let m = Math.floor(rem / 60);
-            let s = rem % 60;
+            m = Math.floor(rem / 60);
+            s = rem % 60;
+            
             const pad = (n) => n.toString().padStart(2,'0');
             
-            if(showSeconds) block[field] = `${pad(h)}:${pad(m)}:${pad(s)}`;
-            else block[field] = `${pad(h)}:${pad(m)}`;
+            if (hasSeconds || step === 1) {
+                // Wenn wir Sekunden ändern oder schon welche da waren -> Format HH:MM:SS
+                block[field] = `${pad(h)}:${pad(m)}:${pad(s)}`;
+            } else {
+                // Sonst HH:MM
+                block[field] = `${pad(h)}:${pad(m)}`;
+            }
 
             if (day) this.triggerListSave(day);
             else this.triggerAutoSave();
