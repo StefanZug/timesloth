@@ -210,49 +210,49 @@ createApp({
             
             const input = event.target;
             const rect = input.getBoundingClientRect();
-            // Mausposition im Element (0 bis Breite)
+            // Mausposition im Element berechnen
             const x = event.clientX - rect.left; 
             const width = rect.width;
             const percent = x / width;
 
             let step = 60; // Standard: Minuten
 
-            // Unterscheidung nach Format (HH:MM oder HH:MM:SS)
-            // Wir prüfen einfach: Hat der String Sekunden? (Länge > 5)
+            // Prüfen ob Sekunden angezeigt werden (HH:MM:SS hat > 5 Zeichen)
             const hasSeconds = block[field].length > 5;
 
             if (hasSeconds) {
-                // 3 Zonen: Stunden | Minuten | Sekunden
-                if (percent < 0.33) step = 3600;      // Links: Stunden
-                else if (percent > 0.66) step = 1;    // Rechts: Sekunden
-                else step = 60;                       // Mitte: Minuten
+                // FIX: Da der Text zentriert ist, liegen Stunden und Sekunden nicht am Rand, 
+                // sondern eher bei ~40% und ~60%. Wir passen die Zonen an:
+                
+                if (percent < 0.42) step = 3600;      // Links (< 42%): Stunden
+                else if (percent > 0.58) step = 1;    // Rechts (> 58%): Sekunden
+                else step = 60;                       // Mitte (42-58%): Minuten
             } else {
-                // 2 Zonen: Stunden | Minuten
+                // Bei HH:MM (ohne Sekunden)
                 if (percent < 0.5) step = 3600;       // Links: Stunden
                 else step = 60;                       // Rechts: Minuten
             }
 
-            if (event.shiftKey) step = 1; // Shift erzwingt immer Sekunden/Feinheit
+            // Shift-Taste erzwingt immer Sekunden-Schritte
+            if (event.shiftKey) step = 1; 
 
             const direction = event.deltaY < 0 ? 1 : -1;
             
-            // Berechnung der neuen Zeit in Sekunden
-            let currentSec = TimeLogic.toMinutes(block[field]) * 60; 
-            // Falls Sekunden im String sind, diese auch parsen (TimeLogic.toMinutes macht evtl. nur Minuten)
-            // Da TimeLogic.toMinutes runden KÖNNTE, parsen wir hier lieber lokal exakt für das Scrollen
+            // Aktuelle Zeit in Sekunden umrechnen
             const parts = block[field].split(':');
             let h = parseInt(parts[0] || 0);
             let m = parseInt(parts[1] || 0);
             let s = parseInt(parts[2] || 0);
-            currentSec = (h * 3600) + (m * 60) + s;
+            let currentSec = (h * 3600) + (m * 60) + s;
 
+            // Neue Zeit berechnen
             let newSec = currentSec + (step * direction);
             
             // Tages-Überlauf behandeln (00:00 <-> 23:59)
             if(newSec < 0) newSec = (24 * 3600) + newSec;
             if(newSec >= 24 * 3600) newSec = newSec % (24 * 3600);
 
-            // Zurück in String formatieren
+            // Zurück formatieren
             h = Math.floor(newSec / 3600);
             let rem = newSec % 3600;
             m = Math.floor(rem / 60);
@@ -260,11 +260,10 @@ createApp({
             
             const pad = (n) => n.toString().padStart(2,'0');
             
+            // Wenn Sekunden da waren oder wir Sekundenschritte machen -> HH:MM:SS
             if (hasSeconds || step === 1) {
-                // Wenn wir Sekunden ändern oder schon welche da waren -> Format HH:MM:SS
                 block[field] = `${pad(h)}:${pad(m)}:${pad(s)}`;
             } else {
-                // Sonst HH:MM
                 block[field] = `${pad(h)}:${pad(m)}`;
             }
 
