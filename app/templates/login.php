@@ -2,6 +2,7 @@
     
     <div class="text-center mb-4 animate-fade">
         <img src="/static/img/logo.png" alt="TimeSloth" 
+             width="140" height="140"
              style="height: 140px; width: auto; cursor: pointer;" 
              class="mb-2 sloth-logo" title="Klick mich!">
         
@@ -28,5 +29,3 @@
     </div>
 
 </div>
-
-<script src="/static/js/pages/login.js"></script>

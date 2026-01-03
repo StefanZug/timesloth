@@ -61,7 +61,7 @@
     </nav>
     <?php endif; ?>
 
-    <div class="container-fluid p-0" id="main-content">
+    <main class="container-fluid p-0" id="main-content">
         <?php if (isset($_SESSION['flash_error'])): ?>
             <div class="alert alert-danger m-2 shadow-sm"><?= htmlspecialchars($_SESSION['flash_error']) ?></div>
             <?php unset($_SESSION['flash_error']); ?>
@@ -74,7 +74,7 @@
 
         <?= $content ?? '' ?>
         
-        <div class="app-footer">
+        <footer class="app-footer">
             <div class="mb-2 d-flex align-items-center justify-content-center gap-2">
                 <span>&copy; <?= date('Y') ?> • <span class="fw-bold">TimeSloth</span></span>
                 <img src="/static/img/logo.png" alt="Logo" width="24" height="24" 
@@ -105,8 +105,8 @@
                 echo $quotes[array_rand($quotes)]; 
                 ?>
             </div>
-        </div>
-    </div>
+        </footer>
+    </main>
 
     <script>
         // Dark Mode Toggle
