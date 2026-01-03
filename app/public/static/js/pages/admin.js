@@ -77,6 +77,18 @@ createApp({
             } catch(e) { alert("Fehler"); }
         },
 
+        async fetchStats() { /* ... */ },
+
+        async fetchUserLogs(user) {
+            if(user.logs) return;
+            user.loadingLogs = true;
+            try {
+                const res = await axios.get(`/admin/user_logs/${user.id}`);
+                user.logs = res.data;
+            } catch(e) { console.error(e); }
+            user.loadingLogs = false;
+        },
+
         async copyPw(text, event) {
             try {
                 await navigator.clipboard.writeText(text);

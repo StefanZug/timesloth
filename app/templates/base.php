@@ -139,7 +139,6 @@
                     // 2. Ziel-Farbe bestimmen
                     const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
                     const nextTheme = isDark ? 'light' : 'dark';
-                    // Hardcodierte Farben passend zu CSS variablen
                     const nextColor = isDark ? '#f3f4f6' : '#0d1117'; 
 
                     // 3. Bubble positionieren
@@ -150,18 +149,17 @@
                     // 4. Explosion!
                     bubble.classList.add('expand');
 
-                    // 5. Theme switchen wenn Screen bedeckt ist (nach 400ms)
+                    // 5. Theme switchen (Timing reduziert auf 250ms)
                     setTimeout(() => {
                         document.documentElement.setAttribute('data-bs-theme', nextTheme);
                         localStorage.setItem('theme', nextTheme);
                         updateIcon();
                         
-                        // 6. Aufräumen (nach Animation)
+                        // 6. Aufräumen (Kurz warten damit der Screen gefüllt wirkt)
                         setTimeout(() => {
                             bubble.classList.remove('expand');
-                            // Kleiner Hack: Style resetten damit es nicht zurück animiert
-                        }, 400); 
-                    }, 400); 
+                        }, 100); 
+                    }, 250); 
                 });
             }
         });

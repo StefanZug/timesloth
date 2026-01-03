@@ -89,6 +89,9 @@ if (str_starts_with($uri, '/admin/')) {
         try { json_response($service->toggleActive($m[1], $_SESSION['user']['id'])); }
         catch (Exception $e) { json_error($e->getMessage()); }
     }
+    if (preg_match('#^/admin/user_logs/(\d+)$#', $uri, $m)) {
+        json_response($service->getUserLogs($m[1]));
+    }
     if (preg_match('#^/admin/reset_password/(\d+)$#', $uri, $m) && $method === 'POST') {
         try { json_response($service->resetUserPassword($m[1])); }
         catch (Exception $e) { json_error($e->getMessage()); }

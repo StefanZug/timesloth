@@ -43,7 +43,7 @@
                 <div class="accordion accordion-flush" id="usersAccordion">
                     <div class="accordion-item" v-for="u in users" :key="u.id">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" :data-bs-target="'#user-'+u.id">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" :data-bs-target="'#user-'+u.id" @click="fetchUserLogs(u)">
                                 <span class="d-flex align-items-center gap-2 w-100">
                                     <span class="avatar-circle" style="width: 28px; height: 28px; font-size: 0.8rem;">
                                         [[ u.username.charAt(0).toUpperCase() ]]
@@ -71,7 +71,26 @@
                                         <strong>[[ u.is_admin ? 'Administrator' : 'Benutzer' ]]</strong>
                                     </div>
                                 </div>
-
+                                
+                                <div class="mb-3">
+                                    <h6 class="text-muted small fw-bold text-uppercase border-bottom pb-1">Letzte Logins</h6>
+                                    <div v-if="u.loadingLogs" class="text-center py-2 text-muted small">Lade...</div>
+                                    <div v-else-if="u.logs && u.logs.length > 0" class="table-responsive bg-body rounded border" style="max-height: 150px;">
+                                        <table class="table table-sm table-borderless small mb-0">
+                                            <thead class="text-muted" style="font-size: 0.75rem;">
+                                                <tr><th class="ps-2">Zeit</th><th>Browser</th><th class="text-end pe-2">IP</th></tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="log in u.logs">
+                                                    <td class="ps-2 text-nowrap">[[ new Date(log.timestamp).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit', hour:'2-digit', minute:'2-digit'}) ]]</td>
+                                                    <td>[[ log.browser_short ]]</td>
+                                                    <td class="text-end font-monospace pe-2 text-muted">[[ log.ip_address ]]</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div v-else class="text-muted small fst-italic py-1">Keine Logins gefunden.</div>
+                                </div>
                                 <div v-if="u.temp_password" class="alert alert-success d-flex align-items-center justify-content-between mt-3 mb-3 animate-fade">
                                     <div class="overflow-hidden">
                                         <small class="d-block text-success-emphasis fw-bold" style="font-size: 0.7rem;">NEUES PASSWORT</small>

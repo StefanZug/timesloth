@@ -54,6 +54,34 @@ class AdminService {
         return ['new_password' => $newPw];
     }
 
+    public function getUserLogs($userId) {
+        $db = get_db();
+        // Hole die letzten 10 Logins dieses Users
+        $stmt = $db->prepare("SELECT timestamp, ip_address, user_agent FROM login_log WHERE user_id = ? ORDER BY timestamp DESC LIMIT 10");
+        $stmt->execute([$userId]);
+        $logs = $stmt->fetchAll();
+        
+        // Parse User Agent (gleiche Logik wie in auth.php, idealerweise in Helfer auslagern, hier inline)
+        foreach($logs as &$log) {
+            $ua = $log['user_agent'];
+            $platform = 'Unbekannt';
+            if (preg_match('/windows|win32/i', $ua)) $platform = 'Windows';
+            elseif (preg_match('/android/i', $ua)) $platform = 'Android';
+            elseif (preg_match('/iphone|ipad|ios/i', $ua)) $platform = 'iOS';
+            elseif (preg_match('/macintosh|mac os x/i', $ua)) $platform = 'Mac';
+            elseif (preg_match('/linux/i', $ua)) $platform = 'Linux';
+            
+            $browser = 'Unbekannt';
+            if (preg_match('/firefox/i', $ua)) $browser = 'Firefox';
+            elseif (preg_match('/edg/i', $ua)) $browser = 'Edge';
+            elseif (preg_match('/chrome|crios/i', $ua)) $browser = 'Chrome';
+            elseif (preg_match('/safari/i', $ua)) $browser = 'Safari';
+            
+            $log['browser_short'] = "$platform / $browser";
+        }
+        return $logs;
+    }
+
     public function addHoliday($date, $name) {
         $db = get_db();
         try {

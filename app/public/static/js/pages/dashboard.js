@@ -180,47 +180,39 @@ createApp({
             
             const isHome = (block.type === 'home');
             const input = event.target;
-            const rect = input.getBoundingClientRect();
             
-            // NEUE LOGIK: Pixelabstand zur Mitte des Feldes
-            const centerX = rect.width / 2;
-            const mouseX = event.clientX - rect.left;
-            const dist = mouseX - centerX; // Negativ = Links, Positiv = Rechts
+            // CURSOR POSITION LOGIK
+            // Wir prüfen, wo der Cursor blinkt (selectionStart)
+            const cursor = input.selectionStart; 
             
-            let step = 60; 
+            let step = 60; // Default: Minuten
             const hasSeconds = block[field].length > 5;
 
-            // Shift Taste -> Immer feiner Schritt (Sekunden oder Minuten)
-            if (event.shiftKey) step = 1;
-
-            if (isHome) {
-                // Bei HH:MM ist die Mitte der Doppelpunkt.
-                // Links (< 0) Stunden, Rechts (> 0) Minuten
-                if (dist < 0) step = 3600; 
-                else step = 60;
+            // Shift Taste -> Immer feinster Schritt (Sekunden oder Minuten)
+            if (event.shiftKey) {
+                step = 1; 
             } else {
-                if (hasSeconds) {
-                    // Bei HH:MM:SS (8 Zeichen) ist die Mitte zwischen den Minuten.
-                    // Wir definieren eine "Minuten-Zone" von +/- 22px um die Mitte.
-                    // Das ist robust, da der Text zentriert ist.
-                    const minZone = 22; 
-                    
-                    if (Math.abs(dist) <= minZone) {
-                        step = 60; // Mitte = Minuten
-                        if(event.shiftKey) step = 1;
-                    } else if (dist < -minZone) {
-                        step = 3600; // Links = Stunden
-                    } else {
-                        step = 1; // Rechts = Sekunden
-                    }
+                if (isHome) {
+                    // HH:MM -> Alles vor Index 3 (dem Doppelpunkt) sind Stunden
+                    if (cursor < 3) step = 3600; 
+                    else step = 60;
                 } else {
-                    // Fallback für HH:MM ohne Homeoffice (sollte kaum vorkommen)
-                    if (dist < 0) step = 3600; else step = 60;
+                    if (hasSeconds) {
+                        // HH:MM:SS
+                        if (cursor < 3) step = 3600;      // Cursor im Stunden-Bereich
+                        else if (cursor < 6) step = 60;   // Cursor im Minuten-Bereich
+                        else step = 1;                    // Cursor im Sekunden-Bereich
+                    } else {
+                        // HH:MM Fallback
+                        if (cursor < 3) step = 3600; 
+                        else step = 60;
+                    }
                 }
             }
 
             const direction = event.deltaY < 0 ? 1 : -1;
             
+            // ... [Berechnung und Speichern bleibt gleich] ...
             let currentSec = TimeLogic.toMinutes(block[field]) * 60; 
             const parts = block[field].split(':');
             let h = parseInt(parts[0] || 0);
@@ -246,6 +238,12 @@ createApp({
             } else {
                 block[field] = `${pad(h)}:${pad(m)}`;
             }
+
+            // WICHTIG: Cursor Position beibehalten, sonst springt er ans Ende!
+            // Wir setzen ihn nach dem Update wieder dahin zurück, wo er war.
+            Vue.nextTick(() => {
+                input.setSelectionRange(cursor, cursor);
+            });
 
             if (day) this.triggerListSave(day);
             else this.triggerAutoSave();
