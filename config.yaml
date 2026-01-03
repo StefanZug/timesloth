@@ -1,5 +1,5 @@
 name: "TimeSloth"
-version: "0.1.4.6"
+version: "0.1.5.0"
 slug: "timesloth"
 description: "Professional Time Tracking for Sloths."
 url: "https://github.com/StefanZug/timesloth"
@@ -9,9 +9,15 @@ init: false
 options:
   secret_key: "CHANGE_ME_IN_ADDON_CONFIG"
   db_folder: "/data"
+  ssl: true
+  certfile: "fullchain.pem"
+  keyfile: "privkey.pem"
 schema:
   secret_key: "password"
   db_folder: "str"
+  ssl: "bool"
+  certfile: "str"
+  keyfile: "str"
 ports:
   8080/tcp: 8080
 ports_description:

@@ -34,18 +34,6 @@ RUN mkdir -p /app/public/static/js /app/public/static/css/fonts /app/public/stat
     curl -f -L -o /app/public/static/css/fonts/bootstrap-icons.woff2 https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2 && \
     curl -f -L -o /app/public/static/css/fonts/bootstrap-icons.woff https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff
 
-# Nginx Config
-RUN echo 'server { \
-    listen 8080 default_server; \
-    root /app/public; \
-    index index.php; \
-    location / { try_files $uri $uri/ /index.php?$query_string; } \
-    location ~ \.php$ { \
-        fastcgi_pass 127.0.0.1:9000; \
-        include fastcgi_params; \
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \
-    } \
-}' > /etc/nginx/http.d/default.conf
 
 COPY app /app
 COPY icon.png /app/public/static/img/favicon.png

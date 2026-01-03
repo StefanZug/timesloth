@@ -11,7 +11,7 @@
     --sloth-bg-tertiary: #f8f9fa;
     
     --sloth-text-main: #1f2937;
-    --sloth-text-muted: #6b7280;
+    --sloth-text-muted: #4b5563;
     
     --sloth-border-color: #e5e7eb;
     --sloth-input-bg: #ffffff;
@@ -33,7 +33,7 @@
     --sloth-bg-tertiary: #21262d;   /* Headers / Inputs */
     
     --sloth-text-main: #e6edf3;     /* Off-White */
-    --sloth-text-muted: #8b949e;    /* Cool Grey */
+    --sloth-text-muted: #a1aebf;    /* Cool Grey */
     
     --sloth-border-color: #30363d;
     --sloth-input-bg: #0d1117;
@@ -58,7 +58,8 @@ body {
     /* FIX: Sticky Footer Setup */
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    /* ÄNDERUNG HIER: Von 100vh auf 100dvh ändern */
+    min-height: 100dvh;
 }
 
 /* Der Hauptcontainer muss wachsen, um den Footer nach unten zu drücken */
@@ -286,8 +287,9 @@ input[type="time"] { -moz-appearance: textfield; }
     text-align: center !important;
     width: 100%;
     margin-top: auto; /* Drückt Footer bei Flex-Layout nach unten */
-    padding: 40px 20px; 
-    opacity: 0.6; 
+    /* 40px oben, 20px seite, und unten dynamisch + Puffer */
+    padding: 40px 20px calc(20px + env(safe-area-inset-bottom)); 
+    opacity: 0.9; 
 }
 .app-footer:hover { 
     opacity: 1; 
@@ -322,6 +324,34 @@ input[type="time"] { -moz-appearance: textfield; }
 
 @keyframes slothSpin {
     0% { transform: rotate(0deg) scale(1); }
-    50% { transform: rotate(180deg) scale(1.1); } /* Kleiner "Pop" Effekt */
+    50% { transform: rotate(180deg) scale(1.5); } /* Kleiner "Pop" Effekt */
     100% { transform: rotate(360deg) scale(1); }
+}
+
+/* --- BUTTON FIXES --- */
+/* Wir nutzen die "Text"-Variable als Hintergrund, da diese kräftiger ist.
+   Die Textfarbe wird zur Karten-Hintergrundfarbe (Weiß im Light Mode, Dunkel im Dark Mode).
+   Das garantiert perfekten Kontrast. */
+
+.bg-office {
+    background-color: var(--text-office) !important;
+    border-color: var(--text-office) !important;
+    color: var(--sloth-bg-card) !important; 
+}
+
+.bg-home {
+    background-color: var(--text-home) !important;
+    border-color: var(--text-home) !important;
+    color: var(--sloth-bg-card) !important;
+}
+
+.bg-doctor {
+    background-color: var(--text-sick) !important;
+    border-color: var(--text-sick) !important;
+    color: var(--sloth-bg-card) !important;
+}
+
+/* Das Icon innerhalb des Buttons muss die Farbe erben */
+.bg-office i, .bg-home i, .bg-doctor i {
+    color: inherit !important;
 }

@@ -15,7 +15,44 @@ mkdir -p "$DB_FOLDER"
 echo "🔧 Setze Berechtigungen für $DB_FOLDER..."
 chown -R nobody:nobody "$DB_FOLDER"
 
-echo "🦥 TimeSloth (PHP 8.4 Edition) startet..."
+# SSL Konfiguration lesen
+SSL=$(jq --raw-output '.ssl // false' $CONFIG_PATH)
+CERTFILE=$(jq --raw-output '.certfile // "fullchain.pem"' $CONFIG_PATH)
+KEYFILE=$(jq --raw-output '.keyfile // "privkey.pem"' $CONFIG_PATH)
+
+# Nginx Server Block dynamisch erstellen
+if [ "$SSL" == "true" ]; then
+    echo "🔒 SSL ist AKTIVIERT. Nutze Zertifikate aus /ssl/..."
+    LISTEN_DIRECTIVE="listen 8080 default_server ssl;
+    ssl_certificate /ssl/$CERTFILE;
+    ssl_certificate_key /ssl/$KEYFILE;"
+else
+    echo "⚠️ SSL ist DEAKTIVIERT. Server läuft über HTTP."
+    LISTEN_DIRECTIVE="listen 8080 default_server;"
+fi
+
+# Config schreiben
+echo "server {
+    $LISTEN_DIRECTIVE
+    root /app/public;
+    index index.php;
+
+    # Security Headers
+    add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\" always;
+    add_header X-Content-Type-Options \"nosniff\" always;
+    add_header X-Frame-Options \"SAMEORIGIN\" always;
+    add_header Referrer-Policy \"strict-origin-when-cross-origin\" always;
+
+    location / { try_files \$uri \$uri/ /index.php?\$query_string; }
+
+    location ~ \.php$ {
+        fastcgi_pass 127.0.0.1:9000;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+    }
+}" > /etc/nginx/http.d/default.conf
+
+echo "🦥 TimeSloth startet..."
 echo "📂 Datenbank Pfad: $DB_FOLDER/timesloth.sqlite"
 
 # PHP-FPM 8.4 konfigurieren

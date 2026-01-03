@@ -22,12 +22,12 @@
                 </div>
                 <div class="widget-body">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <button class="btn btn-outline-secondary btn-sm rounded-circle" @click="shiftDay(-1)"><i class="bi bi-chevron-left"></i></button>
+                        <button class="btn btn-outline-secondary btn-sm rounded-circle" @click="shiftDay(-1)" aria-label="Vorheriger Tag"><i class="bi bi-chevron-left"></i></button>
                         <div class="text-center">
                             <h5 class="m-0 fw-bold">[[ displayDateDayView ]]</h5>
                             <small class="text-muted" v-if="isNonWorkDay">[[ getStatusText(dayStatus) ]]</small>
                         </div>
-                        <button class="btn btn-outline-secondary btn-sm rounded-circle" @click="shiftDay(1)"><i class="bi bi-chevron-right"></i></button>
+                        <button class="btn btn-outline-secondary btn-sm rounded-circle" @click="shiftDay(1)" aria-label="Nächster Tag"><i class="bi bi-chevron-right"></i></button>
                     </div>
 
                     <div class="d-flex justify-content-center gap-2 mb-4">
@@ -41,7 +41,7 @@
                             <div v-for="(block, index) in blocks" :key="block.id" class="card mb-2 shadow-sm border-0 bg-body-tertiary" :class="'type-' + block.type">
                                 <div class="card-body p-2 d-flex align-items-center gap-2">
                                     <div class="dropdown">
-                                        <button class="btn btn-sm dropdown-toggle text-white shadow-sm" :class="'bg-' + block.type" type="button" data-bs-toggle="dropdown" style="width: 36px;">
+                                        <button class="btn btn-sm dropdown-toggle shadow-sm" :class="'bg-' + block.type" data-bs-toggle="dropdown" style="width: 36px;" aria-label="Typ ändern">
                                             <i class="bi" :class="getTypeIcon(block.type)"></i>
                                         </button>
                                         <ul class="dropdown-menu shadow">
@@ -50,10 +50,10 @@
                                             <li><a class="dropdown-item text-danger" @click="changeBlockType($event, index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</a></li>
                                         </ul>
                                     </div>
-                                    <input :type="inputType" step="1" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'start')">
+                                    <input :type="inputType" step="1" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'start')" :aria-label="'Startzeit Eintrag ' + (index + 1)">
                                     <span class="text-muted">-</span>
-                                    <input :type="inputType" step="1" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.end" placeholder="16:30" @blur="formatTimeInput(block, 'end')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'end')">
-                                    <button class="btn btn-link text-muted p-0 ms-auto" @click="removeBlock(index)"><i class="bi bi-x-lg"></i></button>
+                                    <input :type="inputType" step="1" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.end" placeholder="16:30" @blur="formatTimeInput(block, 'end')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'end')" :aria-label="'Endzeit Eintrag ' + (index + 1)">
+                                    <button class="btn btn-link text-muted p-0 ms-auto" @click="removeBlock(index)" aria-label="Eintrag löschen"><i class="bi bi-x-lg"></i></button>
                                 </div>
                             </div>
                         </transition-group>
@@ -108,11 +108,11 @@
             <div class="widget-card h-100">
                 <div class="widget-header">
                     <div class="d-flex align-items-center gap-2">
-                        <button class="btn btn-sm btn-outline-secondary border-0 py-0" @click="shiftMonth(-1)"><i class="bi bi-chevron-left"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0" @click="shiftMonth(-1)" aria-label="Vorheriger Monat"><i class="bi bi-chevron-left"></i></button>
                         <span>🗓️ [[ displayMonthName ]]</span>
-                        <button class="btn btn-sm btn-outline-secondary border-0 py-0" @click="shiftMonth(1)"><i class="bi bi-chevron-right"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0" @click="shiftMonth(1)" aria-label="Nächster Monat"><i class="bi bi-chevron-right"></i></button>
                     </div>
-                    <button class="btn btn-sm btn-link text-danger p-0" @click="resetMonth" title="Monat leeren"><i class="bi bi-trash"></i></button>
+                    <button class="btn btn-sm btn-link text-danger p-0" @click="resetMonth" title="Monat leeren" aria-label="Monat zurücksetzen"><i class="bi bi-trash"></i></button>
                 </div>
                 
                 <div class="table-responsive">
@@ -140,17 +140,17 @@
                                         <div v-for="(block, index) in day.blocks" :key="block.id" class="d-flex align-items-center gap-1 mb-1">
                                             <i class="bi" :class="getTypeIcon(block.type)" :style="{color: block.type === 'office' ? 'var(--sloth-primary)' : 'inherit'}" style="font-size: 0.8rem; width: 15px;"></i>
                                             
-                                            <input :type="inputType" step="1" class="table-input py-0 px-1" style="height: 24px; font-size: 0.8rem;" v-model="block.start" @blur="formatListTime(day, index, 'start')" @input="triggerListSave(day)">
+                                            <input :type="inputType" step="1" class="table-input py-0 px-1" style="height: 24px; font-size: 0.8rem;" v-model="block.start" @blur="formatListTime(day, index, 'start')" @input="triggerListSave(day)" :aria-label="'Startzeit ' + day.dayShort + ' ' + day.dateNum + '.'">
                                             <span style="font-size: 0.8rem">-</span>
-                                            <input :type="inputType" step="1" class="table-input py-0 px-1" style="height: 24px; font-size: 0.8rem;" v-model="block.end" @blur="formatListTime(day, index, 'end')" @input="triggerListSave(day)">
+                                            <input :type="inputType" step="1" class="table-input py-0 px-1" style="height: 24px; font-size: 0.8rem;" v-model="block.end" @blur="formatListTime(day, index, 'end')" @input="triggerListSave(day)" :aria-label="'Endzeit ' + day.dayShort + ' ' + day.dateNum + '.'">
                                             
-                                            <i class="bi bi-x text-danger cursor-pointer ms-1" style="font-size: 1rem;" @click="removeListBlock(day, index)"></i>
+                                            <i class="bi bi-x text-danger cursor-pointer ms-1" style="font-size: 1rem;" @click="removeListBlock(day, index)" role="button" aria-label="Eintrag löschen"></i>
                                         </div>
                                         <div class="text-muted small cursor-pointer hover-text-primary" @click="addListBlock(day, 'office')" v-if="day.blocks.length === 0">
                                             <i class="bi bi-plus-circle"></i> Zeit
                                         </div>
                                         <div class="text-end" v-if="day.blocks.length > 0">
-                                             <i class="bi bi-plus text-muted cursor-pointer" @click="addListBlock(day, 'office')"></i>
+                                             <i class="bi bi-plus text-muted cursor-pointer" @click="addListBlock(day, 'office')" role="button" aria-label="Eintrag hinzufügen"></i>
                                         </div>
                                     </div>
                                 </td>
@@ -161,15 +161,15 @@
                                 
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-1">
-                                        <div class="btn-xs-status st-f" :class="{active: day.status === 'F'}" style="width:24px; height:24px; font-size:0.7rem;" @click.stop="quickToggle(day, 'F')">F</div>
-                                        <div class="btn-xs-status st-u" :class="{active: day.status === 'U'}" style="width:24px; height:24px; font-size:0.7rem;" @click.stop="quickToggle(day, 'U')">U</div>
-                                        <div class="btn-xs-status st-k" :class="{active: day.status === 'K'}" style="width:24px; height:24px; font-size:0.7rem;" @click.stop="quickToggle(day, 'K')">K</div>
+                                        <div class="btn-xs-status st-f" :class="{active: day.status === 'F'}" style="width:24px; height:24px; font-size:0.7rem;" @click.stop="quickToggle(day, 'F')" aria-label="Status Feiertag">F</div>
+                                        <div class="btn-xs-status st-u" :class="{active: day.status === 'U'}" style="width:24px; height:24px; font-size:0.7rem;" @click.stop="quickToggle(day, 'U')" aria-label="Status Urlaub">U</div>
+                                        <div class="btn-xs-status st-k" :class="{active: day.status === 'K'}" style="width:24px; height:24px; font-size:0.7rem;" @click.stop="quickToggle(day, 'K')" aria-label="Status Krank">K</div>
                                     </div>
                                 </td>
                                 
                                 <td>
                                     <input type="text" class="form-control form-control-sm border-0 bg-transparent p-0" style="font-size: 0.85rem;" 
-                                           v-model.lazy="day.comment" :placeholder="day.placeholder" @change="updateComment(day)">
+                                           v-model.lazy="day.comment" :placeholder="day.placeholder" @change="updateComment(day)" :aria-label="'Notiz für ' + day.dayShort + ' ' + day.dateNum + '.'">
                                 </td>
                             </tr>
                         </tbody>
@@ -183,7 +183,7 @@
             <div class="widget-card">
                 <div class="widget-header">
                     <span class="text-primary"><i class="bi bi-buildings-fill"></i> Büro-Quote</span>
-                    <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="modal" data-bs-target="#calcModal"><i class="bi bi-calculator"></i></button>
+                    <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="modal" data-bs-target="#calcModal" aria-label="Rechner öffnen"><i class="bi bi-calculator"></i></button>
                 </div>
                 <div class="widget-body">
                     <div class="d-flex justify-content-between align-items-end mb-2">
@@ -263,7 +263,7 @@
             <div class="modal-content shadow">
                 <div class="modal-header border-bottom-0 pb-0">
                     <h5 class="modal-title fw-bold">🧮 Büro-Planer</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
                 </div>
                 <div class="modal-body">
                     <p class="text-muted small mb-4">
@@ -272,7 +272,7 @@
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Offene Büro-Stunden (laut SAP)</label>
                         <div class="input-group">
-                            <input type="number" step="0.01" class="form-control" v-model.number="calc.sapMissing" placeholder="z.B. 31.42">
+                            <input type="number" step="0.01" class="form-control" v-model.number="calc.sapMissing" placeholder="z.B. 31.42" aria-label="Offene Stunden">
                             <span class="input-group-text">h</span>
                         </div>
                     </div>
@@ -281,7 +281,7 @@
                             <span>Abwesenheit (Krank/Urlaub)</span>
                             <span class="text-success" v-if="calcDeduction > 0">- [[ formatNum(calcDeduction) ]] h</span>
                         </label>
-                        <input type="number" step="1" class="form-control" v-model.number="calc.absentDays" placeholder="Tage">
+                        <input type="number" step="1" class="form-control" v-model.number="calc.absentDays" placeholder="Tage" aria-label="Abwesenheit in Tagen">
                         <div class="form-text small">Tage, die noch nicht in SAP verbucht sind.</div>
                     </div>
                     <div class="mb-4">
@@ -289,7 +289,7 @@
                             <span>Geplante Bürozeit pro Tag</span>
                             <span class="text-primary">[[ formatNum(calc.planHours) ]] h</span>
                         </label>
-                        <input type="range" class="form-range" min="4" max="10" step="0.25" v-model.number="calc.planHours">
+                        <input type="range" class="form-range" min="4" max="10" step="0.25" v-model.number="calc.planHours" aria-label="Geplante Stunden Slider">
                     </div>
                     <div class="alert alert-primary text-center border-0 shadow-sm mb-0">
                         <small class="text-uppercase text-muted" style="font-size: 0.7rem;">Du musst noch ins Büro für:</small>
