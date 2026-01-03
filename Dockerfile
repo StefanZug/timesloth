@@ -34,7 +34,6 @@ RUN mkdir -p /app/public/static/js /app/public/static/css/fonts /app/public/stat
     curl -f -L -o /app/public/static/css/fonts/bootstrap-icons.woff2 https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2 && \
     curl -f -L -o /app/public/static/css/fonts/bootstrap-icons.woff https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff
 
-
 COPY app /app
 COPY icon.png /app/public/static/img/favicon.png
 COPY logo.png /app/public/static/img/logo.png
