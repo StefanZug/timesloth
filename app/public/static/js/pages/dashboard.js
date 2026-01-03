@@ -181,27 +181,46 @@ createApp({
             const isHome = (block.type === 'home');
             const input = event.target;
             const rect = input.getBoundingClientRect();
-            const x = event.clientX - rect.left; 
-            const width = rect.width;
-            const percent = x / width;
-
+            
+            // NEUE LOGIK: Pixelabstand zur Mitte des Feldes
+            const centerX = rect.width / 2;
+            const mouseX = event.clientX - rect.left;
+            const dist = mouseX - centerX; // Negativ = Links, Positiv = Rechts
+            
             let step = 60; 
             const hasSeconds = block[field].length > 5;
 
+            // Shift Taste -> Immer feiner Schritt (Sekunden oder Minuten)
+            if (event.shiftKey) step = 1;
+
             if (isHome) {
-                if (percent < 0.5) step = 3600; else step = 60;
+                // Bei HH:MM ist die Mitte der Doppelpunkt.
+                // Links (< 0) Stunden, Rechts (> 0) Minuten
+                if (dist < 0) step = 3600; 
+                else step = 60;
             } else {
                 if (hasSeconds) {
-                    if (percent < 0.33) step = 3600;
-                    else if (percent > 0.66) step = 1;
-                    else step = 60;
+                    // Bei HH:MM:SS (8 Zeichen) ist die Mitte zwischen den Minuten.
+                    // Wir definieren eine "Minuten-Zone" von +/- 22px um die Mitte.
+                    // Das ist robust, da der Text zentriert ist.
+                    const minZone = 22; 
+                    
+                    if (Math.abs(dist) <= minZone) {
+                        step = 60; // Mitte = Minuten
+                        if(event.shiftKey) step = 1;
+                    } else if (dist < -minZone) {
+                        step = 3600; // Links = Stunden
+                    } else {
+                        step = 1; // Rechts = Sekunden
+                    }
                 } else {
-                    if (percent < 0.5) step = 3600; else step = 60;
+                    // Fallback für HH:MM ohne Homeoffice (sollte kaum vorkommen)
+                    if (dist < 0) step = 3600; else step = 60;
                 }
-                if (event.shiftKey) step = 1; 
             }
 
             const direction = event.deltaY < 0 ? 1 : -1;
+            
             let currentSec = TimeLogic.toMinutes(block[field]) * 60; 
             const parts = block[field].split(':');
             let h = parseInt(parts[0] || 0);
@@ -210,6 +229,7 @@ createApp({
             currentSec = (h * 3600) + (m * 60) + s;
 
             let newSec = currentSec + (step * direction);
+            
             if(newSec < 0) newSec = (24 * 3600) + newSec;
             if(newSec >= 24 * 3600) newSec = newSec % (24 * 3600);
 

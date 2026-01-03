@@ -4,10 +4,6 @@ require_once __DIR__ . '/Services/EntryService.php';
 require_once __DIR__ . '/Services/UserService.php';
 require_once __DIR__ . '/Services/AdminService.php';
 
-define('APP_ROOT', dirname(__DIR__));
-define('TEMPLATE_PATH', APP_ROOT . '/templates');
-define('DB_PATH', getenv('DB_FOLDER') . '/timesloth.sqlite');
-
 function json_response($data) {
     echo json_encode($data);
     exit;

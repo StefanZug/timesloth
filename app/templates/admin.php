@@ -72,8 +72,18 @@
                                     </div>
                                 </div>
 
+                                <div v-if="u.temp_password" class="alert alert-success d-flex align-items-center justify-content-between mt-3 mb-3 animate-fade">
+                                    <div class="overflow-hidden">
+                                        <small class="d-block text-success-emphasis fw-bold" style="font-size: 0.7rem;">NEUES PASSWORT</small>
+                                        <span class="font-monospace fs-5 fw-bold user-select-all me-2">[[ u.temp_password ]]</span>
+                                    </div>
+                                    <button class="btn btn-light btn-sm text-success fw-bold shadow-sm text-nowrap" @click="copyPw(u.temp_password, $event)">
+                                        <i class="bi bi-clipboard"></i> Kopieren
+                                    </button>
+                                </div>
+
                                 <div class="d-flex gap-2 border-top pt-3" v-if="u.id != currentUserId">
-                                    <button class="btn btn-sm btn-outline-dark" @click="resetPw(u)">
+                                    <button class="btn btn-sm btn-outline-secondary" @click="resetPw(u)">
                                         <i class="bi bi-key"></i> PW Reset
                                     </button>
                                     
@@ -152,96 +162,10 @@
 </div>
 
 <script>
-const { createApp } = Vue;
-createApp({
-    delimiters: ['[[', ']]'],
-    data() {
-        return {
-            currentUserId: <?= $_SESSION['user_id'] ?>,
-            users: <?= json_encode($users) ?>,
-            holidays: <?= json_encode($holidays) ?>,
-            stats: { db_size_bytes: 0, count_entries: 0, count_logs: 0 },
-            loading: false,
-            
-            newUser: { username: '', password: '', is_admin: false },
-            newHoliday: { date: '', name: '' }
-        }
-    },
-    methods: {
-        formatDate(str) {
-            if(!str) return 'Nie';
-            return new Date(str).toLocaleDateString('de-DE');
-        },
-        formatBytes(bytes, decimals = 2) {
-            if (!+bytes) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(decimals))} ${sizes[i]}`;
-        },
-        
-        async fetchStats() {
-            try {
-                const res = await axios.get('/admin/stats');
-                this.stats = res.data;
-            } catch(e) { console.error(e); }
-        },
-
-        async cleanupLogs() {
-            if(!confirm("Alte Logs und Datenbank bereinigen?")) return;
-            this.loading = true;
-            try {
-                await axios.post('/admin/cleanup');
-                await this.fetchStats();
-                alert("Datenbank bereinigt!");
-            } catch(e) { alert("Fehler!"); }
-            this.loading = false;
-        },
-
-        async createUser() {
-            try {
-                await axios.post('/admin/create_user', this.newUser);
-                location.reload();
-            } catch(e) { alert(e.response?.data?.error || "Fehler"); }
-        },
-        async deleteUser(u) {
-            if(!confirm(`User ${u.username} wirklich löschen?`)) return;
-            try {
-                await axios.post(`/admin/delete_user/${u.id}`);
-                location.reload();
-            } catch(e) { alert("Fehler"); }
-        },
-        async toggleActive(u) {
-            try {
-                await axios.post(`/admin/toggle_active/${u.id}`);
-                u.is_active = !u.is_active; 
-            } catch(e) { alert("Fehler"); }
-        },
-        async resetPw(u) {
-            if(!confirm(`Passwort für ${u.username} zurücksetzen?`)) return;
-            try {
-                const res = await axios.post(`/admin/reset_password/${u.id}`);
-                alert(`Neues Passwort für ${u.username}: \n\n${res.data.new_password}`);
-                u.pw_last_changed = new Date().toISOString(); 
-            } catch(e) { alert("Fehler"); }
-        },
-
-        async addHoliday() {
-            try {
-                await axios.post('/admin/holiday', this.newHoliday);
-                location.reload();
-            } catch(e) { alert("Datum existiert schon!"); }
-        },
-        async deleteHoliday(id) {
-            if(!confirm("Löschen?")) return;
-            try {
-                await axios.delete(`/admin/holiday/${id}`);
-                location.reload();
-            } catch(e) { alert("Fehler"); }
-        }
-    },
-    mounted() {
-        this.fetchStats();
-    }
-}).mount('#adminApp');
+    window.slothData = {
+        currentUserId: <?= $_SESSION['user_id'] ?>,
+        users: <?= json_encode($users) ?>,
+        holidays: <?= json_encode($holidays) ?>
+    };
 </script>
+<script src="/static/js/pages/admin.js"></script>

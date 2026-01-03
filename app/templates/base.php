@@ -16,6 +16,7 @@
     <script src="/static/js/axios.js"></script>
 
     <script>
+    // Initial Theme Load
     let theme = localStorage.getItem('theme');
     if (!theme) {
         theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
@@ -25,7 +26,7 @@
 </head>
 <body>
     
-    <div id="crt-overlay"></div>
+    <div id="theme-bubble" class="theme-bubble"></div>
 
     <?php if (isset($_SESSION['user'])): ?>
     <nav class="navbar navbar-expand bg-body-tertiary shadow-sm mb-3 border-bottom sticky-top" style="z-index: 1050;">
@@ -89,13 +90,14 @@
                     $quotes = [
                         "Zeit ist Geld, aber Faulheit ist unbezahlbar.",
                         "Wir zählen die Stunden, damit du es nicht musst.",
-                        "Programmiert mit ❤️ und viel Koffein.",
+                        "Programmiert mit ❤️ und viel 🍺.",
                         "Heute schon nichts getan? Wir verurteilen dich nicht.",
                         "Lade Arbeitsmoral... Fehler 404.",
                         "Schneller arbeiten bringt auch nicht mehr Feierabend.",
                         "Wir tracken deine Zeit, nicht deine Motivation.",
-                        "Work-Life-Balance? Wir bevorzugen Life-Life-Balance.",
-                        "Wir unterstützen proaktives Nichtstun."
+                        "Wir machens, weils SAP nicht kann.",
+                        "Arbeitszeit ist die neue Währung der Faulen.",
+                        "Timemanagement für fortschrittliche Faultiere."
                     ];
                     echo $quotes[array_rand($quotes)]; 
                     ?>
@@ -106,6 +108,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Faultier Spin
             const sloths = document.querySelectorAll('.sloth-logo');
             sloths.forEach(sloth => {
                 sloth.addEventListener('click', (e) => {
@@ -116,10 +119,11 @@
                 });
             });
 
+            // Bubble Theme Toggle
             const themeBtn = document.getElementById('darkModeBtn');
-            const overlay = document.getElementById('crt-overlay');
+            const bubble = document.getElementById('theme-bubble');
             
-            if(themeBtn && overlay) {
+            if(themeBtn && bubble) {
                 const updateIcon = () => {
                     const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
                     themeBtn.className = isDark ? 'bi bi-sun-fill theme-toggle-btn' : 'bi bi-moon-stars-fill theme-toggle-btn';
@@ -127,15 +131,37 @@
                 updateIcon();
 
                 themeBtn.addEventListener('click', () => {
-                    overlay.classList.add('crt-animate');
+                    // 1. Koordinaten finden
+                    const rect = themeBtn.getBoundingClientRect();
+                    const x = rect.left + rect.width / 2;
+                    const y = rect.top + rect.height / 2;
+                    
+                    // 2. Ziel-Farbe bestimmen
+                    const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+                    const nextTheme = isDark ? 'light' : 'dark';
+                    // Hardcodierte Farben passend zu CSS variablen
+                    const nextColor = isDark ? '#f3f4f6' : '#0d1117'; 
+
+                    // 3. Bubble positionieren
+                    bubble.style.left = x + 'px';
+                    bubble.style.top = y + 'px';
+                    bubble.style.backgroundColor = nextColor;
+                    
+                    // 4. Explosion!
+                    bubble.classList.add('expand');
+
+                    // 5. Theme switchen wenn Screen bedeckt ist (nach 400ms)
                     setTimeout(() => {
-                        const current = document.documentElement.getAttribute('data-bs-theme');
-                        const next = current === 'dark' ? 'light' : 'dark';
-                        document.documentElement.setAttribute('data-bs-theme', next);
-                        localStorage.setItem('theme', next);
+                        document.documentElement.setAttribute('data-bs-theme', nextTheme);
+                        localStorage.setItem('theme', nextTheme);
                         updateIcon();
-                    }, 300);
-                    setTimeout(() => { overlay.classList.remove('crt-animate'); }, 600);
+                        
+                        // 6. Aufräumen (nach Animation)
+                        setTimeout(() => {
+                            bubble.classList.remove('expand');
+                            // Kleiner Hack: Style resetten damit es nicht zurück animiert
+                        }, 400); 
+                    }, 400); 
                 });
             }
         });
