@@ -58,7 +58,7 @@
                             </div>
                         </transition-group>
 
-                        <button class="btn btn-outline-secondary btn-sm w-100 border-dashed mt-3" @click="addBlock('office')" style="border-style: dashed;">
+                        <button class="btn btn-dashed btn-sm w-100 mt-3" @click="addBlock('office')">
                             <i class="bi bi-plus-lg"></i> Eintrag hinzufügen
                         </button>
                     </div>
@@ -129,16 +129,25 @@
                         <tbody>
                             <tr v-for="day in monthDays" :key="day.iso" :class="getRowClass(day)">
                                 <td class="ps-3 cursor-pointer text-nowrap" @click="jumpToDay(day.iso)">
-                                    <div class="fw-bold" :class="{'text-primary': day.isToday}">
+                                    <div class="fw-bold" :class="day.isToday ? 'text-primary' : 'text-body'">
                                         [[ day.dayShort ]] [[ day.dateNum ]].
                                     </div>
-                                    <div class="text-secondary small" style="font-size: 0.65rem;">KW [[ day.kw ]]</div>
+                                    <div class="text-subtle">KW [[ day.kw ]]</div>
                                 </td>
                                 
                                 <td style="min-width: 180px;">
                                     <div v-if="!day.status">
                                         <div v-for="(block, index) in day.blocks" :key="block.id" class="d-flex align-items-center gap-1 mb-1">
-                                            <i class="bi" :class="getTypeIcon(block.type)" :style="{color: block.type === 'office' ? 'var(--sloth-primary)' : 'inherit'}" style="font-size: 0.8rem; width: 15px;"></i>
+                                            <div class="dropdown d-inline-block me-1">
+                                                <button class="btn btn-sm p-0 border-0" type="button" data-bs-toggle="dropdown" aria-label="Typ ändern">
+                                                    <i class="bi" :class="getTypeIcon(block.type)" :style="{color: block.type === 'office' ? 'var(--sloth-primary)' : 'inherit'}" style="font-size: 0.9rem;"></i>
+                                                </button>
+                                                <ul class="dropdown-menu shadow">
+                                                    <li><button type="button" class="dropdown-item" @click="changeListBlockType($event, day, index, 'office')"><i class="bi bi-building me-2 text-success"></i>Büro</button></li>
+                                                    <li><button type="button" class="dropdown-item" @click="changeListBlockType($event, day, index, 'home')"><i class="bi bi-house me-2 text-info"></i>Home</button></li>
+                                                    <li><button type="button" class="dropdown-item text-danger" @click="changeListBlockType($event, day, index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</button></li>
+                                                </ul>
+                                            </div>
                                             
                                             <input :type="inputType" step="1" class="table-input py-0 px-1" style="height: 24px; font-size: 0.8rem;" v-model="block.start" @blur="formatListTime(day, index, 'start')" @input="triggerListSave(day)" :aria-label="'Startzeit ' + day.dayShort + ' ' + day.dateNum + '.'">
                                             <span style="font-size: 0.8rem">-</span>

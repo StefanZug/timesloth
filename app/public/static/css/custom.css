@@ -1,49 +1,77 @@
+/* --- 1. THEMEN & VARIABLEN (Zentrale Steuerung) --- */
 :root {
-    /* Ein etwas dunkleres Blau für besseren Kontrast auf hellem Grau */
-    /* Original Bootstrap ist #0d6efd, wir gehen etwas dunkler zu #0a58ca oder ähnlich */
-    --sloth-primary: #0a58ca; 
-    --sloth-radius: 10px;
+    --sloth-radius: 12px;
+    --transition-speed: 0.2s;
+    
+    /* Status-Farben Basis (werden im Theme zugewiesen) */
 }
 
+/* LIGHT THEME (Clean & Soft) */
 [data-bs-theme="light"] {
-    /* ... deine existierenden Variablen ... */
+    /* UI Farben */
+    --sloth-primary: #2563eb;       /* Kräftiges Royal Blue für guten Kontrast */
+    --sloth-primary-hover: #1d4ed8;
     
-    /* FIX: Bootstrap Variablen überschreiben, damit text-primary dunkler wird */
+    --bg-body: #f3f4f6;             /* Kühles Hellgrau */
+    --bg-card: #ffffff;
+    --bg-tertiary: #f9fafb;
+    --border-color: #e5e7eb;
+    
+    --text-main: #111827;
+    --text-muted: #4b5563;          /* Fester Grauwert, keine Opacity! */
+    --text-subtle: #6b7280;         /* Noch etwas heller für unwichtiges */
+
+    /* Status Farben (Pastell + Dunkler Text für Kontrast) */
+    --st-office-bg: #dcfce7;   --st-office-txt: #14532d;
+    --st-home-bg: #e0f2fe;     --st-home-txt: #0c4a6e;
+    --st-sick-bg: #fee2e2;     --st-sick-txt: #7f1d1d;
+    --st-vacation: #fef3c7;    --st-vacation-txt: #78350f;
+    --st-holiday-bg: #f3f4f6;  --st-holiday-txt: #374151;
+    
+    /* Bootstrap Overrides */
     --bs-primary: var(--sloth-primary);
-    --bs-link-color: var(--sloth-primary);
+    --bs-body-bg: var(--bg-body);
+    --bs-body-color: var(--text-main);
 }
 
+/* DARK THEME (Modern Deep Blue/Gray - GitHub Style) */
 [data-bs-theme="dark"] {
-    /* ... deine existierenden Variablen ... */
-
-    /* FIX: Im Dark Mode muss das Blau HELLER sein für Kontrast auf Schwarz */
-    --bs-primary: #79c0ff; 
-    --bs-link-color: #79c0ff;
-}
-
-/* Explizite Helper Klassen, falls Bootstrap Variablen nicht überall greifen */
-[data-bs-theme="dark"] .text-primary {
-    color: #79c0ff !important;
-}
-[data-bs-theme="light"] .text-primary {
-    color: #0a58ca !important;
-}
-
-/* --- 2. GLOBAL LAYOUT --- */
-body { 
-    background-color: var(--sloth-bg-body); 
-    color: var(--sloth-text-main);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    /* UI Farben */
+    --sloth-primary: #58a6ff;       /* Helles, freundliches Blau für Darkmode */
+    --sloth-primary-hover: #79c0ff;
     
-    /* FIX: Sticky Footer Setup */
+    --bg-body: #0d1117;             /* Sehr dunkles Blau-Grau */
+    --bg-card: #161b22;
+    --bg-tertiary: #21262d;
+    --border-color: #30363d;
+    
+    --text-main: #f0f6fc;
+    --text-muted: #8b949e;          /* Fester Grauwert für Lesbarkeit */
+    --text-subtle: #6e7681;
+
+    /* Status Farben (Gedämpft + Heller Text) */
+    --st-office-bg: #112519;   --st-office-txt: #4ade80; /* Grün */
+    --st-home-bg: #12222e;     --st-home-txt: #38bdf8;   /* Cyan */
+    --st-sick-bg: #2e1214;     --st-sick-txt: #f87171;   /* Rot */
+    --st-vacation: #2e2208;    --st-vacation-txt: #fcd34d; /* Gelb */
+    --st-holiday-bg: #1b1f24;  --st-holiday-txt: #9ca3af;
+    
+    /* Bootstrap Overrides */
+    --bs-primary: var(--sloth-primary);
+    --bs-body-bg: var(--bg-body);
+    --bs-body-color: var(--text-main);
+    --bs-border-color: var(--border-color);
+}
+
+/* --- 2. GLOBAL LAYOUT & TYPO --- */
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    transition: background-color var(--transition-speed), color var(--transition-speed);
     display: flex;
     flex-direction: column;
-    /* ÄNDERUNG HIER: Von 100vh auf 100dvh ändern */
-    min-height: 100dvh;
+    min-height: 100dvh; /* Mobile Viewport Fix */
 }
 
-/* Der Hauptcontainer muss wachsen, um den Footer nach unten zu drücken */
 #main-content {
     flex: 1;
     display: flex;
@@ -51,288 +79,210 @@ body {
     width: 100%;
 }
 
-h1, h2, h3, h4, h5, h6, .card-title, strong { color: var(--sloth-text-main); }
-.text-muted { color: var(--sloth-text-muted) !important; }
+/* Text Utilities (Ersetzt Opacity Klassen) */
+.text-muted { color: var(--text-muted) !important; }
+.text-subtle { color: var(--text-subtle) !important; font-size: 0.85em; }
+.fw-bold { font-weight: 600 !important; }
 
-/* --- 3. INPUTS & FORMULARE --- */
-.form-control, .form-select, .form-box {
-    background-color: var(--sloth-input-bg);
-    border: 1px solid var(--sloth-border-color);
-    color: var(--sloth-text-main);
-    border-radius: 6px;
+/* Links & Headings */
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3 { color: var(--text-main); }
+a { text-decoration: none; color: var(--sloth-primary); }
+a:hover { color: var(--sloth-primary-hover); }
+
+/* --- 3. COMPONENTS --- */
+
+/* Cards */
+.card, .widget-card { 
+    background-color: var(--bg-card); 
+    border: 1px solid var(--border-color);
+    border-radius: var(--sloth-radius);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Subtiler Schatten */
+    margin-bottom: 20px;
+    overflow: visible;
 }
 
+.widget-header {
+    padding: 12px 16px;
+    font-size: 0.8rem; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em;
+    color: var(--text-subtle);
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-tertiary);
+    border-radius: var(--sloth-radius) var(--sloth-radius) 0 0;
+    display: flex; justify-content: space-between; align-items: center;
+}
+
+.widget-body { padding: 16px; }
+
+/* Inputs */
+.form-control, .form-select {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+}
 .form-control:focus, .form-select:focus {
-    background-color: var(--sloth-input-bg);
+    background-color: var(--bg-card);
     border-color: var(--sloth-primary);
-    color: var(--sloth-text-main);
-    box-shadow: 0 0 0 3px rgba(92, 124, 250, 0.15);
+    color: var(--text-main);
+    box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.15); /* Soft Glow */
 }
 
-/* Inputs IN der Tabelle */
-.table-input {
-    width: 100%; 
-    min-width: 50px;
-    background-color: transparent;
-    border: 1px solid transparent; 
-    border-radius: 4px; 
-    text-align: center;
-    color: inherit; /* Nimmt Textfarbe der Zeile an (wichtig für Darkmode!) */
+/* Dashed "Ghost" Button (Modern) */
+.btn-dashed {
+    border: 2px dashed var(--border-color);
+    background: transparent;
+    color: var(--text-muted);
     font-weight: 600;
     transition: all 0.2s;
 }
-
-.table-input:hover {
-    border-color: var(--sloth-border-color);
-    background-color: var(--input-hover-bg);
-    color: var(--sloth-text-main); /* Bei Hover wieder Standard-Farbe */
-}
-
-.table-input:focus {
+.btn-dashed:hover {
     border-color: var(--sloth-primary);
-    background-color: var(--sloth-input-bg);
-    color: var(--sloth-text-main);
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(92, 124, 250, 0.25);
+    color: var(--sloth-primary);
+    background-color: var(--bg-tertiary);
 }
 
-/* --- 4. TABELLEN & ZEILEN-FARBEN --- */
-.table {
-    --bs-table-bg: transparent;
-    --bs-table-border-color: var(--sloth-border-color);
-    color: var(--sloth-text-main);
+/* Avatar */
+.avatar-circle {
+    width: 36px; height: 36px; border-radius: 50%;
+    background-color: var(--sloth-primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1rem;
+    border: 2px solid var(--bg-card); /* Kleiner Rand für Separation */
 }
 
+/* --- 4. STATUS & TABELLEN --- */
+
+/* Tabellen Styling */
+.table { 
+    --bs-table-bg: transparent; 
+    color: var(--text-main); 
+    border-color: var(--border-color);
+}
 thead th {
-    background-color: var(--sloth-bg-tertiary) !important;
-    color: var(--sloth-text-muted) !important;
-    border-bottom: 2px solid var(--sloth-border-color) !important;
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-muted) !important;
     font-weight: 600;
     text-transform: uppercase;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
 }
+td { border-bottom: 1px solid var(--border-color); }
 
-/* Die neuen Farb-Klassen (ohne Transparenz-Tricks) */
-.tr-office   { background-color: var(--bg-office) !important; color: var(--text-office) !important; }
-.tr-home     { background-color: var(--bg-home) !important; color: var(--text-home) !important; }
-.tr-vacation { background-color: var(--bg-vacation) !important; color: var(--text-vacation) !important; }
-.tr-sick     { background-color: var(--bg-sick) !important; color: var(--text-sick) !important; }
-.tr-holiday  { background-color: var(--bg-holiday) !important; color: var(--text-holiday) !important; }
+/* Status Klassen (nutzen Variablen von oben) */
+.tr-office   { background-color: var(--st-office-bg) !important; color: var(--st-office-txt) !important; }
+.tr-home     { background-color: var(--st-home-bg) !important; color: var(--st-home-txt) !important; }
+.tr-sick     { background-color: var(--st-sick-bg) !important; color: var(--st-sick-txt) !important; }
+.tr-vacation { background-color: var(--st-vacation) !important; color: var(--st-vacation-txt) !important; }
+.tr-holiday  { background-color: var(--st-holiday-bg) !important; color: var(--st-holiday-txt) !important; }
+.tr-weekend  { background-color: var(--bg-tertiary) !important; color: var(--text-muted) !important; }
 
-/* Wochenende */
-.tr-weekend { 
-    background-color: rgba(0,0,0,0.02) !important; 
-    color: var(--sloth-text-muted) !important; 
-}
-[data-bs-theme="dark"] .tr-weekend { 
-    background-color: rgba(255,255,255,0.02) !important; 
-}
-
-/* Dropdown Menüs */
-.dropdown-menu {
-    background-color: var(--sloth-bg-card);
-    border-color: var(--sloth-border-color);
-}
-.dropdown-item { color: var(--sloth-text-main); }
-.dropdown-item:hover {
-    background-color: var(--sloth-primary);
-    color: white;
-}
-
-/* --- 5. KOMPONENTEN --- */
-.avatar-circle {
-    width: 38px; height: 38px; border-radius: 50%;
-    background-color: var(--sloth-primary); color: white;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: bold; font-size: 1.1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* Status Buttons (Tagesansicht & Schnellwahl) */
+/* Status Badges (Kleine Buttons) */
 .btn-xs-status {
     border-radius: 6px; 
     font-weight: bold;
     display: inline-flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.2s;
-    border: 1px solid var(--sloth-border-color); 
-    background-color: var(--sloth-bg-card); 
-    color: var(--sloth-text-muted);
-    opacity: 0.7;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
 }
-.btn-xs-status:hover { transform: translateY(-1px); opacity: 1; border-color: var(--sloth-text-muted); }
+.btn-xs-status:hover { border-color: var(--text-muted); color: var(--text-main); }
 
-/* Aktive Status Buttons (Invertiert für besseren Kontrast) */
-.st-f.active { background-color: var(--text-holiday); color: var(--bg-holiday); border-color: transparent; opacity: 1; }
-.st-u.active { background-color: var(--text-vacation); color: black; border-color: transparent; opacity: 1; }
-.st-k.active { background-color: var(--text-sick); color: white; border-color: transparent; opacity: 1; }
+/* Active States für Badges */
+.st-f.active { background: var(--st-holiday-txt); color: var(--bg-card); border-color: transparent; }
+.st-u.active { background: var(--st-vacation-txt); color: #fff; border-color: transparent; }
+.st-k.active { background: var(--st-sick-txt); color: #fff; border-color: transparent; }
 
-/* Type Cards (in der linken Spalte) */
-.type-office { border-left: 4px solid var(--text-office) !important; }
-.type-home { border-left: 4px solid var(--text-home) !important; }
-.type-doctor { border-left: 4px solid var(--text-sick) !important; }
+/* Type Cards (Linke Spalte Border) */
+.type-office { border-left: 4px solid var(--st-office-txt) !important; }
+.type-home   { border-left: 4px solid var(--st-home-txt) !important; }
+.type-doctor { border-left: 4px solid var(--st-sick-txt) !important; }
 
-/* Progress Bar */
-.progress-sloth { height: 8px; border-radius: 4px; background-color: var(--sloth-bg-tertiary); overflow: hidden; }
-.progress-bar-sloth { height: 100%; background-color: var(--sloth-primary); transition: width 0.5s ease; }
+/* --- 5. PROGRESS & FOOTER --- */
+.progress-sloth { 
+    height: 8px; 
+    border-radius: 10px; 
+    background-color: var(--bg-tertiary); 
+    overflow: hidden; 
+}
+.progress-bar-sloth { 
+    height: 100%; 
+    background-color: var(--sloth-primary); 
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
+}
 
-/* Helper Classes */
+.app-footer {
+    text-align: center;
+    padding: 3rem 1rem calc(1rem + env(safe-area-inset-bottom));
+    color: var(--text-subtle);
+    font-size: 0.8rem;
+    margin-top: auto;
+    width: 100%;
+}
+.app-footer img {
+    opacity: 0.5; 
+    filter: grayscale(1); 
+    transition: all 0.3s; 
+}
+.app-footer:hover img { opacity: 1; filter: grayscale(0); transform: rotate(10deg); }
+
+/* --- 6. UTILS --- */
 .cursor-pointer { cursor: pointer; }
-.bg-body-tertiary { background-color: var(--sloth-bg-tertiary) !important; }
-
-/* --- 6. SPEZIAL-SEITEN (Login, Admin, Settings) --- */
-.card, .widget-card { 
-    background-color: var(--sloth-bg-card); 
-    border: 1px solid var(--sloth-border-color);
-    border-radius: var(--sloth-radius);
-    color: var(--sloth-text-main);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.settings-box {
-    background-color: var(--sloth-bg-tertiary);
-    border: 1px solid var(--sloth-border-color);
-    border-radius: var(--sloth-radius);
-    padding: 15px; margin-bottom: 15px;
-}
-
-/* --- 7. TOAST NOTIFICATIONS --- */
-.toast-sloth {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background-color: var(--sloth-bg-card); color: var(--sloth-text-main);
-    padding: 10px 20px; border-radius: 30px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 1px solid var(--sloth-primary);
-    z-index: 1060; opacity: 0; visibility: hidden; transition: all 0.3s ease;
-    display: flex; align-items: center; gap: 10px; font-weight: bold;
-}
-.toast-sloth.show { opacity: 1; visibility: visible; bottom: 40px; }
-
-/* --- 8. DASHBOARD GRID SYSTEM (v0.1.4.3) --- */
-.widget-card { 
-    margin-bottom: 20px; 
-    overflow: visible; /* Wichtig für Dropdowns */
-}
-
-.widget-header {
-    padding: 10px 15px;
-    font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-    color: var(--sloth-text-muted);
-    border-bottom: 1px solid var(--sloth-border-color);
-    background-color: var(--sloth-bg-tertiary);
-    border-top-left-radius: var(--sloth-radius);
-    border-top-right-radius: var(--sloth-radius);
-    display: flex; justify-content: space-between; align-items: center;
-}
-.widget-body { padding: 15px; }
-
-/* Sticky Columns (Links & Rechts) */
-@media (min-width: 992px) {
-    .sticky-column {
-        position: sticky; 
-        /* FIX: Abstand erhöht von 80px auf 100px */
-        /* Verhindert, dass die Überschrift unter die Navbar rutscht */
-        top: 100px; 
-        height: fit-content; 
-        z-index: 900; /* Kleiner als Navbar (meist 1000+), aber über normalem Content */
-    }
-}
+.bg-body-tertiary { background-color: var(--bg-tertiary) !important; }
 
 /* View Switcher */
-.view-switcher { 
-    background: var(--sloth-bg-tertiary); border-radius: 20px; padding: 4px; display: inline-flex; border: 1px solid var(--sloth-border-color); 
+.view-switcher {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 4px;
+    display: inline-flex;
 }
-.view-btn { 
-    border: none; background: transparent; padding: 5px 15px; border-radius: 16px; 
-    font-size: 0.9rem; color: var(--sloth-text-muted); transition: all 0.2s; 
+.view-btn {
+    border: none; background: transparent;
+    padding: 6px 16px; border-radius: 16px;
+    color: var(--text-muted); font-size: 0.9rem;
+    transition: all 0.2s;
 }
-.view-btn.active { 
-    background: var(--sloth-bg-card); color: var(--sloth-text-main); font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+.view-btn.active {
+    background: var(--bg-card);
+    color: var(--text-main);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-weight: 600;
 }
-[data-bs-theme="dark"] .view-btn.active { background: #30363d; color: white; }
 
-.mobile-only-switcher { display: block; }
+/* Sticky Column */
 @media (min-width: 992px) {
+    .sticky-column { position: sticky; top: 100px; z-index: 900; }
     .mobile-only-switcher { display: none !important; }
 }
 
-.table-compact td, .table-compact th { padding: 0.4rem 0.3rem; font-size: 0.85rem; }
+/* Animations */
+.animate-fade { animation: fadeInUp 0.5s ease-out forwards; opacity: 0; transform: translateY(10px); }
+@keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 
-/* Uhr-Icon ausblenden für bessere Scroll-Area */
-input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
-input[type="time"] { -moz-appearance: textfield; }
-
-/* --- 9. FOOTER --- */
-.app-footer { 
-    font-size: 0.75rem; 
-    color: var(--sloth-text-muted); 
-    /* FIX: Force Center und volle Breite */
-    text-align: center !important;
-    width: 100%;
-    margin-top: auto; /* Drückt Footer bei Flex-Layout nach unten */
-    /* 40px oben, 20px seite, und unten dynamisch + Puffer */
-    padding: 40px 20px calc(20px + env(safe-area-inset-bottom)); 
-    opacity: 0.9; 
-}
-.app-footer:hover { 
-    opacity: 1; 
-    transition: opacity 0.3s ease; 
-}
-.app-footer:hover img {
-    filter: grayscale(0) !important;
-    opacity: 1 !important;
-    transform: rotate(10deg); /* Kleiner Wackler zum Hallo-Sagen */
-}
-
-/* --- 10. ANIMATIONEN (Login & Interaktion) --- */
-
-/* Fade In Animation (für sanftes Laden von Seiten) */
-.animate-fade {
-    animation: fadeInUp 0.6s ease-out forwards;
-    opacity: 0;
-    transform: translateY(20px);
-}
-
-@keyframes fadeInUp {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Sloth Spin Animation (Easter Egg) */
-.spin-animation {
-    animation: slothSpin 1s ease-in-out;
-}
-
+.spin-animation { animation: slothSpin 1s ease-in-out; }
 @keyframes slothSpin {
     0% { transform: rotate(0deg) scale(1); }
-    50% { transform: rotate(180deg) scale(1.5); } /* Kleiner "Pop" Effekt */
+    50% { transform: rotate(180deg) scale(1.2); }
     100% { transform: rotate(360deg) scale(1); }
 }
 
-/* --- BUTTON FIXES --- */
-/* Wir nutzen die "Text"-Variable als Hintergrund, da diese kräftiger ist.
-   Die Textfarbe wird zur Karten-Hintergrundfarbe (Weiß im Light Mode, Dunkel im Dark Mode).
-   Das garantiert perfekten Kontrast. */
-
-.bg-office {
-    background-color: var(--text-office) !important;
-    border-color: var(--text-office) !important;
-    color: var(--sloth-bg-card) !important; 
+/* Table Input Reset */
+.table-input {
+    width: 100%; border: none; background: transparent;
+    text-align: center; font-weight: 600; color: inherit;
+    padding: 2px; border-radius: 4px;
 }
+.table-input:hover { background: var(--bg-card); box-shadow: 0 0 0 1px var(--border-color); }
+.table-input:focus { outline: none; background: var(--bg-card); color: var(--text-main); box-shadow: 0 0 0 2px var(--sloth-primary); }
 
-.bg-home {
-    background-color: var(--text-home) !important;
-    border-color: var(--text-home) !important;
-    color: var(--sloth-bg-card) !important;
-}
-
-.bg-doctor {
-    background-color: var(--text-sick) !important;
-    border-color: var(--text-sick) !important;
-    color: var(--sloth-bg-card) !important;
-}
-
-/* Das Icon innerhalb des Buttons muss die Farbe erben */
-.bg-office i, .bg-home i, .bg-doctor i {
-    color: inherit !important;
-}
+/* Buttons in Dropdowns & co */
+.dropdown-menu { background-color: var(--bg-card); border-color: var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.dropdown-item { color: var(--text-main); }
+.dropdown-item:hover { background-color: var(--bg-tertiary); color: var(--sloth-primary); }
