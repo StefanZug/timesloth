@@ -1,51 +1,32 @@
-/* --- 1. DEFINITIONEN & VARIABLEN --- */
 :root {
-    --sloth-primary: #5c7cfa;
+    /* Ein etwas dunkleres Blau für besseren Kontrast auf hellem Grau */
+    /* Original Bootstrap ist #0d6efd, wir gehen etwas dunkler zu #0a58ca oder ähnlich */
+    --sloth-primary: #0a58ca; 
     --sloth-radius: 10px;
 }
 
-/* LIGHT THEME (Clean & Bright) */
 [data-bs-theme="light"] {
-    --sloth-bg-body: #f0f2f5;
-    --sloth-bg-card: #ffffff;
-    --sloth-bg-tertiary: #f8f9fa;
+    /* ... deine existierenden Variablen ... */
     
-    --sloth-text-main: #1f2937;
-    --sloth-text-muted: #4b5563;
-    
-    --sloth-border-color: #e5e7eb;
-    --sloth-input-bg: #ffffff;
-    
-    /* Status Farben (Pastell-artig für Light Mode) */
-    --bg-office: #dcfce7;   --text-office: #166534;
-    --bg-home: #cff4fc;     --text-home: #055160;
-    --bg-sick: #fce8e6;     --text-sick: #991b1b;
-    --bg-vacation: #fef9c3; --text-vacation: #854d0e;
-    --bg-holiday: #e9ecef;  --text-holiday: #495057;
-    
-    --input-hover-bg: #f8f9fa;
+    /* FIX: Bootstrap Variablen überschreiben, damit text-primary dunkler wird */
+    --bs-primary: var(--sloth-primary);
+    --bs-link-color: var(--sloth-primary);
 }
 
-/* DARK THEME (Crisp & High Contrast - GitHub Style) */
 [data-bs-theme="dark"] {
-    --sloth-bg-body: #0d1117;       /* Deep Space Blue */
-    --sloth-bg-card: #161b22;       /* Card Background */
-    --sloth-bg-tertiary: #21262d;   /* Headers / Inputs */
-    
-    --sloth-text-main: #e6edf3;     /* Off-White */
-    --sloth-text-muted: #a1aebf;    /* Cool Grey */
-    
-    --sloth-border-color: #30363d;
-    --sloth-input-bg: #0d1117;
-    
-    /* Status Farben (Dunkel & Gesättigt + Heller Text) */
-    --bg-office: #11291c;   --text-office: #7ee787; /* Neon Grün auf Dunkelgrün */
-    --bg-home: #132736;     --text-home: #79c0ff;   /* Cyan auf Dunkelblau */
-    --bg-sick: #381619;     --text-sick: #ff7b72;   /* Rot auf Dunkelrot */
-    --bg-vacation: #382800; --text-vacation: #d29922; /* Gold auf Dunkelbraun */
-    --bg-holiday: #252a30;  --text-holiday: #8b949e;
-    
-    --input-hover-bg: #30363d;
+    /* ... deine existierenden Variablen ... */
+
+    /* FIX: Im Dark Mode muss das Blau HELLER sein für Kontrast auf Schwarz */
+    --bs-primary: #79c0ff; 
+    --bs-link-color: #79c0ff;
+}
+
+/* Explizite Helper Klassen, falls Bootstrap Variablen nicht überall greifen */
+[data-bs-theme="dark"] .text-primary {
+    color: #79c0ff !important;
+}
+[data-bs-theme="light"] .text-primary {
+    color: #0a58ca !important;
 }
 
 /* --- 2. GLOBAL LAYOUT --- */

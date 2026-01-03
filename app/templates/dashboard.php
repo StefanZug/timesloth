@@ -45,9 +45,9 @@
                                             <i class="bi" :class="getTypeIcon(block.type)"></i>
                                         </button>
                                         <ul class="dropdown-menu shadow">
-                                            <li><a class="dropdown-item" @click="changeBlockType($event, index, 'office')"><i class="bi bi-building me-2 text-success"></i>Büro</a></li>
-                                            <li><a class="dropdown-item" @click="changeBlockType($event, index, 'home')"><i class="bi bi-house me-2 text-info"></i>Home</a></li>
-                                            <li><a class="dropdown-item text-danger" @click="changeBlockType($event, index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</a></li>
+                                            <li><button type="button" class="dropdown-item" @click="changeBlockType($event, index, 'office')"><i class="bi bi-building me-2 text-success"></i>Büro</button></li>
+                                            <li><button type="button" class="dropdown-item" @click="changeBlockType($event, index, 'home')"><i class="bi bi-house me-2 text-info"></i>Home</button></li>
+                                            <li><button type="button" class="dropdown-item text-danger" @click="changeBlockType($event, index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</button></li>
                                         </ul>
                                     </div>
                                     <input :type="inputType" step="1" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'start')" :aria-label="'Startzeit Eintrag ' + (index + 1)">
@@ -58,7 +58,7 @@
                             </div>
                         </transition-group>
 
-                        <button class="btn btn-outline-secondary btn-sm w-100 border-dashed mt-3" @click="addBlock('office')" style="border-style: dashed; opacity: 0.7;">
+                        <button class="btn btn-outline-secondary btn-sm w-100 border-dashed mt-3" @click="addBlock('office')" style="border-style: dashed;">
                             <i class="bi bi-plus-lg"></i> Eintrag hinzufügen
                         </button>
                     </div>
@@ -132,7 +132,7 @@
                                     <div class="fw-bold" :class="{'text-primary': day.isToday}">
                                         [[ day.dayShort ]] [[ day.dateNum ]].
                                     </div>
-                                    <div class="opacity-50" style="font-size: 0.65rem;">KW [[ day.kw ]]</div>
+                                    <div class="text-secondary small" style="font-size: 0.65rem;">KW [[ day.kw ]]</div>
                                 </td>
                                 
                                 <td style="min-width: 180px;">
@@ -187,7 +187,7 @@
                 </div>
                 <div class="widget-body">
                     <div class="d-flex justify-content-between align-items-end mb-2">
-                        <span class="fs-2 fw-bold text-dark">[[ quota.percent.toFixed(1) ]]%</span>
+                        <span class="fs-2 fw-bold">[[ quota.percent.toFixed(1) ]]%</span>
                         <span class="text-muted small mb-1">Ziel: 40%</span>
                     </div>
                     
@@ -196,7 +196,7 @@
                     </div>
 
                     <div class="d-flex justify-content-between text-muted small border-top pt-2">
-                        <span>Ist: <strong class="text-dark">[[ formatNum(quota.current) ]]h</strong></span>
+                        <span>Ist: <strong>[[ formatNum(quota.current) ]]h</strong></span>
                         <span>Soll: <strong>[[ formatNum(quota.target) ]]h</strong></span>
                     </div>
                     
