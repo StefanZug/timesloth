@@ -62,11 +62,11 @@
                             <div class="accordion-body bg-body-tertiary">
                                 
                                 <div class="d-flex flex-wrap gap-2 mb-3">
-                                    <div class="bg-white p-2 rounded border small flex-fill">
+                                    <div class="bg-body p-2 rounded border small flex-fill">
                                         <span class="text-muted d-block">Passwort zuletzt geändert</span>
                                         <strong>[[ formatDate(u.pw_last_changed) ]]</strong>
                                     </div>
-                                    <div class="bg-white p-2 rounded border small flex-fill">
+                                    <div class="bg-body p-2 rounded border small flex-fill">
                                         <span class="text-muted d-block">Rolle</span>
                                         <strong>[[ u.is_admin ? 'Administrator' : 'Benutzer' ]]</strong>
                                     </div>
@@ -123,7 +123,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <div class="modal fade" id="createUserModal" tabindex="-1">
@@ -150,7 +149,6 @@
             </div>
         </div>
     </div>
-
 </div>
 
 <script>
@@ -216,7 +214,7 @@ createApp({
         async toggleActive(u) {
             try {
                 await axios.post(`/admin/toggle_active/${u.id}`);
-                u.is_active = !u.is_active; // Optimistisches Update
+                u.is_active = !u.is_active; 
             } catch(e) { alert("Fehler"); }
         },
         async resetPw(u) {
@@ -224,7 +222,7 @@ createApp({
             try {
                 const res = await axios.post(`/admin/reset_password/${u.id}`);
                 alert(`Neues Passwort für ${u.username}: \n\n${res.data.new_password}`);
-                u.pw_last_changed = new Date().toISOString(); // Update UI
+                u.pw_last_changed = new Date().toISOString(); 
             } catch(e) { alert("Fehler"); }
         },
 

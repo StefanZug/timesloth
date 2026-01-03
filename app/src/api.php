@@ -19,7 +19,6 @@ function json_error($msg, $code = 400) {
     exit;
 }
 
-// --- ROUTING ---
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -63,7 +62,6 @@ if (str_starts_with($uri, '/admin/')) {
     $service = new AdminService();
     $input = json_decode(file_get_contents('php://input'), true);
 
-    // Basic Actions
     if ($method === 'POST' && $uri === '/admin/create_user') { 
         try {
             $res = $service->createUser($input['username'], $input['password'], !empty($input['is_admin']));
@@ -77,7 +75,6 @@ if (str_starts_with($uri, '/admin/')) {
         } catch (Exception $e) { json_error($e->getMessage()); }
     }
     
-    // Stats & Cleanup
     if ($uri === '/admin/stats') {
         json_response($service->getSystemStats());
     }
@@ -85,7 +82,6 @@ if (str_starts_with($uri, '/admin/')) {
         json_response($service->clearOldLogs());
     }
 
-    // ID Actions
     if (preg_match('#^/admin/delete_user/(\d+)$#', $uri, $m)) { 
         try { json_response($service->deleteUser($m[1], $_SESSION['user']['id'])); }
         catch (Exception $e) { json_error($e->getMessage()); }
@@ -93,7 +89,6 @@ if (str_starts_with($uri, '/admin/')) {
     if (preg_match('#^/admin/holiday/(\d+)$#', $uri, $m) && $method === 'DELETE') { 
         json_response($service->deleteHoliday($m[1])); 
     }
-    // NEU: Toggle & Reset
     if (preg_match('#^/admin/toggle_active/(\d+)$#', $uri, $m) && $method === 'POST') {
         try { json_response($service->toggleActive($m[1], $_SESSION['user']['id'])); }
         catch (Exception $e) { json_error($e->getMessage()); }

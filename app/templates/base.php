@@ -9,7 +9,7 @@
     
     <link href="/static/css/bootstrap.css" rel="stylesheet">
     <link href="/static/css/bootstrap-icons.css" rel="stylesheet">
-    <link href="/static/css/custom.css?v=0.1.4.3" rel="stylesheet">
+    <link href="/static/css/custom.css?v=0.1.5.0" rel="stylesheet">
     
     <script src="/static/js/bootstrap.js"></script>
     <script src="/static/js/vue.js"></script>
@@ -25,6 +25,8 @@
 </head>
 <body>
     
+    <div id="crt-overlay"></div>
+
     <?php if (isset($_SESSION['user'])): ?>
     <nav class="navbar navbar-expand bg-body-tertiary shadow-sm mb-3 border-bottom sticky-top" style="z-index: 1050;">
         <div class="container-fluid">
@@ -33,14 +35,10 @@
                      class="me-2 rounded-circle sloth-logo" 
                      style="cursor: pointer;">
 
-                <a class="navbar-brand fw-bold" href="/">
-                    TimeSloth
-                </a>
+                <a class="navbar-brand fw-bold" href="/">TimeSloth</a>
             </div>
             
             <div class="d-flex align-items-center gap-3">
-                <i class="bi bi-moon-stars-fill" id="darkModeBtn" style="cursor: pointer;"></i>
-                
                 <div class="dropdown">
                     <div class="avatar-circle" data-bs-toggle="dropdown" style="cursor: pointer;">
                         <?= strtoupper(substr($_SESSION['user']['username'], 0, 1)) ?>
@@ -74,73 +72,72 @@
 
         <?= $content ?? '' ?>
         
-        <footer class="app-footer">
-            <div class="mb-2 d-flex align-items-center justify-content-center gap-2">
-                <span>&copy; <?= date('Y') ?> • <span class="fw-bold">TimeSloth</span></span>
-                <img src="/static/img/logo.png" alt="Logo" width="24" height="24" 
-                     class="sloth-logo"
-                     style="filter: grayscale(1); opacity: 0.7; transition: all 0.3s; cursor: pointer;">
-            </div>
-            
-            <div class="mb-2">
-                <?php 
-                $quotes = [
-                    "Zeit ist Geld, aber Faulheit ist unbezahlbar.",
-                    "Wir zählen die Stunden, damit du es nicht musst.",
-                    "Keine Haftung bei versehentlicher Produktivität.",
-                    "Programmiert mit ❤️ und viel Koffein.",
-                    "Heute schon nichts getan? Wir verurteilen dich nicht.",
-                    "Wenn du das hier liest, arbeitest du gerade nicht. 👀",
-                    "Lade Arbeitsmoral... Fehler 404.",
-                    "Schneller arbeiten bringt auch nicht mehr Feierabend.",
-                    "SAP glaubt dir. Wir auch. Meistens.",
-                    "Wir tracken deine Zeit, nicht deine Motivation.",
-                    "TimeSloth: Weil 'Ich hab vergessen zu buchen' keine Ausrede mehr ist.",
-                    "Deine Büro-Quote weint leise im Hintergrund.",
-                    "Zuhause ist es am schönsten, aber SAP will dich im Büro sehen.",
-                    "Work-Life-Balance? Wir bevorzugen Life-Life-Balance.",
-                    "Wir unterstützen proaktives Nichtstun.",
-                    "Wir machens, weils SAP nicht kann."
-                ];
-                echo $quotes[array_rand($quotes)]; 
-                ?>
+        <footer class="app-footer mt-5 pb-4">
+            <div class="d-flex flex-column align-items-center gap-3">
+                
+                <div class="footer-actions">
+                    <i class="bi bi-moon-stars-fill theme-toggle-btn" id="darkModeBtn" title="Lichtschalter"></i>
+                    <div style="width: 1px; height: 16px; background: var(--border-color);"></div>
+                    <div class="d-flex align-items-center gap-2" style="font-size: 0.85rem;">
+                        <span>&copy; <?= date('Y') ?> TimeSloth</span>
+                        <img src="/static/img/logo.png" width="20" class="sloth-logo" style="filter: grayscale(1); opacity: 0.5;">
+                    </div>
+                </div>
+
+                <div class="text-muted small fst-italic px-3 text-center">
+                    <?php 
+                    $quotes = [
+                        "Zeit ist Geld, aber Faulheit ist unbezahlbar.",
+                        "Wir zählen die Stunden, damit du es nicht musst.",
+                        "Programmiert mit ❤️ und viel Koffein.",
+                        "Heute schon nichts getan? Wir verurteilen dich nicht.",
+                        "Lade Arbeitsmoral... Fehler 404.",
+                        "Schneller arbeiten bringt auch nicht mehr Feierabend.",
+                        "Wir tracken deine Zeit, nicht deine Motivation.",
+                        "Work-Life-Balance? Wir bevorzugen Life-Life-Balance.",
+                        "Wir unterstützen proaktives Nichtstun."
+                    ];
+                    echo $quotes[array_rand($quotes)]; 
+                    ?>
+                </div>
             </div>
         </footer>
     </main>
 
     <script>
-        // Dark Mode Toggle
-        const themeBtn = document.getElementById('darkModeBtn');
-        if(themeBtn) {
-            themeBtn.addEventListener('click', () => {
-                const current = document.documentElement.getAttribute('data-bs-theme');
-                const next = current === 'dark' ? 'light' : 'dark';
-                document.documentElement.setAttribute('data-bs-theme', next);
-                localStorage.setItem('theme', next);
-            });
-        }
-
-        // SLOTH SPIN LOGIC (Global für alle Logos)
         document.addEventListener('DOMContentLoaded', () => {
-            // Finde ALLE Elemente mit der Klasse .sloth-logo
             const sloths = document.querySelectorAll('.sloth-logo');
-            
             sloths.forEach(sloth => {
-                sloth.addEventListener('click', (e) => { // 'e' als Parameter hinzufügen
-                
-                    // Verhindert, dass Klicks z.B. einen Link auslösen (wichtig für den Footer!)
-                    e.preventDefault(); 
-                    e.stopPropagation();
-                    
-                    // Verhindern, dass Animation neu startet während sie läuft
+                sloth.addEventListener('click', (e) => {
+                    e.preventDefault(); e.stopPropagation();
                     if(sloth.classList.contains('spin-animation')) return;
-                    
                     sloth.classList.add('spin-animation');
-                    setTimeout(() => {
-                        sloth.classList.remove('spin-animation');
-                    }, 1000);
+                    setTimeout(() => { sloth.classList.remove('spin-animation'); }, 1000);
                 });
             });
+
+            const themeBtn = document.getElementById('darkModeBtn');
+            const overlay = document.getElementById('crt-overlay');
+            
+            if(themeBtn && overlay) {
+                const updateIcon = () => {
+                    const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+                    themeBtn.className = isDark ? 'bi bi-sun-fill theme-toggle-btn' : 'bi bi-moon-stars-fill theme-toggle-btn';
+                };
+                updateIcon();
+
+                themeBtn.addEventListener('click', () => {
+                    overlay.classList.add('crt-animate');
+                    setTimeout(() => {
+                        const current = document.documentElement.getAttribute('data-bs-theme');
+                        const next = current === 'dark' ? 'light' : 'dark';
+                        document.documentElement.setAttribute('data-bs-theme', next);
+                        localStorage.setItem('theme', next);
+                        updateIcon();
+                    }, 300);
+                    setTimeout(() => { overlay.classList.remove('crt-animate'); }, 600);
+                });
+            }
         });
     </script>
 </body>

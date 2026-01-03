@@ -36,9 +36,7 @@ createApp({
         },
         formatNum(n) { return n.toFixed(2).replace('.', ','); },
         
-        // --- GAME LOGIC ---
         handleSlothClick(id, event) {
-            // WICHTIG: Neue Klasse verwenden
             const el = event.target.closest('.sloth-game-img');
             if(!el) return; 
 
@@ -51,22 +49,30 @@ createApp({
             };
 
             if (this.gameClicks === 0) {
-                // Erster Klick -> Immer falsch
-                this.gameClicks++;
+                // 1. KLICK
+                this.gameClicks = 1;
                 this.lastClickedId = id;
                 this.gameError = true;
                 this.gameMessage = "Das ist falsch!"; 
                 shake();
             } else {
                 if (id === this.lastClickedId) {
-                    // Gleiches nochmal geklickt -> Falsch
-                    this.gameMessage = "Nein, das ANDERE!";
+                    // WEITERE KLICKS AUF DAS FALSCHE
+                    this.gameClicks++;
+                    
+                    if (this.gameClicks === 2) {
+                        this.gameMessage = "Nein, noch immer falsch! Versuch's nochmal!";
+                    } else {
+                        // Ab dem 3. Klick
+                        this.gameMessage = "Oh. WTF! Es ist das andere! Bitte klick endlich das andere an!";
+                    }
+                    
                     this.gameError = true;
                     shake();
                 } else {
-                    // Richtig!
+                    // KLICK AUF DAS RICHTIGE
                     this.gameError = false;
-                    this.gameMessage = "Das macht niemand. Wurde auch NIE gesagt. Wie kommst du drauf?";
+                    this.gameMessage = "Richtig, das macht niemand. Wurde auch NIE gesagt. Wie kommst du drauf?";
                     setTimeout(() => { this.pwGameSolved = true; }, 3000);
                 }
             }

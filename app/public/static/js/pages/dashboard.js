@@ -13,11 +13,10 @@ createApp({
             holidaysMap: {},
             saveState: 'idle', 
             saveTimer: null,
-            // Settings via Bridge
             settings: Object.assign({
                 sollStunden: 7.70,
                 deductionPerDay: 3.08,
-                arztStart: 480, arztEnde: 972, // 08:00 - 16:12
+                arztStart: 480, arztEnde: 972,
                 pcScroll: true,
                 useNativeWheel: false,
                 correction: 0,
@@ -31,11 +30,8 @@ createApp({
     computed: {
         inputType() { return this.settings.useNativeWheel ? 'time' : 'text'; },
         
-        // --- LOGIK DELEGIERT AN TIMELOGIC.JS ---
         totals() {
-            // Ruft die neue Klasse auf
             const stats = TimeLogic.calculateDayStats(this.blocks, this.settings, this.isNonWorkDay);
-            
             let prefix = stats.saldoMin > 0 ? '+' : '';
             return { 
                 sapTime: stats.sapMin, 
@@ -45,16 +41,10 @@ createApp({
             };
         },
         quota() {
-            // Ruft die neue Klasse auf
             return TimeLogic.calculateMonthlyQuota(
-                this.currentDateObj, 
-                this.entriesCache, 
-                this.holidaysMap, 
-                this.settings
+                this.currentDateObj, this.entriesCache, this.holidaysMap, this.settings
             );
         },
-        // ----------------------------------------
-
         calcDeduction() {
             const dailyDed = this.settings.sollStunden * 0.40;
             return (this.calc.absentDays * dailyDed);
@@ -65,7 +55,6 @@ createApp({
             if(realMissing <= 0) return 0;
             return (realMissing / this.calc.planHours);
         },
-
         isoDate() { return this.formatIsoDate(this.currentDateObj); },
         isoMonth() { return this.isoDate.substring(0, 7); },
         displayDateDayView() {
@@ -87,9 +76,7 @@ createApp({
             return parseFloat(this.settings.sollStunden);
         },
         prediction() {
-            // Auch diese Logik könnte man auslagern, ist aber eher UI-spezifisch
             if (this.blocks.length === 0 || this.isNonWorkDay) return { target: '--:--', max: '--:--' };
-            
             let firstStart = 9999; let lastEnd = 0;
             this.blocks.forEach(b => {
                 let s = TimeLogic.toMinutes(b.start); 
@@ -97,25 +84,19 @@ createApp({
                 if (s > 0 && s < firstStart) firstStart = s;
                 if (e > lastEnd) lastEnd = e;
             });
-            
             if (firstStart === 9999) return { target: '--:--', max: '--:--' };
             
-            // Wir nutzen die berechneten Totals von oben
             let currentNetto = this.totals.sapTime;
             let remaining = (this.todaySoll * 60) - currentNetto;
-            
             if (remaining <= 0) return { target: '✔', max: '...' };
             
             let finish = lastEnd + remaining;
-            // Wenn Pause noch nicht abgezogen wurde, aber durchs Bleiben überschritten wird:
             if (this.totals.pause === 0 && (currentNetto + remaining) > 360) finish += 30;
-            
             let base = (lastEnd > 0 && lastEnd > firstStart) ? lastEnd : firstStart;
             if(base === firstStart) { 
                 finish = firstStart + (this.todaySoll * 60) + (this.todaySoll > 6 ? 30 : 0);
             }
-            
-            let maxTime = firstStart + 630; // 10.5h nach Start (10h Arbeit + 30min Pause)
+            let maxTime = firstStart + 630; 
             return { target: TimeLogic.minutesToString(finish), max: TimeLogic.minutesToString(maxTime) };
         },
         monthDays() {
@@ -132,14 +113,8 @@ createApp({
                 let status = entry ? entry.status : (holidayName ? 'F' : null);
                 let blocks = (entry && entry.blocks) ? JSON.parse(JSON.stringify(entry.blocks)) : [];
                 
-                // --- Logik Aufruf ---
-                // Für die Listenansicht brauchen wir kurz die SAP Zeit dieses Tages
-                // Wir simulieren ein Settings-Objekt oder nutzen das globale
                 let stats = { sapMin: 0 };
-                if(entry && !status) {
-                   stats = TimeLogic.calculateDayStats(blocks, this.settings, false);
-                }
-                // --------------------
+                if(entry && !status) stats = TimeLogic.calculateDayStats(blocks, this.settings, false);
 
                 let hasOffice = false; let hasHome = false;
                 if(blocks) blocks.forEach(b => {
@@ -159,7 +134,7 @@ createApp({
                     dayShort: date.toLocaleDateString('de-DE', { weekday: 'short' }),
                     kw: this.getKw(date),
                     status: status,
-                    sapTime: stats.sapMin, // Genutzter Wert aus TimeLogic
+                    sapTime: stats.sapMin, 
                     blocks: blocks,
                     isWeekend: isWeekend,
                     isToday: (iso === todayIso),
@@ -174,13 +149,8 @@ createApp({
         }
     },
     methods: {
-        formatNum(n) { 
-            if(n === null || n === undefined) return '0,00';
-            return n.toFixed(2).replace('.', ','); 
-        },
-        formatH(min) { 
-            return (min / 60).toFixed(2).replace('.', ','); 
-        },
+        formatNum(n) { if(n === null || n === undefined) return '0,00'; return n.toFixed(2).replace('.', ','); },
+        formatH(min) { return (min / 60).toFixed(2).replace('.', ','); },
         formatIsoDate(date) {
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -208,60 +178,50 @@ createApp({
             if (!this.settings.pcScroll) return;
             if(!block[field]) return;
             
+            const isHome = (block.type === 'home');
             const input = event.target;
             const rect = input.getBoundingClientRect();
-            // Mausposition im Element berechnen
             const x = event.clientX - rect.left; 
             const width = rect.width;
             const percent = x / width;
 
-            let step = 60; // Standard: Minuten
-
-            // Prüfen ob Sekunden angezeigt werden (HH:MM:SS hat > 5 Zeichen)
+            let step = 60; 
             const hasSeconds = block[field].length > 5;
 
-            if (hasSeconds) {
-                // FIX: Da der Text zentriert ist, liegen Stunden und Sekunden nicht am Rand, 
-                // sondern eher bei ~40% und ~60%. Wir passen die Zonen an:
-                
-                if (percent < 0.42) step = 3600;      // Links (< 42%): Stunden
-                else if (percent > 0.58) step = 1;    // Rechts (> 58%): Sekunden
-                else step = 60;                       // Mitte (42-58%): Minuten
+            if (isHome) {
+                if (percent < 0.5) step = 3600; else step = 60;
             } else {
-                // Bei HH:MM (ohne Sekunden)
-                if (percent < 0.5) step = 3600;       // Links: Stunden
-                else step = 60;                       // Rechts: Minuten
+                if (hasSeconds) {
+                    if (percent < 0.33) step = 3600;
+                    else if (percent > 0.66) step = 1;
+                    else step = 60;
+                } else {
+                    if (percent < 0.5) step = 3600; else step = 60;
+                }
+                if (event.shiftKey) step = 1; 
             }
 
-            // Shift-Taste erzwingt immer Sekunden-Schritte
-            if (event.shiftKey) step = 1; 
-
             const direction = event.deltaY < 0 ? 1 : -1;
-            
-            // Aktuelle Zeit in Sekunden umrechnen
+            let currentSec = TimeLogic.toMinutes(block[field]) * 60; 
             const parts = block[field].split(':');
             let h = parseInt(parts[0] || 0);
             let m = parseInt(parts[1] || 0);
             let s = parseInt(parts[2] || 0);
-            let currentSec = (h * 3600) + (m * 60) + s;
+            currentSec = (h * 3600) + (m * 60) + s;
 
-            // Neue Zeit berechnen
             let newSec = currentSec + (step * direction);
-            
-            // Tages-Überlauf behandeln (00:00 <-> 23:59)
             if(newSec < 0) newSec = (24 * 3600) + newSec;
             if(newSec >= 24 * 3600) newSec = newSec % (24 * 3600);
 
-            // Zurück formatieren
             h = Math.floor(newSec / 3600);
             let rem = newSec % 3600;
             m = Math.floor(rem / 60);
             s = rem % 60;
             
+            if(isHome) s = 0;
+
             const pad = (n) => n.toString().padStart(2,'0');
-            
-            // Wenn Sekunden da waren oder wir Sekundenschritte machen -> HH:MM:SS
-            if (hasSeconds || step === 1) {
+            if (!isHome && (hasSeconds || step === 1)) {
                 block[field] = `${pad(h)}:${pad(m)}:${pad(s)}`;
             } else {
                 block[field] = `${pad(h)}:${pad(m)}`;
@@ -273,6 +233,10 @@ createApp({
         changeBlockType(event, index, newType) {
             let oldBlock = this.blocks[index];
             this.blocks.splice(index, 1, { ...oldBlock, type: newType });
+            if(newType === 'home') {
+                this.smartFormat(this.blocks[index], 'start');
+                this.smartFormat(this.blocks[index], 'end');
+            }
             this.triggerAutoSave();
             const dropdownToggle = event.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
             if (dropdownToggle) {
@@ -299,6 +263,10 @@ createApp({
         },
         changeListBlockType(event, day, index, newType) {
             day.blocks[index].type = newType;
+            if(newType === 'home') {
+                this.smartFormat(day.blocks[index], 'start');
+                this.smartFormat(day.blocks[index], 'end');
+            }
             this.triggerListSave(day);
             const dropdownToggle = event.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
             if (dropdownToggle) {
@@ -341,11 +309,7 @@ createApp({
             } else if (clean.length <= 2) {
                 h = parseInt(clean);
             }
-
-            if(h > 23) h = 23; 
-            if(m > 59) m = 59;
-            if(s > 59) s = 59;
-
+            if(h > 23) h = 23; if(m > 59) m = 59; if(s > 59) s = 59;
             if(block.type === 'home') s = 0;
             const showSeconds = (block.type !== 'home');
             const pad = (n) => n.toString().padStart(2,'0');
@@ -372,6 +336,11 @@ createApp({
         shiftMonth(offset) {
             let d = new Date(this.currentDateObj);
             d.setDate(1); d.setMonth(d.getMonth() + offset);
+            
+            const now = new Date();
+            if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+                d = new Date(); 
+            }
             this.currentDateObj = d;
             this.loadMonthData();
         },
@@ -459,9 +428,7 @@ createApp({
                 this.entriesCache = res.data.entries;
                 this.holidaysMap = res.data.holidays || {};
                 if(res.data.settings) {
-                    // Falls neue Settings kommen:
                     Object.assign(this.settings, res.data.settings);
-                    // Sicherstellen, dass Zahlen auch Zahlen sind
                     this.settings.sollStunden = parseFloat(this.settings.sollStunden);
                 }
                 this.loadFromCache();
@@ -491,11 +458,7 @@ createApp({
         }
     },
     mounted() {
-        // Listener für Resize
-        window.addEventListener('resize', () => {
-            this.isDesktop = window.innerWidth >= 992;
-        });
-        
+        window.addEventListener('resize', () => { this.isDesktop = window.innerWidth >= 992; });
         this.loadMonthData();
     }
 }).mount('#app');
