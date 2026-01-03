@@ -8,18 +8,19 @@ function get_db() {
         $dsn = 'sqlite:' . DB_PATH;
         $pdo = new PDO($dsn);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC); // Wichtig für saubere Arrays
+        $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         
-        // Users
+        // 1. Tabellen erstellen
         $pdo->exec("CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
             password_hash TEXT,
             is_admin INTEGER DEFAULT 0,
-            settings TEXT DEFAULT '{}'
+            settings TEXT DEFAULT '{}',
+            is_active INTEGER DEFAULT 1,
+            pw_last_changed DATETIME
         )");
         
-        // Entries
         $pdo->exec("CREATE TABLE IF NOT EXISTS entries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
@@ -30,7 +31,6 @@ function get_db() {
             UNIQUE(user_id, date_str)
         )");
         
-        // Logs
         $pdo->exec("CREATE TABLE IF NOT EXISTS login_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
@@ -39,20 +39,34 @@ function get_db() {
             user_agent TEXT
         )");
 
-        // FEHLTE VORHER: Global Holidays
         $pdo->exec("CREATE TABLE IF NOT EXISTS global_holidays (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date_str TEXT UNIQUE,
             name TEXT
         )");
 
-        // Admin erstellen falls nötig
+        // 2. MIGRATION: Spalten prüfen und hinzufügen falls sie fehlen (für Updates)
+        $cols = $pdo->query("PRAGMA table_info(users)")->fetchAll(PDO::FETCH_COLUMN, 1);
+        if (!in_array('is_active', $cols)) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1");
+        }
+        if (!in_array('pw_last_changed', $cols)) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN pw_last_changed DATETIME");
+            // Setze initiales Datum für bestehende User
+            $pdo->exec("UPDATE users SET pw_last_changed = CURRENT_TIMESTAMP WHERE pw_last_changed IS NULL");
+        }
+
+        // 3. Admin Check
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = 'admin'");
         $stmt->execute();
         if ($stmt->fetchColumn() == 0) {
             $hash = password_hash('admin', PASSWORD_BCRYPT);
-            $pdo->exec("INSERT INTO users (username, password_hash, is_admin) VALUES ('admin', '$hash', 1)");
+            $pdo->exec("INSERT INTO users (username, password_hash, is_admin, pw_last_changed) VALUES ('admin', '$hash', 1, CURRENT_TIMESTAMP)");
         }
+        
+        // 4. CLEANUP: Alte Logs löschen (1% Chance bei jedem Page Load oder fix hier)
+        // Wir machen es einfach hier beim Verbindungsaufbau - ist performant genug bei SQLite
+        $pdo->exec("DELETE FROM login_log WHERE timestamp < date('now', '-30 days')");
     }
     return $pdo;
 }
