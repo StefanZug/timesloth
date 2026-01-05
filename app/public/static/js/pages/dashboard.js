@@ -77,27 +77,39 @@ createApp({
         },
         prediction() {
             if (this.blocks.length === 0 || this.isNonWorkDay) return { target: '--:--', max: '--:--' };
-            let firstStart = 9999; let lastEnd = 0;
+            
+            let firstStart = 9999; 
+            let lastEnd = 0;
+            
             this.blocks.forEach(b => {
                 let s = TimeLogic.toMinutes(b.start); 
                 let e = TimeLogic.toMinutes(b.end);
                 if (s > 0 && s < firstStart) firstStart = s;
                 if (e > lastEnd) lastEnd = e;
             });
+            
             if (firstStart === 9999) return { target: '--:--', max: '--:--' };
             
+            // 1. Max Zeit IMMER berechnen (Startzeit + 10.5h Anwesenheit)
+            // 10h Arbeit + 30min Pause = 630 Minuten
+            let maxTime = firstStart + 630; 
+            let maxStr = TimeLogic.minutesToString(maxTime);
+
             let currentNetto = this.totals.sapTime;
             let remaining = (this.todaySoll * 60) - currentNetto;
-            if (remaining <= 0) return { target: '✔', max: '...' };
+            
+            // 2. Wenn Soll erfüllt, gib Häkchen UND die berechnete Max-Zeit zurück
+            if (remaining <= 0) return { target: '✔', max: maxStr };
             
             let finish = lastEnd + remaining;
             if (this.totals.pause === 0 && (currentNetto + remaining) > 360) finish += 30;
+            
             let base = (lastEnd > 0 && lastEnd > firstStart) ? lastEnd : firstStart;
             if(base === firstStart) { 
                 finish = firstStart + (this.todaySoll * 60) + (this.todaySoll > 6 ? 30 : 0);
             }
-            let maxTime = firstStart + 630; 
-            return { target: TimeLogic.minutesToString(finish), max: TimeLogic.minutesToString(maxTime) };
+            
+            return { target: TimeLogic.minutesToString(finish), max: maxStr };
         },
         monthDays() {
             let days = [];
@@ -178,7 +190,7 @@ createApp({
             if (!this.settings.pcScroll) return;
             if (!block[field]) return;
 
-            // NEU: Nur erlauben, wenn das Feld fokussiert ist
+            // FOKUS CHECK: Nur scrollen, wenn das Feld aktiv ist
             if (document.activeElement !== event.target) return;
             
             const isHome = (block.type === 'home');
@@ -239,6 +251,7 @@ createApp({
                 input.setSelectionRange(cursor, cursor);
             });
 
+            // Speichern triggert jetzt auch den Sync nach oben
             if (day) this.triggerListSave(day);
             else this.triggerAutoSave();
         },
@@ -323,7 +336,7 @@ createApp({
             }
             if(h > 23) h = 23; if(m > 59) m = 59; if(s > 59) s = 59;
             
-            // NEU: Konsequenter Reset bei Homeoffice
+            // HOME OFFICE: Sekunden immer nullen
             if(block.type === 'home') s = 0;
 
             const showSeconds = (block.type !== 'home');
@@ -379,9 +392,11 @@ createApp({
             const newStatus = (day.status === status) ? null : status;
             day.status = newStatus;
 
-            // NEU: Sync mit Tagesansicht, falls es der heutige Tag ist
+            // NEU: Sync Logik - wenn es der angezeigte Tag ist
             if (day.iso === this.isoDate) {
                 this.dayStatus = newStatus;
+                // WICHTIG: Auch die Blöcke syncen, falls sie beim "Ent-Klicken" von F wieder da sein sollen
+                this.blocks = JSON.parse(JSON.stringify(day.blocks || []));
             }
 
             let entry = this.entriesCache.find(e => e.date === day.iso);
@@ -403,6 +418,13 @@ createApp({
             this.saveSingleEntry(entry);
         },
         triggerListSave(day) {
+            // 1. SOFORT SYNC: Wenn es der aktuelle Tag ist, Daten sofort nach oben kopieren
+            if (day.iso === this.isoDate) {
+                this.blocks = JSON.parse(JSON.stringify(day.blocks));
+                this.dayStatus = day.status;
+            }
+
+            // 2. SPEICHERN (Verzögert)
             this.saveState = 'saving';
             if(this.saveTimer) clearTimeout(this.saveTimer);
             this.saveTimer = setTimeout(() => {

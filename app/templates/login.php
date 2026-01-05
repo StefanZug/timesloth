@@ -7,7 +7,7 @@
              class="mb-2 sloth-logo" title="Klick mich!">
         
         <h1 class="fw-bold mb-0" style="letter-spacing: -1px;">TimeSloth</h1>
-        <div id="login-quote" class="text-muted small fst-italic mt-1" style="min-height: 20px;">
+        <div id="login-quote" class="sloth-quote">
             Effizient faul sein.
         </div>
     </div>

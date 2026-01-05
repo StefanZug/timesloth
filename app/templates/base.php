@@ -9,7 +9,7 @@
     
     <link href="/static/css/bootstrap.css" rel="stylesheet">
     <link href="/static/css/bootstrap-icons.css" rel="stylesheet">
-    <link href="/static/css/custom.css?v=0.1.6.0" rel="stylesheet">
+    <link href="/static/css/custom.css?v=0.1.7.0" rel="stylesheet">
     
     <script src="/static/js/bootstrap.js"></script>
     <script src="/static/js/vue.js"></script>
@@ -35,9 +35,9 @@
                      class="me-3 rounded-circle sloth-logo" 
                      style="cursor: pointer;" title="Klick mich für neue Weisheiten!">
 
-                <div class="d-flex flex-column justify-content-center" style="line-height: 1.1;">
-                    <a class="navbar-brand fw-bold m-0 p-0 fs-5" href="/">TimeSloth</a>
-                    <small id="header-quote" class="text-muted fst-italic animate-fade" style="font-size: 0.75rem; min-width: 200px;">
+                <div class="d-flex flex-column justify-content-center">
+                    <a class="navbar-brand fw-bold m-0 p-0 fs-5" href="/" style="line-height: 1;">TimeSloth</a>
+                    <small id="header-quote" class="sloth-quote animate-fade">
                         </small>
                 </div>
             </div>

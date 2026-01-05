@@ -231,3 +231,14 @@ input[type="text"].form-control-sm.text-center {
 }
 .theme-toggle-btn { cursor: pointer; color: var(--text-muted); transition: color 0.2s; }
 .theme-toggle-btn:hover { color: var(--sloth-primary); }
+
+/* --- 6. SPEZIAL: QUOTES --- */
+.sloth-quote {
+    display: block;                /* Damit Margin greift */
+    font-size: 0.75rem;            /* Kleinere Schrift */
+    font-style: italic;            /* Kursiv */
+    color: var(--text-muted);      /* Theme-Farbe */
+    margin-top: 6px;               /* Dein gewünschter Abstand */
+    min-width: 200px;              /* Verhindert Springen beim Laden */
+    line-height: 1.2;
+}
