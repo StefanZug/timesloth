@@ -16,7 +16,6 @@
     <script src="/static/js/axios.js"></script>
 
     <script>
-    // Initial Theme Load
     let theme = localStorage.getItem('theme');
     if (!theme) {
         theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
@@ -106,63 +105,6 @@
         </footer>
     </main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Faultier Spin
-            const sloths = document.querySelectorAll('.sloth-logo');
-            sloths.forEach(sloth => {
-                sloth.addEventListener('click', (e) => {
-                    e.preventDefault(); e.stopPropagation();
-                    if(sloth.classList.contains('spin-animation')) return;
-                    sloth.classList.add('spin-animation');
-                    setTimeout(() => { sloth.classList.remove('spin-animation'); }, 1000);
-                });
-            });
-
-            // Bubble Theme Toggle
-            const themeBtn = document.getElementById('darkModeBtn');
-            const bubble = document.getElementById('theme-bubble');
-            
-            if(themeBtn && bubble) {
-                const updateIcon = () => {
-                    const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-                    themeBtn.className = isDark ? 'bi bi-sun-fill theme-toggle-btn' : 'bi bi-moon-stars-fill theme-toggle-btn';
-                };
-                updateIcon();
-
-                themeBtn.addEventListener('click', () => {
-                    // 1. Koordinaten finden
-                    const rect = themeBtn.getBoundingClientRect();
-                    const x = rect.left + rect.width / 2;
-                    const y = rect.top + rect.height / 2;
-                    
-                    // 2. Ziel-Farbe bestimmen
-                    const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-                    const nextTheme = isDark ? 'light' : 'dark';
-                    const nextColor = isDark ? '#f3f4f6' : '#0d1117'; 
-
-                    // 3. Bubble positionieren
-                    bubble.style.left = x + 'px';
-                    bubble.style.top = y + 'px';
-                    bubble.style.backgroundColor = nextColor;
-                    
-                    // 4. Explosion!
-                    bubble.classList.add('expand');
-
-                    // 5. Theme switchen (Timing reduziert auf 250ms)
-                    setTimeout(() => {
-                        document.documentElement.setAttribute('data-bs-theme', nextTheme);
-                        localStorage.setItem('theme', nextTheme);
-                        updateIcon();
-                        
-                        // 6. Aufräumen (Kurz warten damit der Screen gefüllt wirkt)
-                        setTimeout(() => {
-                            bubble.classList.remove('expand');
-                        }, 100); 
-                    }, 250); 
-                });
-            }
-        });
-    </script>
+    <script src="/static/js/base.js"></script>
 </body>
 </html>
