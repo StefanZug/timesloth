@@ -28,16 +28,34 @@ class TimeLogic {
 
     /**
      * Berechnet Tages-Statistik: SAP, CATS, Pause, Saldo
+     * NEU: Berücksichtigt Lücken zwischen Blöcken als Pause.
      */
     static calculateDayStats(blocks, settings, isNonWorkDay) {
         let sapMin = 0; 
         let catsMin = 0;
         
-        blocks.forEach(b => {
+        // 1. Blöcke chronologisch sortieren für korrekte Lücken-Berechnung
+        // Wir arbeiten auf einer Kopie, um das Original nicht zu verändern
+        const sortedBlocks = [...blocks].sort((a, b) => {
+            return this.toMinutes(a.start) - this.toMinutes(b.start);
+        });
+
+        // 2. Arbeitszeit und Lücken (echte Pausen) berechnen
+        let totalGapMin = 0;
+        let lastEnd = -1;
+
+        sortedBlocks.forEach(b => {
             let s = this.toMinutes(b.start); 
             let e = this.toMinutes(b.end);
-            if (s >= e) return;
             
+            if (s >= e) return; // Ungültige Blöcke ignorieren
+            
+            // Lücke zum vorherigen Block addieren
+            if (lastEnd >= 0 && s > lastEnd) {
+                totalGapMin += (s - lastEnd);
+            }
+            lastEnd = e; // Ende merken für nächsten Loop
+
             let dur = e - s;
             
             if (b.type === 'doctor') {
@@ -56,16 +74,30 @@ class TimeLogic {
             }
         });
 
-        // Pausen-Regel: > 6h -> 30min Abzug
-        let pause = 0;
+        // 3. Pausen-Regel: > 6h -> Mindestens 30min Pause nötig
+        let deduction = 0;
+        let requiredBreak = 0;
+
         if (sapMin > 360) { 
-            pause = 30; 
-            sapMin -= 30; 
-            catsMin -= 30; 
+            requiredBreak = 30;
+            // Wenn die echten Lücken kleiner sind als 30min, ziehen wir die Differenz ab
+            if (totalGapMin < requiredBreak) {
+                deduction = requiredBreak - totalGapMin;
+            }
         }
+
+        sapMin -= deduction;
+        catsMin -= deduction;
 
         sapMin = Math.max(0, sapMin);
         catsMin = Math.max(0, catsMin);
+
+        // Anzeige-Logik:
+        // - Wenn ich 90min weg war (Gap), zeige 90min an.
+        // - Wenn ich 0min weg war, aber 30min abgezogen wurden, zeige 30min an.
+        // - Wenn ich 10min weg war und 20min abgezogen wurden, zeige 30min an.
+        let displayPause = Math.max(totalGapMin, requiredBreak);
+        if (requiredBreak === 0) displayPause = totalGapMin; // Unter 6h nur echte Pausen anzeigen
 
         // Saldo
         let targetMin = isNonWorkDay ? 0 : (settings.sollStunden * 60);
@@ -74,7 +106,7 @@ class TimeLogic {
         return {
             sapMin,
             catsMin,
-            pause,
+            pause: displayPause, // Zeigt jetzt echte Pause ODER Mindestpause
             saldoMin: saldoVal
         };
     }
