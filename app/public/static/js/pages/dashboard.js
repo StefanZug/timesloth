@@ -28,11 +28,8 @@ createApp({
         viewMode(newVal) { localStorage.setItem('viewMode', newVal); }
     },
     computed: {
-        // WICHTIG: Wir nutzen jetzt immer 'time' am PC, damit das Uhr-Symbol da ist.
-        // Das Scrollen fixen wir unten in onWheel über die Mausposition.
+        // Am PC immer 'time', damit das Icon da ist.
         inputType() { 
-            // Am PC wollen wir das Uhr-Icon -> time.
-            // Am Handy je nach Setting.
             if (this.isDesktop) return 'time';
             return this.settings.useNativeWheel ? 'time' : 'text'; 
         },
@@ -97,14 +94,12 @@ createApp({
             
             if (firstStart === 9999) return { target: '--:--', max: '--:--', reached: false };
             
-            // 1. Max Zeit (10h)
             let maxTime = firstStart + 630; 
             let maxStr = TimeLogic.minutesToString(maxTime);
 
             let currentNetto = this.totals.sapTime;
             let remaining = (this.todaySoll * 60) - currentNetto;
             
-            // 2. Soll Zeit (Finish)
             let finish = lastEnd + remaining;
             
             if (this.totals.pause === 0 && (this.todaySoll * 60) > 360) {
@@ -172,10 +167,7 @@ createApp({
         }
     },
     methods: {
-        // NEU: Steuert Sekundenanzeige (60=Aus, 1=An)
-        getStep(block) {
-            return (block.type === 'home') ? 60 : 1;
-        },
+        getStep(block) { return (block.type === 'home') ? 60 : 1; },
         formatNum(n) { if(n === null || n === undefined) return '0,00'; return n.toFixed(2).replace('.', ','); },
         formatH(min) { return (min / 60).toFixed(2).replace('.', ','); },
         formatIsoDate(date) {
@@ -201,103 +193,22 @@ createApp({
             this.blocks.splice(idx, 1);
             this.triggerAutoSave();
         },
-        
         onWheel(event, block, field, day = null) {
             if (!this.settings.pcScroll) return;
-            if (!block[field]) return;
-            // Fokus-Check: Man muss erst klicken
+            
+            // FIX: Wenn es ein Zeit-Input ist, lassen wir den Browser machen!
+            if (this.inputType === 'time') {
+                // Das Event NICHT verhindern (kein preventDefault).
+                // Der Browser ändert den Wert und feuert automatisch das 'input'-Event.
+                // Das 'input'-Event löst dann triggerAutoSave aus.
+                return;
+            }
+
+            // Fallback für Text-Inputs (falls wir jemals dorthin zurückwollen)
             if (document.activeElement !== event.target) return;
+            event.preventDefault();
             
-            const isHome = (block.type === 'home');
-            const input = event.target;
-            
-            // --- SMART SCROLL LOGIK ---
-            // Da type="time" kein selectionStart hat, nutzen wir die Mausposition (offsetX)
-            // Wir gehen davon aus, dass der Text zentriert ist (durch .text-center Klasse)
-            let isHoursTarget = true;
-            
-            try {
-                // Versuch 1: Cursor Position (geht bei type="text")
-                if (input.type === 'text') {
-                     const cursor = input.selectionStart || 0;
-                     isHoursTarget = (cursor < 3);
-                } else {
-                    // Versuch 2: Maus Position (für type="time")
-                    // Annahme: Klick in die linke Hälfte = Stunden, Rechts = Minuten
-                    // Bei Sekunden (Step=1) dritteln wir grob
-                    const w = input.offsetWidth;
-                    const x = event.offsetX;
-                    const step = this.getStep(block); // 60 oder 1
-                    
-                    if (step === 60) {
-                        // HH:MM -> Split bei 50%
-                        isHoursTarget = (x < w / 2);
-                    } else {
-                        // HH:MM:SS -> Split grob bei 33%
-                        // Links (33%): Stunden
-                        // Mitte: Minuten
-                        // Rechts (66%+): Sekunden
-                        if (x < w / 3) isHoursTarget = true; // Stunden
-                        else if (x > (w * 0.66)) isHoursTarget = 'seconds'; // Sekunden
-                        else isHoursTarget = false; // Minuten
-                    }
-                }
-            } catch(e) {
-                isHoursTarget = false; // Fallback Minuten
-            }
-
-            let stepVal = 60; // Default: Minuten ändern
-            
-            if (event.shiftKey) {
-                stepVal = 1; 
-            } else {
-                if (isHoursTarget === true) {
-                    stepVal = 3600; // Stunden
-                } else if (isHoursTarget === 'seconds') {
-                    stepVal = 1;    // Sekunden
-                } else {
-                    stepVal = 60;   // Minuten
-                }
-            }
-
-            const direction = event.deltaY < 0 ? 1 : -1;
-            
-            let currentSec = TimeLogic.toMinutes(block[field]) * 60; 
-            const parts = block[field].split(':');
-            let h = parseInt(parts[0] || 0);
-            let m = parseInt(parts[1] || 0);
-            let s = parseInt(parts[2] || 0);
-            currentSec = (h * 3600) + (m * 60) + s;
-
-            let newSec = currentSec + (stepVal * direction);
-            
-            if(newSec < 0) newSec = (24 * 3600) + newSec;
-            if(newSec >= 24 * 3600) newSec = newSec % (24 * 3600);
-
-            h = Math.floor(newSec / 3600);
-            let rem = newSec % 3600;
-            m = Math.floor(rem / 60);
-            s = rem % 60;
-            
-            if(isHome) s = 0;
-
-            const pad = (n) => n.toString().padStart(2,'0');
-            // Formatieren: Sekunden nur anzeigen wenn nicht Home
-            const showSeconds = (block.type !== 'home');
-            
-            if(showSeconds) block[field] = `${pad(h)}:${pad(m)}:${pad(s)}`;
-            else block[field] = `${pad(h)}:${pad(m)}`;
-
-            // Reset selection für Text-Input (optional)
-            try {
-                if (input.type === 'text') {
-                    const oldCursor = input.selectionStart;
-                    Vue.nextTick(() => { input.setSelectionRange(oldCursor, oldCursor); });
-                }
-            } catch(e) {}
-
-            if (day) this.triggerListSave(day);
-            else this.triggerAutoSave();
+            // ... (Hier könnte alter Text-Input Code stehen, wird aber nicht mehr benötigt) ...
         },
         changeBlockType(event, index, newType) {
             let oldBlock = this.blocks[index];
@@ -380,7 +291,6 @@ createApp({
             }
             if(h > 23) h = 23; if(m > 59) m = 59; if(s > 59) s = 59;
             
-            // HOME OFFICE: Sekunden immer nullen
             if(block.type === 'home') s = 0;
 
             const showSeconds = (block.type !== 'home');
