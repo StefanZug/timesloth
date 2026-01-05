@@ -95,7 +95,9 @@
                          <div class="row text-center align-items-center">
                             <div class="col-6 border-end">
                                 <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Gehen (Soll)</small>
-                                <div class="fs-4 fw-bold text-success">[[ prediction.target ]]</div>
+                                <div class="fs-4 fw-bold" :class="prediction.reached ? 'text-success' : 'text-primary'">
+                                    [[ prediction.target ]] <i v-if="prediction.reached" class="bi bi-check-lg"></i>
+                                </div>
                             </div>
                             <div class="col-6">
                                 <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Max (10h)</small>

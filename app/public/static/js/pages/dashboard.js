@@ -76,7 +76,7 @@ createApp({
             return parseFloat(this.settings.sollStunden);
         },
         prediction() {
-            if (this.blocks.length === 0 || this.isNonWorkDay) return { target: '--:--', max: '--:--' };
+            if (this.blocks.length === 0 || this.isNonWorkDay) return { target: '--:--', max: '--:--', reached: false };
             
             let firstStart = 9999; 
             let lastEnd = 0;
@@ -88,28 +88,37 @@ createApp({
                 if (e > lastEnd) lastEnd = e;
             });
             
-            if (firstStart === 9999) return { target: '--:--', max: '--:--' };
+            if (firstStart === 9999) return { target: '--:--', max: '--:--', reached: false };
             
-            // 1. Max Zeit IMMER berechnen (Startzeit + 10.5h Anwesenheit)
-            // 10h Arbeit + 30min Pause = 630 Minuten
+            // 1. Max Zeit (10h)
             let maxTime = firstStart + 630; 
             let maxStr = TimeLogic.minutesToString(maxTime);
 
             let currentNetto = this.totals.sapTime;
             let remaining = (this.todaySoll * 60) - currentNetto;
             
-            // 2. Wenn Soll erfüllt, gib Häkchen UND die berechnete Max-Zeit zurück
-            if (remaining <= 0) return { target: '✔', max: maxStr };
-            
+            // 2. Soll Zeit (Finish)
+            // Wir berechnen die Zeit basierend auf dem letzten Eintrag + Restzeit.
+            // Auch wenn remaining < 0 ist (Überstunden), ergibt die Addition die korrekte "Vergangenheits-Zeit".
             let finish = lastEnd + remaining;
-            if (this.totals.pause === 0 && (currentNetto + remaining) > 360) finish += 30;
             
+            // Pausen-Korrektur: Wenn wir über die Sollzeit 6h kommen würden, müssen wir 30m draufschlagen,
+            // falls sie nicht schon abgezogen wurden.
+            if (this.totals.pause === 0 && (this.todaySoll * 60) > 360) {
+                 finish += 30;
+            }
+            
+            // Fallback: Wenn noch keine Endzeit da ist, rechnen wir vom Start weg
             let base = (lastEnd > 0 && lastEnd > firstStart) ? lastEnd : firstStart;
             if(base === firstStart) { 
                 finish = firstStart + (this.todaySoll * 60) + (this.todaySoll > 6 ? 30 : 0);
             }
-            
-            return { target: TimeLogic.minutesToString(finish), max: maxStr };
+
+            return { 
+                target: TimeLogic.minutesToString(finish), 
+                max: maxStr, 
+                reached: (remaining <= 0) 
+            };
         },
         monthDays() {
             let days = [];
@@ -189,13 +198,10 @@ createApp({
         onWheel(event, block, field, day = null) {
             if (!this.settings.pcScroll) return;
             if (!block[field]) return;
-
-            // FOKUS CHECK: Nur scrollen, wenn das Feld aktiv ist
             if (document.activeElement !== event.target) return;
             
             const isHome = (block.type === 'home');
             const input = event.target;
-            
             const cursor = input.selectionStart; 
             
             let step = 60; 
@@ -251,7 +257,6 @@ createApp({
                 input.setSelectionRange(cursor, cursor);
             });
 
-            // Speichern triggert jetzt auch den Sync nach oben
             if (day) this.triggerListSave(day);
             else this.triggerAutoSave();
         },
@@ -335,8 +340,6 @@ createApp({
                 h = parseInt(clean);
             }
             if(h > 23) h = 23; if(m > 59) m = 59; if(s > 59) s = 59;
-            
-            // HOME OFFICE: Sekunden immer nullen
             if(block.type === 'home') s = 0;
 
             const showSeconds = (block.type !== 'home');
@@ -392,10 +395,8 @@ createApp({
             const newStatus = (day.status === status) ? null : status;
             day.status = newStatus;
 
-            // NEU: Sync Logik - wenn es der angezeigte Tag ist
             if (day.iso === this.isoDate) {
                 this.dayStatus = newStatus;
-                // WICHTIG: Auch die Blöcke syncen, falls sie beim "Ent-Klicken" von F wieder da sein sollen
                 this.blocks = JSON.parse(JSON.stringify(day.blocks || []));
             }
 
@@ -418,13 +419,10 @@ createApp({
             this.saveSingleEntry(entry);
         },
         triggerListSave(day) {
-            // 1. SOFORT SYNC: Wenn es der aktuelle Tag ist, Daten sofort nach oben kopieren
             if (day.iso === this.isoDate) {
                 this.blocks = JSON.parse(JSON.stringify(day.blocks));
                 this.dayStatus = day.status;
             }
-
-            // 2. SPEICHERN (Verzögert)
             this.saveState = 'saving';
             if(this.saveTimer) clearTimeout(this.saveTimer);
             this.saveTimer = setTimeout(() => {

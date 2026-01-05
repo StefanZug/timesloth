@@ -25,7 +25,10 @@
 </head>
 <body>
     
-    <div id="theme-bubble" class="theme-bubble"></div>
+    <div id="sloth-lids" style="display: none;">
+        <div class="lid-top"></div>
+        <div class="lid-bottom"></div>
+    </div>
 
     <?php if (isset($_SESSION['user'])): ?>
     <nav class="navbar navbar-expand bg-body-tertiary shadow-sm mb-3 border-bottom sticky-top" style="z-index: 1050;">

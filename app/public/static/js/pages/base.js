@@ -53,11 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 2. Bubble Theme Toggle
+// 2. Sleepy Blink Theme Toggle
     const themeBtn = document.getElementById('darkModeBtn');
-    const bubble = document.getElementById('theme-bubble');
+    const lidsContainer = document.getElementById('sloth-lids');
     
-    if(themeBtn && bubble) {
+    if(themeBtn && lidsContainer) {
         // Icon initial setzen
         const updateIcon = () => {
             const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
@@ -66,29 +66,25 @@ document.addEventListener('DOMContentLoaded', () => {
         updateIcon();
 
         themeBtn.addEventListener('click', () => {
-            const rect = themeBtn.getBoundingClientRect();
-            const x = rect.left + rect.width / 2;
-            const y = rect.top + rect.height / 2;
+            // 1. Augen zu! (Klasse hinzufügen)
+            lidsContainer.classList.add('eyes-closed');
             
-            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-            const nextTheme = isDark ? 'light' : 'dark';
-            const nextColor = isDark ? '#f3f4f6' : '#0d1117'; 
-
-            bubble.style.left = x + 'px';
-            bubble.style.top = y + 'px';
-            bubble.style.backgroundColor = nextColor;
-            
-            bubble.classList.add('expand');
-
+            // 2. Warten bis Augen zu sind (400ms Animation)
             setTimeout(() => {
+                // Jetzt im Dunkeln (hinter den Lidern) das Theme wechseln
+                const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+                const nextTheme = isDark ? 'light' : 'dark';
+                
                 document.documentElement.setAttribute('data-bs-theme', nextTheme);
                 localStorage.setItem('theme', nextTheme);
                 updateIcon();
-                
+
+                // 3. Kurz warten und Augen wieder auf!
                 setTimeout(() => {
-                    bubble.classList.remove('expand');
-                }, 100); 
-            }, 250); 
+                    lidsContainer.classList.remove('eyes-closed');
+                }, 150); // Kurze "Schlaf"-Pause
+
+            }, 400); 
         });
     }
 });
