@@ -91,6 +91,6 @@
         </footer>
     </main>
 
-    <script src="/static/js/base.js"></script>
+    <script src="/static/js/pages/base.js"></script>
 </body>
 </html>
