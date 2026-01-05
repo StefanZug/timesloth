@@ -28,7 +28,14 @@ createApp({
         viewMode(newVal) { localStorage.setItem('viewMode', newVal); }
     },
     computed: {
-        inputType() { return this.settings.useNativeWheel ? 'time' : 'text'; },
+        // WICHTIG: Wir nutzen jetzt immer 'time' am PC, damit das Uhr-Symbol da ist.
+        // Das Scrollen fixen wir unten in onWheel über die Mausposition.
+        inputType() { 
+            // Am PC wollen wir das Uhr-Icon -> time.
+            // Am Handy je nach Setting.
+            if (this.isDesktop) return 'time';
+            return this.settings.useNativeWheel ? 'time' : 'text'; 
+        },
         
         totals() {
             const stats = TimeLogic.calculateDayStats(this.blocks, this.settings, this.isNonWorkDay);
@@ -98,17 +105,12 @@ createApp({
             let remaining = (this.todaySoll * 60) - currentNetto;
             
             // 2. Soll Zeit (Finish)
-            // Wir berechnen die Zeit basierend auf dem letzten Eintrag + Restzeit.
-            // Auch wenn remaining < 0 ist (Überstunden), ergibt die Addition die korrekte "Vergangenheits-Zeit".
             let finish = lastEnd + remaining;
             
-            // Pausen-Korrektur: Wenn wir über die Sollzeit 6h kommen würden, müssen wir 30m draufschlagen,
-            // falls sie nicht schon abgezogen wurden.
             if (this.totals.pause === 0 && (this.todaySoll * 60) > 360) {
                  finish += 30;
             }
             
-            // Fallback: Wenn noch keine Endzeit da ist, rechnen wir vom Start weg
             let base = (lastEnd > 0 && lastEnd > firstStart) ? lastEnd : firstStart;
             if(base === firstStart) { 
                 finish = firstStart + (this.todaySoll * 60) + (this.todaySoll > 6 ? 30 : 0);
@@ -170,6 +172,10 @@ createApp({
         }
     },
     methods: {
+        // NEU: Steuert Sekundenanzeige (60=Aus, 1=An)
+        getStep(block) {
+            return (block.type === 'home') ? 60 : 1;
+        },
         formatNum(n) { if(n === null || n === undefined) return '0,00'; return n.toFixed(2).replace('.', ','); },
         formatH(min) { return (min / 60).toFixed(2).replace('.', ','); },
         formatIsoDate(date) {
@@ -195,33 +201,62 @@ createApp({
             this.blocks.splice(idx, 1);
             this.triggerAutoSave();
         },
+        
         onWheel(event, block, field, day = null) {
             if (!this.settings.pcScroll) return;
             if (!block[field]) return;
+            // Fokus-Check: Man muss erst klicken
             if (document.activeElement !== event.target) return;
             
             const isHome = (block.type === 'home');
             const input = event.target;
-            const cursor = input.selectionStart; 
             
-            let step = 60; 
-            const hasSeconds = block[field].length > 5;
-
-            if (event.shiftKey) {
-                step = 1; 
-            } else {
-                if (isHome) {
-                    if (cursor < 3) step = 3600; 
-                    else step = 60;
+            // --- SMART SCROLL LOGIK ---
+            // Da type="time" kein selectionStart hat, nutzen wir die Mausposition (offsetX)
+            // Wir gehen davon aus, dass der Text zentriert ist (durch .text-center Klasse)
+            let isHoursTarget = true;
+            
+            try {
+                // Versuch 1: Cursor Position (geht bei type="text")
+                if (input.type === 'text') {
+                     const cursor = input.selectionStart || 0;
+                     isHoursTarget = (cursor < 3);
                 } else {
-                    if (hasSeconds) {
-                        if (cursor < 3) step = 3600;
-                        else if (cursor < 6) step = 60;
-                        else step = 1;
+                    // Versuch 2: Maus Position (für type="time")
+                    // Annahme: Klick in die linke Hälfte = Stunden, Rechts = Minuten
+                    // Bei Sekunden (Step=1) dritteln wir grob
+                    const w = input.offsetWidth;
+                    const x = event.offsetX;
+                    const step = this.getStep(block); // 60 oder 1
+                    
+                    if (step === 60) {
+                        // HH:MM -> Split bei 50%
+                        isHoursTarget = (x < w / 2);
                     } else {
-                        if (cursor < 3) step = 3600; 
-                        else step = 60;
+                        // HH:MM:SS -> Split grob bei 33%
+                        // Links (33%): Stunden
+                        // Mitte: Minuten
+                        // Rechts (66%+): Sekunden
+                        if (x < w / 3) isHoursTarget = true; // Stunden
+                        else if (x > (w * 0.66)) isHoursTarget = 'seconds'; // Sekunden
+                        else isHoursTarget = false; // Minuten
                     }
+                }
+            } catch(e) {
+                isHoursTarget = false; // Fallback Minuten
+            }
+
+            let stepVal = 60; // Default: Minuten ändern
+            
+            if (event.shiftKey) {
+                stepVal = 1; 
+            } else {
+                if (isHoursTarget === true) {
+                    stepVal = 3600; // Stunden
+                } else if (isHoursTarget === 'seconds') {
+                    stepVal = 1;    // Sekunden
+                } else {
+                    stepVal = 60;   // Minuten
                 }
             }
 
@@ -234,7 +269,7 @@ createApp({
             let s = parseInt(parts[2] || 0);
             currentSec = (h * 3600) + (m * 60) + s;
 
-            let newSec = currentSec + (step * direction);
+            let newSec = currentSec + (stepVal * direction);
             
             if(newSec < 0) newSec = (24 * 3600) + newSec;
             if(newSec >= 24 * 3600) newSec = newSec % (24 * 3600);
@@ -247,15 +282,19 @@ createApp({
             if(isHome) s = 0;
 
             const pad = (n) => n.toString().padStart(2,'0');
-            if (!isHome && (hasSeconds || step === 1)) {
-                block[field] = `${pad(h)}:${pad(m)}:${pad(s)}`;
-            } else {
-                block[field] = `${pad(h)}:${pad(m)}`;
-            }
+            // Formatieren: Sekunden nur anzeigen wenn nicht Home
+            const showSeconds = (block.type !== 'home');
+            
+            if(showSeconds) block[field] = `${pad(h)}:${pad(m)}:${pad(s)}`;
+            else block[field] = `${pad(h)}:${pad(m)}`;
 
-            Vue.nextTick(() => {
-                input.setSelectionRange(cursor, cursor);
-            });
+            // Reset selection für Text-Input (optional)
+            try {
+                if (input.type === 'text') {
+                    const oldCursor = input.selectionStart;
+                    Vue.nextTick(() => { input.setSelectionRange(oldCursor, oldCursor); });
+                }
+            } catch(e) {}
 
             if (day) this.triggerListSave(day);
             else this.triggerAutoSave();
@@ -340,6 +379,8 @@ createApp({
                 h = parseInt(clean);
             }
             if(h > 23) h = 23; if(m > 59) m = 59; if(s > 59) s = 59;
+            
+            // HOME OFFICE: Sekunden immer nullen
             if(block.type === 'home') s = 0;
 
             const showSeconds = (block.type !== 'home');

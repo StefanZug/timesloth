@@ -50,9 +50,9 @@
                                             <li><button type="button" class="dropdown-item text-danger" @click="changeBlockType($event, index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</button></li>
                                         </ul>
                                     </div>
-                                    <input :type="inputType" step="1" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'start')" :aria-label="'Startzeit Eintrag ' + (index + 1)">
+                                    <input :type="inputType" :step="getStep(block)" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'start')" :aria-label="'Startzeit Eintrag ' + (index + 1)">
                                     <span class="text-muted">-</span>
-                                    <input :type="inputType" step="1" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.end" placeholder="16:30" @blur="formatTimeInput(block, 'end')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'end')" :aria-label="'Endzeit Eintrag ' + (index + 1)">
+                                    <input :type="inputType" :step="getStep(block)" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.end" placeholder="16:30" @blur="formatTimeInput(block, 'end')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'end')" :aria-label="'Endzeit Eintrag ' + (index + 1)">
                                     <button class="btn btn-link text-muted p-0 ms-auto" @click="removeBlock(index)" aria-label="Eintrag löschen"><i class="bi bi-x-lg"></i></button>
                                 </div>
                             </div>
@@ -165,7 +165,7 @@
                                                 </ul>
                                             </div>
                                             
-                                            <input :type="inputType" step="1" class="table-input" 
+                                            <input :type="inputType" :step="getStep(block)" class="table-input" 
                                                    v-model="block.start" 
                                                    @blur="formatListTime(day, index, 'start')" 
                                                    @input="triggerListSave(day)" 
@@ -174,7 +174,7 @@
                                 
                                             <span class="text-muted" style="font-size: 0.8rem">-</span>
                                 
-                                            <input :type="inputType" step="1" class="table-input" 
+                                            <input :type="inputType" :step="getStep(block)" class="table-input" 
                                                    v-model="block.end" 
                                                    @blur="formatListTime(day, index, 'end')" 
                                                    @input="triggerListSave(day)" 
