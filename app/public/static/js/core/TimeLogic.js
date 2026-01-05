@@ -28,7 +28,7 @@ class TimeLogic {
 
     /**
      * Berechnet Tages-Statistik: SAP, CATS, Pause, Saldo
-     * NEU: Berücksichtigt Lücken zwischen Blöcken als Pause.
+     * NEU: Berücksichtigt echte Lücken zwischen Blöcken als Pause.
      */
     static calculateDayStats(blocks, settings, isNonWorkDay) {
         let sapMin = 0; 
@@ -50,11 +50,12 @@ class TimeLogic {
             
             if (s >= e) return; // Ungültige Blöcke ignorieren
             
-            // Lücke zum vorherigen Block addieren
+            // Lücke zum vorherigen Block addieren (nur wenn wir nicht beim ersten Block sind)
             if (lastEnd >= 0 && s > lastEnd) {
                 totalGapMin += (s - lastEnd);
             }
-            lastEnd = e; // Ende merken für nächsten Loop
+            // Update lastEnd, aber nur wenn der aktuelle Block weiter reicht
+            if (e > lastEnd) lastEnd = e;
 
             let dur = e - s;
             
@@ -66,7 +67,7 @@ class TimeLogic {
                 // Nur wenn Zeitfenster getroffen wurde
                 if (ve > vs) {
                     sapMin += (ve - vs);
-                    // CATS bleibt 0 bei Arzt (Regel 2 aus Readme)
+                    // CATS bleibt 0 bei Arzt
                 }
             } else {
                 sapMin += dur; 
@@ -86,18 +87,19 @@ class TimeLogic {
             }
         }
 
+        // Abzug anwenden
         sapMin -= deduction;
         catsMin -= deduction;
 
         sapMin = Math.max(0, sapMin);
         catsMin = Math.max(0, catsMin);
 
-        // Anzeige-Logik:
-        // - Wenn ich 90min weg war (Gap), zeige 90min an.
-        // - Wenn ich 0min weg war, aber 30min abgezogen wurden, zeige 30min an.
-        // - Wenn ich 10min weg war und 20min abgezogen wurden, zeige 30min an.
+        // Anzeige-Logik für das Frontend:
+        // Zeige entweder die echte Lücke (z.B. 90min) oder die Pflichtpause (30min),
+        // je nachdem was größer ist.
+        // Wenn noch keine 6h gearbeitet wurden (requiredBreak=0), zeige nur die echte Lücke.
         let displayPause = Math.max(totalGapMin, requiredBreak);
-        if (requiredBreak === 0) displayPause = totalGapMin; // Unter 6h nur echte Pausen anzeigen
+        if (requiredBreak === 0) displayPause = totalGapMin;
 
         // Saldo
         let targetMin = isNonWorkDay ? 0 : (settings.sollStunden * 60);
@@ -106,7 +108,7 @@ class TimeLogic {
         return {
             sapMin,
             catsMin,
-            pause: displayPause, // Zeigt jetzt echte Pause ODER Mindestpause
+            pause: displayPause, 
             saldoMin: saldoVal
         };
     }
