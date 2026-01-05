@@ -91,7 +91,20 @@
                         <i class="bi bi-cup-hot"></i> Pause: -[[ totals.pause ]]m
                     </div>
 
-                    <div class="border-top pt-2 mt-2">
+                    <div v-if="prediction.target !== '--:--'" class="mt-3 pt-3 border-top">
+                         <div class="row text-center align-items-center">
+                            <div class="col-6 border-end">
+                                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Gehen (Soll)</small>
+                                <div class="fs-4 fw-bold text-success">[[ prediction.target ]]</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Max (10h)</small>
+                                <div class="fs-4 fw-bold text-danger">[[ prediction.max ]]</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-top pt-2 mt-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="text-muted small">Gleitzeit Saldo:</span>
                             <span class="fw-bold fs-5" :class="{'text-success': totals.saldo.includes('+'), 'text-danger': totals.saldo.includes('-')}">
@@ -233,27 +246,6 @@
                         <div style="font-size: 0.8rem; line-height: 1.2;">
                             Quote erfüllt! 🥳
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="widget-card" v-if="!isNonWorkDay && prediction.target !== '--:--'">
-                <div class="widget-header">🚀 Live Prognose</div>
-                <div class="widget-body">
-                    <div class="row text-center">
-                        <div class="col-6 border-end">
-                            <small class="text-muted text-uppercase" style="font-size: 0.65rem;">Gehen (Soll)</small>
-                            <div class="fs-3 fw-bold text-primary">[[ prediction.target ]]</div>
-                        </div>
-                        <div class="col-6">
-                            <small class="text-muted text-uppercase" style="font-size: 0.65rem;">Max (10h)</small>
-                            <div class="fs-3 fw-bold text-danger">[[ prediction.max ]]</div>
-                        </div>
-                    </div>
-                    <div class="text-center mt-2 pt-2 border-top">
-                        <small class="text-muted" style="font-size: 0.75rem;">
-                            Basierend auf [[ formatNum(todaySoll) ]]h Tagessoll
-                        </small>
                     </div>
                 </div>
             </div>

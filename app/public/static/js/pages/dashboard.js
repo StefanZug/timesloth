@@ -176,34 +176,31 @@ createApp({
         },
         onWheel(event, block, field, day = null) {
             if (!this.settings.pcScroll) return;
-            if(!block[field]) return;
+            if (!block[field]) return;
+
+            // NEU: Nur erlauben, wenn das Feld fokussiert ist
+            if (document.activeElement !== event.target) return;
             
             const isHome = (block.type === 'home');
             const input = event.target;
             
-            // CURSOR POSITION LOGIK
-            // Wir prüfen, wo der Cursor blinkt (selectionStart)
             const cursor = input.selectionStart; 
             
-            let step = 60; // Default: Minuten
+            let step = 60; 
             const hasSeconds = block[field].length > 5;
 
-            // Shift Taste -> Immer feinster Schritt (Sekunden oder Minuten)
             if (event.shiftKey) {
                 step = 1; 
             } else {
                 if (isHome) {
-                    // HH:MM -> Alles vor Index 3 (dem Doppelpunkt) sind Stunden
                     if (cursor < 3) step = 3600; 
                     else step = 60;
                 } else {
                     if (hasSeconds) {
-                        // HH:MM:SS
-                        if (cursor < 3) step = 3600;      // Cursor im Stunden-Bereich
-                        else if (cursor < 6) step = 60;   // Cursor im Minuten-Bereich
-                        else step = 1;                    // Cursor im Sekunden-Bereich
+                        if (cursor < 3) step = 3600;
+                        else if (cursor < 6) step = 60;
+                        else step = 1;
                     } else {
-                        // HH:MM Fallback
                         if (cursor < 3) step = 3600; 
                         else step = 60;
                     }
@@ -212,7 +209,6 @@ createApp({
 
             const direction = event.deltaY < 0 ? 1 : -1;
             
-            // ... [Berechnung und Speichern bleibt gleich] ...
             let currentSec = TimeLogic.toMinutes(block[field]) * 60; 
             const parts = block[field].split(':');
             let h = parseInt(parts[0] || 0);
@@ -239,8 +235,6 @@ createApp({
                 block[field] = `${pad(h)}:${pad(m)}`;
             }
 
-            // WICHTIG: Cursor Position beibehalten, sonst springt er ans Ende!
-            // Wir setzen ihn nach dem Update wieder dahin zurück, wo er war.
             Vue.nextTick(() => {
                 input.setSelectionRange(cursor, cursor);
             });
@@ -328,7 +322,10 @@ createApp({
                 h = parseInt(clean);
             }
             if(h > 23) h = 23; if(m > 59) m = 59; if(s > 59) s = 59;
+            
+            // NEU: Konsequenter Reset bei Homeoffice
             if(block.type === 'home') s = 0;
+
             const showSeconds = (block.type !== 'home');
             const pad = (n) => n.toString().padStart(2,'0');
             
@@ -381,6 +378,12 @@ createApp({
             this.saveState = 'idle';
             const newStatus = (day.status === status) ? null : status;
             day.status = newStatus;
+
+            // NEU: Sync mit Tagesansicht, falls es der heutige Tag ist
+            if (day.iso === this.isoDate) {
+                this.dayStatus = newStatus;
+            }
+
             let entry = this.entriesCache.find(e => e.date === day.iso);
             if(entry) entry.status = newStatus;
             else {

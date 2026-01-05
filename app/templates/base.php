@@ -9,7 +9,7 @@
     
     <link href="/static/css/bootstrap.css" rel="stylesheet">
     <link href="/static/css/bootstrap-icons.css" rel="stylesheet">
-    <link href="/static/css/custom.css?v=0.1.5.0" rel="stylesheet">
+    <link href="/static/css/custom.css?v=0.1.6.0" rel="stylesheet">
     
     <script src="/static/js/bootstrap.js"></script>
     <script src="/static/js/vue.js"></script>
@@ -31,11 +31,15 @@
     <nav class="navbar navbar-expand bg-body-tertiary shadow-sm mb-3 border-bottom sticky-top" style="z-index: 1050;">
         <div class="container-fluid">
             <div class="d-flex align-items-center">
-                <img src="/static/img/logo.png" alt="Logo" width="30" height="30" 
-                     class="me-2 rounded-circle sloth-logo" 
-                     style="cursor: pointer;">
+                <img src="/static/img/logo.png" alt="Logo" width="42" height="42" 
+                     class="me-3 rounded-circle sloth-logo" 
+                     style="cursor: pointer;" title="Klick mich für neue Weisheiten!">
 
-                <a class="navbar-brand fw-bold" href="/">TimeSloth</a>
+                <div class="d-flex flex-column justify-content-center" style="line-height: 1.1;">
+                    <a class="navbar-brand fw-bold m-0 p-0 fs-5" href="/">TimeSloth</a>
+                    <small id="header-quote" class="text-muted fst-italic animate-fade" style="font-size: 0.75rem; min-width: 200px;">
+                        </small>
+                </div>
             </div>
             
             <div class="d-flex align-items-center gap-3">
@@ -82,24 +86,6 @@
                         <span>&copy; <?= date('Y') ?> TimeSloth</span>
                         <img src="/static/img/logo.png" width="20" class="sloth-logo" style="filter: grayscale(1); opacity: 0.5;">
                     </div>
-                </div>
-
-                <div class="text-muted small fst-italic px-3 text-center">
-                    <?php 
-                    $quotes = [
-                        "Zeit ist Geld, aber Faulheit ist unbezahlbar.",
-                        "Wir zählen die Stunden, damit du es nicht musst.",
-                        "Programmiert mit ❤️ und viel 🍺.",
-                        "Heute schon nichts getan? Wir verurteilen dich nicht.",
-                        "Lade Arbeitsmoral... Fehler 404.",
-                        "Schneller arbeiten bringt auch nicht mehr Feierabend.",
-                        "Wir tracken deine Zeit, nicht deine Motivation.",
-                        "Wir machens, weils SAP nicht kann.",
-                        "Arbeitszeit ist die neue Währung der Faulen.",
-                        "Timemanagement für fortschrittliche Faultiere."
-                    ];
-                    echo $quotes[array_rand($quotes)]; 
-                    ?>
                 </div>
             </div>
         </footer>
