@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
         "Wir zählen die Stunden, damit du es nicht musst.",
         "Programmiert mit ❤️ und viel 🍺.",
         "Heute schon nichts getan? Wir verurteilen dich nicht.",
-        "Lade Arbeitsmoral... Fehler 404.",
+        "Lade Arbeitsmoral... ERROR 404.",
         "Schneller arbeiten bringt auch nicht mehr Feierabend.",
         "Wir tracken deine Zeit, nicht deine Motivation.",
         "Wir machens, weils SAP nicht kann.",
@@ -47,13 +47,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if(sloth.classList.contains('spin-animation')) return;
             
             sloth.classList.add('spin-animation');
+            
+            // FIX: Timeout auf 3000ms erhöht (passend zur 3s CSS Animation)
             setTimeout(() => { 
                 sloth.classList.remove('spin-animation'); 
-            }, 1000);
+            }, 3000);
         });
     });
 
-// 2. Sleepy Blink Theme Toggle
+    // 2. Sleepy Blink Theme Toggle
     const themeBtn = document.getElementById('darkModeBtn');
     const lidsContainer = document.getElementById('sloth-lids');
     
