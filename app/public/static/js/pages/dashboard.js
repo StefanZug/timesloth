@@ -33,7 +33,11 @@ createApp({
     },
     computed: {
         inputType() { 
-            if (this.isDesktop) return 'time';
+            // FIX: Hier lag der Fehler. Wir müssen am PC zwingend 'text' nehmen,
+            // damit selectionStart (Cursor-Position) funktioniert.
+            if (this.isDesktop && this.settings.pcScroll) return 'text';
+            
+            // Am Handy oder wenn Scrollen aus ist:
             return this.settings.useNativeWheel ? 'time' : 'text'; 
         },
         
@@ -270,14 +274,18 @@ createApp({
         
         onWheel(event, block, field, day = null) {
             if (!this.settings.pcScroll) return;
+            // Da wir jetzt inputType='text' erzwingen, greift das hier korrekt.
             if (this.inputType !== 'text') return; 
             
+            // Nur wenn das Feld den Fokus hat
             if (document.activeElement !== event.target) return;
             
             event.preventDefault(); 
             
+            // --- 1. BREMSE (Throttle) auf 75ms ---
+            // Verhindert zu schnelles Springen
             const now = Date.now();
-            if (this.lastScrollTime && (now - this.lastScrollTime < 50)) {
+            if (this.lastScrollTime && (now - this.lastScrollTime < 75)) {
                 return;
             }
             this.lastScrollTime = now;
@@ -286,34 +294,24 @@ createApp({
             const cursor = input.selectionStart || 0;
             const val = block[field] || "00:00";
             
-            const rect = input.getBoundingClientRect();
-            const center = rect.width / 2;
-            const x = event.offsetX;
-            const zoneRadius = 22;
-            
             let segment = 'min'; 
             
-            // Text-Feld Logik + Fallback auf Maus-Position
-            if (input.value.length > 0) {
-                // Wir nutzen primär die Cursor-Position im Text
-                if (cursor <= 2) segment = 'hour';
-                else if (cursor >= 6) segment = 'sec';
-                else segment = 'min';
-            } else {
-                // Fallback, falls leer (sollte nicht passieren bei v-model)
-                if (x < center - zoneRadius) segment = 'hour';
-                else if (x > center + zoneRadius) segment = 'sec';
-                else segment = 'min';
-            }
+            // Bestimmung des Segments anhand der Cursor-Position
+            // HH:MM:SS -> Doppelpunkte bei Index 2 und 5
+            if (cursor <= 2) segment = 'hour'; // 0,1,2 = Stunden
+            else if (cursor >= 6) segment = 'sec'; // 6,7,8... = Sekunden
+            else segment = 'min'; // 3,4,5 = Minuten
             
+            // Ausnahme: Home Office hat keine Sekunden
             if (block.type === 'home' && segment === 'sec') segment = 'min';
 
-            let stepVal = 60; 
-            
+            // deltaY > 0 = runter scrollen (-), deltaY < 0 = hoch (+)
             const direction = event.deltaY > 0 ? -1 : 1; 
             
+            // --- 2. ISOLIERTE ÄNDERUNG ---
             block[field] = this.modifyTime(val, segment, direction, block.type === 'home');
             
+            // Cursor wiederherstellen
             this.$nextTick(() => {
                 input.setSelectionRange(cursor, cursor);
             });
@@ -330,7 +328,8 @@ createApp({
             let m = parseInt(parts[1] || 0);
             let s = parseInt(parts[2] || 0);
             
-            // NEU: Isoliertes Scrollen ohne Überträge
+            // Kein intelligenter Übertrag (Carry-Over) mehr. 
+            // Minuten ändern nur Minuten, Sekunden nur Sekunden.
             if (segment === 'hour') {
                 h += dir;
             } else if (segment === 'min') {
@@ -350,6 +349,7 @@ createApp({
             
             if (noSeconds) return `${pad(h)}:${pad(m)}`;
             
+            // Sekunden nur anzeigen, wenn sie existieren oder wir gerade Sekunden bearbeiten
             const hasSeconds = parts.length > 2 || segment === 'sec';
             if (hasSeconds) return `${pad(h)}:${pad(m)}:${pad(s)}`;
             
