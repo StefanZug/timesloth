@@ -214,7 +214,10 @@
                                     [[ new Date(currentDateObj.getFullYear(), m-1, 1).toLocaleDateString('de-DE', {month: 'long'}) ]]
                                 </div>
                                 <div class="card-body p-2">
-                                    <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                    <div class="calendar-grid mb-1">
+                                        <div class="day-header">Mo</div><div class="day-header">Di</div><div class="day-header">Mi</div><div class="day-header">Do</div><div class="day-header">Fr</div><div class="day-header text-danger">Sa</div><div class="day-header text-danger">So</div>
+                                    </div>
+                                    <div class="calendar-grid">
                                         <div v-for="d in getDaysInMonth(m-1)" :key="d.iso" class="day-box" :class="getDayClass(d)" @click="toggleVacationInCalendar(d)" :title="d.iso + (d.isHoliday ? ' (Feiertag)' : '')">
                                             [[ d.day ]]
                                         </div>

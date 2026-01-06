@@ -67,20 +67,34 @@ class EntryService {
         return ['status' => 'Deleted'];
     }
 
-    // NEU: Statistik für Jahresansicht
+    // UPDATE: Statistik für Jahresansicht (Korrigierte Zählweise + Eigene Feiertage)
     public function getYearStats($userId, $year) {
         $db = get_db();
-        // Alle Urlaubstage im Jahr zählen
-        $stmt = $db->prepare("SELECT COUNT(*) FROM entries WHERE user_id = ? AND status = 'U' AND date_str LIKE ?");
-        $stmt->execute([$userId, "$year%"]);
-        $used = $stmt->fetchColumn();
-
-        // Details laden für Kalender
-        $stmtCal = $db->prepare("SELECT date_str FROM entries WHERE user_id = ? AND status = 'U' AND date_str LIKE ?");
-        $stmtCal->execute([$userId, "$year%"]);
-        $vacationDates = $stmtCal->fetchAll(PDO::FETCH_COLUMN);
         
-        // Globale Feiertage für das ganze Jahr laden
+        // 1. Zähle echte Urlaubstage (Wochenenden ignorieren!)
+        $stmt = $db->prepare("SELECT date_str FROM entries WHERE user_id = ? AND status = 'U' AND date_str LIKE ?");
+        $stmt->execute([$userId, "$year%"]);
+        $uRows = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        $usedCount = 0;
+        $vacationDates = [];
+        
+        foreach($uRows as $dateStr) {
+            $vacationDates[] = $dateStr;
+            // Check ob Wochenende (Samstag/Sonntag)
+            // 'N' gibt 1 (Mo) bis 7 (So) zurück.
+            $dt = new DateTime($dateStr);
+            if ($dt->format('N') < 6) { 
+                $usedCount++;
+            }
+        }
+
+        // 2. Hole EIGENE Feiertage ('F'), die der User gesetzt hat (z.B. 6.1.)
+        $stmtF = $db->prepare("SELECT date_str FROM entries WHERE user_id = ? AND status = 'F' AND date_str LIKE ?");
+        $stmtF->execute([$userId, "$year%"]);
+        $userHolidayDates = $stmtF->fetchAll(PDO::FETCH_COLUMN);
+
+        // 3. Globale Feiertage laden
         $stmtHol = $db->prepare("SELECT date_str, name FROM global_holidays WHERE date_str LIKE ?");
         $stmtHol->execute(["$year%"]);
         $holidays = $stmtHol->fetchAll(PDO::FETCH_ASSOC);
@@ -88,6 +102,17 @@ class EntryService {
         $holidayMap = [];
         foreach($holidays as $h) { $holidayMap[$h['date_str']] = $h['name']; }
 
-        return ['used' => $used, 'dates' => $vacationDates, 'holidays' => $holidayMap];
+        // Merge User-Feiertage in die Map (damit der Kalender sie grau färbt)
+        foreach($userHolidayDates as $fDate) {
+            if(!isset($holidayMap[$fDate])) {
+                $holidayMap[$fDate] = "Persönlich";
+            }
+        }
+
+        return [
+            'used' => $usedCount, 
+            'dates' => $vacationDates, 
+            'holidays' => $holidayMap
+        ];
     }
 }

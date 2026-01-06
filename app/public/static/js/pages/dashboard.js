@@ -20,13 +20,11 @@ createApp({
                 pcScroll: true,
                 useNativeWheel: false,
                 correction: 0,
-                vacationDays: 25, // Default
+                vacationDays: 25, 
             }, window.slothData.settings || {}),
             calc: { sapMissing: null, absentDays: 0, planHours: 8.0 },
             tempCorrection: 0,
             lastScrollTime: 0,
-            
-            // NEU: Urlaubs-Statistik
             vacationStats: { used: 0, total: 25, dates: [], yearHolidays: {} }
         }
     },
@@ -194,71 +192,36 @@ createApp({
                 bootstrap.Modal.getInstance(document.getElementById('correctionModal')).hide();
             } catch(e) { alert("Fehler beim Speichern: " + e); }
         },
-        // --- SCROLL LOGIC NEU (CURSOR BASIERT) ---
+        
         onWheel(event, block, field, day = null) {
             if (!this.settings.pcScroll) return;
-            // Nur wenn das Feld Fokus hat (damit man nicht aus Versehen scrollt)
             if (document.activeElement !== event.target) return;
-            
             event.preventDefault();
-
-            // Bremse
             const now = Date.now();
             if (this.lastScrollTime && (now - this.lastScrollTime < 40)) return;
             this.lastScrollTime = now;
-
             const input = event.target;
             const cursor = input.selectionStart || 0;
             let val = block[field] || "00:00";
-            
-            // Cursor Position entscheidet:
-            // 0,1,2 -> Stunden
-            // 3,4,5 -> Minuten
-            // 6+ -> Sekunden
             let mode = 'min';
             if (cursor <= 2) mode = 'hour';
             else if (cursor >= 6) mode = 'sec';
-
-            // Richtung
             const direction = event.deltaY > 0 ? -1 : 1;
-            // Schrittweite: Bei Minuten machen wir 5er Schritte für "Speed"
             const step = (mode === 'min') ? 5 : 1;
-
             let parts = val.split(':');
             let h = parseInt(parts[0] || 0);
             let m = parseInt(parts[1] || 0);
             let s = parseInt(parts[2] || 0);
-
-            if (mode === 'hour') {
-                h += direction;
-            } else if (mode === 'min') {
-                m += (direction * step);
-                // Smart Overflow: Minuten ziehen Stunden mit? Nein, lieber loopen, das ist intuitiver beim "Feintuning"
-                if (m > 59) m = 0;
-                if (m < 0) m = 55;
-            } else if (mode === 'sec') {
-                s += (direction * 5);
-                if (s > 59) s = 0;
-                if (s < 0) s = 55;
-            }
-
+            if (mode === 'hour') { h += direction; } 
+            else if (mode === 'min') { m += (direction * step); if (m > 59) m = 0; if (m < 0) m = 55; } 
+            else if (mode === 'sec') { s += (direction * 5); if (s > 59) s = 0; if (s < 0) s = 55; }
             if (h > 23) h = 0; if (h < 0) h = 23;
-            
             const pad = (n) => n.toString().padStart(2, '0');
             const hasSeconds = parts.length > 2 || mode === 'sec';
-            
             if (hasSeconds) block[field] = `${pad(h)}:${pad(m)}:${pad(s)}`;
             else block[field] = `${pad(h)}:${pad(m)}`;
-
-            // Wichtig: Cursor Position halten!
-            this.$nextTick(() => {
-                if (document.activeElement === input) {
-                    input.setSelectionRange(cursor, cursor);
-                }
-            });
-
-            if (day) this.triggerListSave(day);
-            else this.triggerAutoSave();
+            this.$nextTick(() => { if (document.activeElement === input) { input.setSelectionRange(cursor, cursor); } });
+            if (day) this.triggerListSave(day); else this.triggerAutoSave();
         },
 
         // --- CALENDAR & VACATION ---
@@ -276,11 +239,20 @@ createApp({
             const year = this.currentDateObj.getFullYear();
             const date = new Date(year, monthIndex, 1);
             const days = [];
+            
+            let firstDay = date.getDay(); 
+            let isoStart = (firstDay === 0) ? 6 : firstDay - 1; 
+
+            for(let i=0; i<isoStart; i++) {
+                days.push({ isEmpty: true });
+            }
+
             while(date.getMonth() === monthIndex) {
                 const iso = this.formatIsoDate(date);
                 const wd = date.getDay();
                 days.push({
                     iso: iso, day: date.getDate(),
+                    isEmpty: false,
                     isWeekend: (wd === 0 || wd === 6),
                     isHoliday: !!this.vacationStats.yearHolidays[iso],
                     isVacation: this.vacationStats.dates.includes(iso)
@@ -290,35 +262,35 @@ createApp({
             return days;
         },
         getDayClass(d) {
-            if (d.isVacation) return 'day-vacation'; // U hat Vorrang
+            if (d.isEmpty) return 'day-empty';
+            if (d.isVacation) return 'day-vacation';
             if (d.isHoliday) return 'day-holiday';
             if (d.isWeekend) return 'day-weekend';
             return '';
         },
         async toggleVacationInCalendar(d) {
-            // Logik: Toggle U -> Ruft saveSingleEntry auf
-            // Wir müssen erst prüfen, ob für diesen Tag schon ein Eintrag existiert
-            if (d.isWeekend || d.isHoliday) return; // Blockade für WE/Feiertage? Oder erlauben? Meistens blockieren.
+            if (d.isEmpty || d.isHoliday) return; // FIX: Weekend Blockade entfernt
             
             const newStatus = d.isVacation ? null : 'U';
             
-            // UI optimistisch updaten
+            // Optimistic UI update
             if (d.isVacation) {
+                // Removing vacation
                 this.vacationStats.dates = this.vacationStats.dates.filter(x => x !== d.iso);
-                this.vacationStats.used--;
+                // WICHTIG: Zähler nur reduzieren, wenn es KEIN Wochenende ist
+                if (!d.isWeekend) this.vacationStats.used--;
             } else {
+                // Adding vacation
                 this.vacationStats.dates.push(d.iso);
-                this.vacationStats.used++;
+                // WICHTIG: Zähler nur erhöhen, wenn es KEIN Wochenende ist
+                if (!d.isWeekend) this.vacationStats.used++;
             }
             
-            // Backend Call
             try {
-                // Wenn wir im aktuellen Monat sind, müssen wir auch den Cache updaten
                 if (d.iso.startsWith(this.isoMonth)) {
                     let entry = this.entriesCache.find(e => e.date === d.iso);
                     if(entry) {
                         entry.status = newStatus;
-                        // Falls der Tag gerade angezeigt wird
                         if(this.isoDate === d.iso) this.dayStatus = newStatus;
                     } else {
                         this.entriesCache.push({ date: d.iso, blocks: [], status: newStatus, comment: '' });
@@ -326,14 +298,12 @@ createApp({
                 }
                 
                 await axios.post('/api/save_entry', { date: d.iso, blocks: [], status: newStatus, comment: '' });
-                // Keine kompletten Reload, stats sind schon aktuell durch optimistischen UI Update
             } catch(e) { 
-                alert("Fehler beim Speichern");
-                this.fetchVacationStats(); // Rollback bei Fehler
+                this.fetchVacationStats(); // Reset bei Fehler
             }
         },
 
-        // --- RESTLICHE HELPER (Unverändert, aber nötig) ---
+        // Helper
         getBlockDuration(block) {
             let s = TimeLogic.toMinutes(block.start); let e = TimeLogic.toMinutes(block.end);
             if (s > 0 && e > 0 && e > s) return this.formatNum((e - s) / 60);
@@ -463,7 +433,6 @@ createApp({
             let existing = this.entriesCache.find(e => e.date === this.isoDate);
             if(existing) payload.comment = existing.comment;
             await this.saveSingleEntry(payload);
-            // Wenn man Status auf U stellt im Dashboard
             if(this.dayStatus === 'U') this.fetchVacationStats();
         },
         async saveSingleEntry(payload) {
@@ -498,6 +467,6 @@ createApp({
     mounted() {
         window.addEventListener('resize', () => { this.isDesktop = window.innerWidth >= 992; });
         this.loadMonthData();
-        this.fetchVacationStats(); // Initiale Urlaubs-Stats
+        this.fetchVacationStats(); 
     }
 }).mount('#app');
