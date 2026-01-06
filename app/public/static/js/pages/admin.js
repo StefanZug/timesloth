@@ -77,7 +77,7 @@ createApp({
             } catch(e) { alert("Fehler"); }
         },
 
-        async fetchStats() { /* ... */ },
+        // HIER WAR DER FEHLER: Die leere fetchStats() wurde gelöscht!
 
         async fetchUserLogs(user) {
             if(user.logs) return;
