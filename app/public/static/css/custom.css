@@ -265,3 +265,18 @@ input[type="text"].form-control-sm.text-center {
 }
 .theme-toggle-btn { cursor: pointer; color: var(--text-muted); transition: color 0.2s; }
 .theme-toggle-btn:hover { color: var(--sloth-primary); }
+
+/* --- 9. DURATION BADGE (Monatsansicht) --- */
+.duration-badge {
+    display: inline-block;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 1px 5px;
+    border-radius: 4px;
+    vertical-align: middle;
+    /* Macht es dezent */
+    opacity: 0.8;
+}

@@ -72,17 +72,35 @@
             <div class="widget-card" v-if="!isNonWorkDay">
                 <div class="widget-header">📊 Tages-Fazit</div>
                 <div class="widget-body text-center">
-                    <div class="row g-2 mb-3">
+                    
+                    <div class="row g-2 mb-2">
                         <div class="col-6">
-                            <div class="p-2 bg-body-tertiary rounded">
-                                <small class="d-block text-muted" style="font-size:0.7rem">SAP (Netto)</small>
-                                <strong class="text-primary">[[ formatH(totals.sapTime) ]]</strong>
+                            <div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center">
+                                <small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">SAP (Netto)</small>
+                                <span class="fs-5 fw-bold text-primary">[[ formatH(totals.sapTime) ]]</span>
                             </div>
                         </div>
                         <div class="col-6">
-                            <div class="p-2 bg-body-tertiary rounded">
-                                <small class="d-block text-muted" style="font-size:0.7rem">CATS (Kunde)</small>
-                                <strong>[[ formatH(totals.catsTime) ]]</strong>
+                            <div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center">
+                                <small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">CATS (Kunde)</small>
+                                <span class="fs-5 fw-bold">[[ formatH(totals.catsTime) ]]</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="prediction.target !== '--:--'" class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center">
+                                <small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">Gehen (Soll)</small>
+                                <div class="fs-5 fw-bold" :class="prediction.reached ? 'text-success' : 'text-primary'">
+                                    [[ prediction.target ]] <i v-if="prediction.reached" class="bi bi-check-lg"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center">
+                                <small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">Max (10h)</small>
+                                <div class="fs-5 fw-bold text-danger">[[ prediction.max ]]</div>
                             </div>
                         </div>
                     </div>
@@ -91,27 +109,25 @@
                         <i class="bi bi-cup-hot"></i> Pause: -[[ totals.pause ]]m
                     </div>
 
-                    <div v-if="prediction.target !== '--:--'" class="mt-3 pt-3 border-top">
-                         <div class="row text-center align-items-center">
-                            <div class="col-6 border-end">
-                                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Gehen (Soll)</small>
-                                <div class="fs-4 fw-bold" :class="prediction.reached ? 'text-success' : 'text-primary'">
-                                    [[ prediction.target ]] <i v-if="prediction.reached" class="bi bi-check-lg"></i>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Max (10h)</small>
-                                <div class="fs-4 fw-bold text-danger">[[ prediction.max ]]</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="border-top pt-2 mt-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-muted small">Gleitzeit Saldo:</span>
-                            <span class="fw-bold fs-5" :class="{'text-success': totals.saldo.includes('+'), 'text-danger': totals.saldo.includes('-')}">
-                                [[ totals.saldo ]]
+                    <div class="border-top pt-2 mt-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted small">Saldo Vortag:</span>
+                            <span class="fw-bold" :class="balanceStats.yesterday >= 0 ? 'text-success' : 'text-danger'">
+                                [[ formatNum(balanceStats.yesterday) ]] h
                             </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small fw-bold">Saldo Aktuell:</span>
+                            <span class="fw-bold fs-5" :class="balanceStats.current >= 0 ? 'text-success' : 'text-danger'">
+                                [[ formatNum(balanceStats.current) ]] h
+                            </span>
+                        </div>
+                        
+                        <div class="text-center mt-2">
+                            <button class="btn btn-sm btn-link text-decoration-none text-muted p-0" style="font-size: 0.75rem;" @click="openCorrectionModal">
+                                <i class="bi bi-pencil-square me-1"></i>
+                                Start-Saldo: <strong>[[ formatNum(settings.correction) ]] h</strong>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -181,6 +197,10 @@
                                                    @wheel="onWheel($event, block, 'end', day)"
                                                    :aria-label="'Endzeit ' + day.dayShort">
                                             
+                                            <span v-if="getBlockDuration(block)" class="duration-badge">
+                                                [[ getBlockDuration(block) ]]
+                                            </span>
+
                                             <button class="btn btn-link text-danger p-0 ms-1" style="font-size: 1rem; line-height: 1;" @click="removeListBlock(day, index)" aria-label="Löschen">
                                                 <i class="bi bi-x"></i>
                                             </button>
@@ -297,15 +317,14 @@
                             <span>Abwesenheit (Krank/Urlaub)</span>
                             <span class="text-success" v-if="calcDeduction > 0">- [[ formatNum(calcDeduction) ]] h</span>
                         </label>
-                        <input type="number" step="1" class="form-control" v-model.number="calc.absentDays" placeholder="Tage" aria-label="Abwesenheit in Tagen">
-                        <div class="form-text small">Tage, die noch nicht in SAP verbucht sind.</div>
+                        <input type="number" step="1" class="form-control" v-model.number="calc.absentDays" placeholder="Tage">
                     </div>
                     <div class="mb-4">
                         <label class="form-label small fw-bold d-flex justify-content-between">
                             <span>Geplante Bürozeit pro Tag</span>
                             <span class="text-primary">[[ formatNum(calc.planHours) ]] h</span>
                         </label>
-                        <input type="range" class="form-range" min="4" max="10" step="0.25" v-model.number="calc.planHours" aria-label="Geplante Stunden Slider">
+                        <input type="range" class="form-range" min="4" max="10" step="0.25" v-model.number="calc.planHours">
                     </div>
                     <div class="alert alert-primary text-center border-0 shadow-sm mb-0">
                         <small class="text-uppercase text-muted" style="font-size: 0.7rem;">Du musst noch ins Büro für:</small>
@@ -313,6 +332,27 @@
                             [[ formatNum(calcResult) ]] <span class="fs-6 fw-normal text-muted">Tage</span>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="correctionModal" tabindex="-1">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content shadow">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h6 class="modal-title fw-bold">Start-Saldo (GLZ)</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Übertrag aus Vormonat / SAP</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" class="form-control fw-bold" v-model.number="tempCorrection" @keyup.enter="saveCorrection" autofocus>
+                            <span class="input-group-text">h</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary w-100 btn-sm" @click="saveCorrection">Speichern</button>
                 </div>
             </div>
         </div>

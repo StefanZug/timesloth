@@ -21,14 +21,16 @@ createApp({
                 useNativeWheel: false,
                 correction: 0,
             }, window.slothData.settings || {}),
-            calc: { sapMissing: null, absentDays: 0, planHours: 8.0 }
+            calc: { sapMissing: null, absentDays: 0, planHours: 8.0 },
+            
+            // NEU: Temp Value für das Correction Modal
+            tempCorrection: 0
         }
     },
     watch: {
         viewMode(newVal) { localStorage.setItem('viewMode', newVal); }
     },
     computed: {
-        // Am PC immer 'time', damit das Icon da ist.
         inputType() { 
             if (this.isDesktop) return 'time';
             return this.settings.useNativeWheel ? 'time' : 'text'; 
@@ -42,6 +44,50 @@ createApp({
                 catsTime: stats.catsMin, 
                 pause: stats.pause, 
                 saldo: prefix + this.formatNum(stats.saldoMin / 60) + ' h' 
+            };
+        },
+        balanceStats() {
+            let sum = parseFloat(this.settings.correction || 0);
+            const todayStr = this.formatIsoDate(new Date());
+            const daysInMonth = new Date(this.currentDateObj.getFullYear(), this.currentDateObj.getMonth() + 1, 0).getDate();
+            
+            for(let d = 1; d <= daysInMonth; d++) {
+                let date = new Date(this.currentDateObj.getFullYear(), this.currentDateObj.getMonth(), d);
+                let iso = this.formatIsoDate(date);
+                if (iso === todayStr) break;
+                
+                let wd = date.getDay();
+                if(wd === 0 || wd === 6) continue;
+
+                let entry = this.entriesCache.find(e => e.date === iso);
+                let isHol = !!this.holidaysMap[iso];
+                let status = entry ? entry.status : (isHol ? 'F' : null);
+                
+                let dayBalance = 0;
+                if (!['F','U','K'].includes(status)) {
+                    let blocks = (entry && entry.blocks) ? entry.blocks : [];
+                    let stats = TimeLogic.calculateDayStats(blocks, this.settings, false);
+                    dayBalance = stats.saldoMin / 60;
+                }
+                sum += dayBalance;
+            }
+            
+            let yesterdaySum = sum;
+            
+            // Heute dazurechnen
+            let todayDelta = 0;
+            const isTodayDisplayed = (this.isoDate === todayStr);
+            if (isTodayDisplayed) {
+                let wd = new Date().getDay();
+                if (wd !== 0 && wd !== 6) {
+                     let stats = TimeLogic.calculateDayStats(this.blocks, this.settings, this.isNonWorkDay);
+                     todayDelta = stats.saldoMin / 60;
+                }
+            }
+            
+            return {
+                yesterday: yesterdaySum,
+                current: yesterdaySum + todayDelta
             };
         },
         quota() {
@@ -167,6 +213,36 @@ createApp({
         }
     },
     methods: {
+        openCorrectionModal() {
+            this.tempCorrection = this.settings.correction || 0;
+            const modal = new bootstrap.Modal(document.getElementById('correctionModal'));
+            modal.show();
+        },
+        async saveCorrection() {
+            this.settings.correction = this.tempCorrection;
+            try {
+                // Wir senden das gesamte Settings-Objekt, da die API das erwartet.
+                await axios.post('/api/settings', this.settings);
+                
+                // Modal schließen
+                const modalEl = document.getElementById('correctionModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+                
+                // Kurzes Feedback? Nicht nötig, Saldo aktualisiert sich sofort.
+            } catch(e) {
+                alert("Fehler beim Speichern: " + e);
+            }
+        },
+        getBlockDuration(block) {
+            let s = TimeLogic.toMinutes(block.start);
+            let e = TimeLogic.toMinutes(block.end);
+            if (s > 0 && e > 0 && e > s) {
+                let diff = (e - s) / 60;
+                return this.formatNum(diff);
+            }
+            return '';
+        },
         getStep(block) { return (block.type === 'home') ? 60 : 1; },
         formatNum(n) { if(n === null || n === undefined) return '0,00'; return n.toFixed(2).replace('.', ','); },
         formatH(min) { return (min / 60).toFixed(2).replace('.', ','); },
@@ -195,20 +271,10 @@ createApp({
         },
         onWheel(event, block, field, day = null) {
             if (!this.settings.pcScroll) return;
-            
-            // FIX: Wenn es ein Zeit-Input ist, lassen wir den Browser machen!
-            if (this.inputType === 'time') {
-                // Das Event NICHT verhindern (kein preventDefault).
-                // Der Browser ändert den Wert und feuert automatisch das 'input'-Event.
-                // Das 'input'-Event löst dann triggerAutoSave aus.
-                return;
-            }
+            if (this.inputType === 'time') return; 
 
-            // Fallback für Text-Inputs (falls wir jemals dorthin zurückwollen)
             if (document.activeElement !== event.target) return;
             event.preventDefault();
-            
-            // ... (Hier könnte alter Text-Input Code stehen, wird aber nicht mehr benötigt) ...
         },
         changeBlockType(event, index, newType) {
             let oldBlock = this.blocks[index];

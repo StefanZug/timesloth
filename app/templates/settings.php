@@ -131,7 +131,7 @@
                     </label>
                     <input type="range" class="form-range mb-4" min="10" max="100" step="5" v-model.number="settings.percent">
 
-                    <div class="row g-3 text-center mb-0">
+                    <div class="row g-3 text-center mb-3">
                         <div class="col-6">
                             <div class="p-3 bg-body-tertiary rounded border">
                                 <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Wochenstunden</small>
@@ -145,6 +145,21 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="p-3 bg-body-tertiary rounded border">
+                        <label class="form-label fw-bold d-flex justify-content-between align-items-center mb-2">
+                            <span><i class="bi bi-bank"></i> Start-Saldo (GLZ)</span>
+                            <span class="badge bg-secondary">Aktueller Monat</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" class="form-control fw-bold" v-model.number="settings.correction">
+                            <span class="input-group-text">Stunden</span>
+                        </div>
+                        <div class="form-text small mt-2">
+                            Hier trägst du den Übertrag aus dem Vormonat (laut SAP) ein.
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
