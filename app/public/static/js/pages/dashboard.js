@@ -22,7 +22,10 @@ createApp({
                 correction: 0,
             }, window.slothData.settings || {}),
             calc: { sapMissing: null, absentDays: 0, planHours: 8.0 },
-            tempCorrection: 0
+            tempCorrection: 0,
+            
+            // Scroll-Bremse
+            lastScrollTime: 0
         }
     },
     watch: {
@@ -265,78 +268,92 @@ createApp({
             this.triggerAutoSave();
         },
         
-        /* --- SMART SCROLL LOGIK (Fixed & Improved) --- */
         onWheel(event, block, field, day = null) {
             if (!this.settings.pcScroll) return;
+            if (this.inputType !== 'text') return; 
             
-            // Wenn der User den Timepicker aufklappt, lassen wir das native Scrollen zu.
-            // Aber auf dem Input selbst übernehmen wir wieder die Kontrolle.
             if (document.activeElement !== event.target) return;
             
-            // Verhindert das Wegscrollen der Seite!
             event.preventDefault(); 
             
-            // Mikro-Ruckler ignorieren (für Touchpads)
-            if (Math.abs(event.deltaY) < 4) return;
+            const now = Date.now();
+            if (this.lastScrollTime && (now - this.lastScrollTime < 50)) {
+                return;
+            }
+            this.lastScrollTime = now;
 
-            const isHome = (block.type === 'home');
             const input = event.target;
+            const cursor = input.selectionStart || 0;
+            const val = block[field] || "00:00";
             
-            // --- NEUE HITBOX LOGIK (Zentrum-basiert) ---
             const rect = input.getBoundingClientRect();
             const center = rect.width / 2;
             const x = event.offsetX;
+            const zoneRadius = 22;
             
-            // Definition der "Minuten-Zone" in der Mitte (ca. 44px breit)
-            // Alles links davon = Stunden
-            // Alles rechts davon = Sekunden (außer bei Home)
-            const zoneRadius = 22; // +/- 22px von der Mitte
+            let segment = 'min'; 
             
-            let stepVal = 60; // Default: Minuten
-            
-            if (event.shiftKey) {
-                stepVal = 1; // Mit Shift immer Sekunden/Fein
+            // Text-Feld Logik + Fallback auf Maus-Position
+            if (input.value.length > 0) {
+                // Wir nutzen primär die Cursor-Position im Text
+                if (cursor <= 2) segment = 'hour';
+                else if (cursor >= 6) segment = 'sec';
+                else segment = 'min';
             } else {
-                if (x < center - zoneRadius) {
-                    stepVal = 3600; // Links -> Stunden
-                } else if (x > center + zoneRadius) {
-                    // Rechts -> Sekunden (wenn nicht Home)
-                    stepVal = isHome ? 60 : 1; 
-                } else {
-                    // Mitte -> Minuten
-                    stepVal = 60;
-                }
+                // Fallback, falls leer (sollte nicht passieren bei v-model)
+                if (x < center - zoneRadius) segment = 'hour';
+                else if (x > center + zoneRadius) segment = 'sec';
+                else segment = 'min';
             }
-
-            const direction = event.deltaY < 0 ? 1 : -1;
             
-            let currentSec = TimeLogic.toMinutes(block[field]) * 60; 
-            const parts = block[field].split(':');
+            if (block.type === 'home' && segment === 'sec') segment = 'min';
+
+            let stepVal = 60; 
+            
+            const direction = event.deltaY > 0 ? -1 : 1; 
+            
+            block[field] = this.modifyTime(val, segment, direction, block.type === 'home');
+            
+            this.$nextTick(() => {
+                input.setSelectionRange(cursor, cursor);
+            });
+            
+            if (day) this.triggerListSave(day);
+            else this.triggerAutoSave();
+        },
+
+        modifyTime(timeStr, segment, dir, noSeconds) {
+            if (!timeStr) timeStr = "00:00";
+            
+            let parts = timeStr.split(':');
             let h = parseInt(parts[0] || 0);
             let m = parseInt(parts[1] || 0);
             let s = parseInt(parts[2] || 0);
-            currentSec = (h * 3600) + (m * 60) + s;
-
-            let newSec = currentSec + (stepVal * direction);
             
-            if(newSec < 0) newSec = (24 * 3600) + newSec;
-            if(newSec >= 24 * 3600) newSec = newSec % (24 * 3600);
-
-            h = Math.floor(newSec / 3600);
-            let rem = newSec % 3600;
-            m = Math.floor(rem / 60);
-            s = rem % 60;
+            // NEU: Isoliertes Scrollen ohne Überträge
+            if (segment === 'hour') {
+                h += dir;
+            } else if (segment === 'min') {
+                m += dir;
+                if (m > 59) m = 0;
+                if (m < 0) m = 59;
+            } else if (segment === 'sec') {
+                s += dir;
+                if (s > 59) s = 0;
+                if (s < 0) s = 59;
+            }
             
-            if(isHome) s = 0;
-
+            if (h > 23) h = 0;
+            if (h < 0) h = 23;
+            
             const pad = (n) => n.toString().padStart(2,'0');
-            const showSeconds = (block.type !== 'home');
             
-            if(showSeconds) block[field] = `${pad(h)}:${pad(m)}:${pad(s)}`;
-            else block[field] = `${pad(h)}:${pad(m)}`;
-
-            if (day) this.triggerListSave(day);
-            else this.triggerAutoSave();
+            if (noSeconds) return `${pad(h)}:${pad(m)}`;
+            
+            const hasSeconds = parts.length > 2 || segment === 'sec';
+            if (hasSeconds) return `${pad(h)}:${pad(m)}:${pad(s)}`;
+            
+            return `${pad(h)}:${pad(m)}`;
         },
 
         changeBlockType(event, index, newType) {
