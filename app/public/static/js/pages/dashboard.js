@@ -23,7 +23,7 @@ createApp({
             }, window.slothData.settings || {}),
             calc: { sapMissing: null, absentDays: 0, planHours: 8.0 },
             
-            // NEU: Temp Value für das Correction Modal
+            // Temp Value für das Correction Modal
             tempCorrection: 0
         }
     },
@@ -47,7 +47,9 @@ createApp({
             };
         },
         balanceStats() {
+            // FIX: parseFloat sicherheitshalber auch hier
             let sum = parseFloat(this.settings.correction || 0);
+            
             const todayStr = this.formatIsoDate(new Date());
             const daysInMonth = new Date(this.currentDateObj.getFullYear(), this.currentDateObj.getMonth() + 1, 0).getDate();
             
@@ -221,15 +223,13 @@ createApp({
         async saveCorrection() {
             this.settings.correction = this.tempCorrection;
             try {
-                // Wir senden das gesamte Settings-Objekt, da die API das erwartet.
                 await axios.post('/api/settings', this.settings);
                 
-                // Modal schließen
                 const modalEl = document.getElementById('correctionModal');
                 const modal = bootstrap.Modal.getInstance(modalEl);
                 if (modal) modal.hide();
                 
-                // Kurzes Feedback? Nicht nötig, Saldo aktualisiert sich sofort.
+                // Wir müssen nicht neu laden, Vue aktualisiert balanceStats automatisch
             } catch(e) {
                 alert("Fehler beim Speichern: " + e);
             }
@@ -244,7 +244,14 @@ createApp({
             return '';
         },
         getStep(block) { return (block.type === 'home') ? 60 : 1; },
-        formatNum(n) { if(n === null || n === undefined) return '0,00'; return n.toFixed(2).replace('.', ','); },
+        
+        // FIX: Absturzsicher machen!
+        formatNum(n) { 
+            if(n === null || n === undefined) return '0,00'; 
+            // parseFloat erzwingen, da 'n' aus der DB ein String sein kann
+            return parseFloat(n).toFixed(2).replace('.', ','); 
+        },
+        
         formatH(min) { return (min / 60).toFixed(2).replace('.', ','); },
         formatIsoDate(date) {
             const year = date.getFullYear();
