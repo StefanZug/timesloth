@@ -31,7 +31,6 @@ createApp({
     },
     computed: {
         inputType() { 
-            // Am PC erzwingen wir 'text' für Smart Input & Scrollen
             if (this.isDesktop && this.settings.pcScroll) return 'text';
             return this.settings.useNativeWheel ? 'time' : 'text'; 
         },
@@ -270,12 +269,15 @@ createApp({
         onWheel(event, block, field, day = null) {
             if (!this.settings.pcScroll) return;
             if (this.inputType !== 'text') return; 
+            
+            // FOKUS CHECK
             if (document.activeElement !== event.target) return;
             
             event.preventDefault(); 
             
+            // --- 1. MINIMALE BREMSE (30ms) ---
             const now = Date.now();
-            if (this.lastScrollTime && (now - this.lastScrollTime < 100)) {
+            if (this.lastScrollTime && (now - this.lastScrollTime < 30)) {
                 return;
             }
             this.lastScrollTime = now;
@@ -284,31 +286,33 @@ createApp({
             const cursor = input.selectionStart || 0;
             const val = block[field] || "00:00";
             
-            const w = input.offsetWidth;
-            const x = event.offsetX;
-            
+            // --- 2. ZIEL ERMITTELN (Nur Cursor!) ---
+            // 01234567
+            // HH:MM:SS
             let segment = 'min'; 
             
-            if (x < w * 0.35) {
-                segment = 'hour';
-            } else if (x > w * 0.65) {
-                segment = 'sec';
-            } else {
-                segment = 'min';
-            }
+            if (cursor <= 2) segment = 'hour';      // 0, 1, 2
+            else if (cursor >= 6) segment = 'sec';  // 6, 7, 8...
+            else segment = 'min';                   // 3, 4, 5
             
             if (block.type === 'home' && segment === 'sec') segment = 'min';
 
+            // --- 3. RICHTUNG ---
             const direction = event.deltaY > 0 ? -1 : 1; 
             
+            // --- 4. BERECHNUNG ---
             block[field] = this.modifyTime(val, segment, direction, block.type === 'home');
             
-            setTimeout(() => {
+            // --- 5. CURSOR RETTEN ---
+            // Wir warten kurz, bis Vue das Feld aktualisiert hat, und setzen den Cursor zurück.
+            // Ohne nextTick springt er sonst ans Ende.
+            this.$nextTick(() => {
                 if (document.activeElement === input) {
                     input.setSelectionRange(cursor, cursor);
                 }
-            }, 0);
+            });
             
+            // --- 6. SPEICHERN (Verzögert) ---
             if (day) this.triggerListSave(day);
             else this.triggerAutoSave();
         },
@@ -329,6 +333,7 @@ createApp({
                 s += dir;
             }
             
+            // Überläufe (Loops 0-23 / 0-59)
             if (h > 23) h = 0; if (h < 0) h = 23;
             if (m > 59) m = 0; if (m < 0) m = 59;
             if (s > 59) s = 0; if (s < 0) s = 59;
@@ -388,7 +393,6 @@ createApp({
             }
         },
         formatListTime(day, index, field) {
-            // FIX: Nur skippen, wenn wir WIRKLICH den nativen Picker nutzen
             if (this.inputType === 'time') {
                 this.triggerListSave(day);
                 return;
@@ -397,7 +401,6 @@ createApp({
             this.triggerListSave(day);
         },
         formatTimeInput(block, field) {
-            // FIX: Nur skippen, wenn wir WIRKLICH den nativen Picker nutzen
             if (this.inputType === 'time') {
                 this.triggerAutoSave();
                 return;
@@ -511,6 +514,7 @@ createApp({
             }
             this.saveState = 'saving';
             if(this.saveTimer) clearTimeout(this.saveTimer);
+            // 1.5s Verzögerung beim Speichern, damit man beim Scrollen nicht unterbrochen wird
             this.saveTimer = setTimeout(() => {
                 let entry = this.entriesCache.find(e => e.date === day.iso);
                 if (!entry) {
@@ -520,11 +524,12 @@ createApp({
                 entry.blocks = day.blocks;
                 entry.status = day.status;
                 this.saveSingleEntry(entry);
-            }, 1500);
+            }, 1500); 
         },
         triggerAutoSave() {
             this.saveState = 'saving';
             if(this.saveTimer) clearTimeout(this.saveTimer);
+            // 1.5s Verzögerung
             this.saveTimer = setTimeout(() => { this.saveData(); }, 1500);
         },
         async saveData() {
