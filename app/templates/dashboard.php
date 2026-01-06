@@ -102,7 +102,14 @@
                                             <span v-if="getBlockDuration(block)" class="duration-badge">[[ getBlockDuration(block) ]]</span>
                                             <button class="btn btn-link text-danger p-0 ms-1" style="font-size: 1rem; line-height: 1;" @click="removeListBlock(day, index)"><i class="bi bi-x"></i></button>
                                         </div>
-                                        <button class="btn btn-dashed btn-sm w-100 py-1 mt-1" @click="addListBlock(day, 'office')"><i class="bi bi-plus-lg"></i></button>
+                                        <div class="d-flex gap-1 mt-1">
+                                        <div style="width: 24px; flex-shrink: 0;"></div>
+                                        
+                                        <button class="btn btn-dashed btn-sm flex-fill py-1" @click="addListBlock(day, 'office')">
+                                            <i class="bi bi-plus-lg"></i>
+                                        </button>
+                                        
+                                        <div style="width: 20px; flex-shrink: 0;"></div>
                                     </div>
                                 </td>
                                 <td class="text-center fw-bold cursor-pointer" @click="jumpToDay(day.iso)">[[ day.sapTime > 0 ? formatH(day.sapTime) : '-' ]]</td>
