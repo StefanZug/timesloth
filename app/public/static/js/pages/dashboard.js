@@ -20,10 +20,14 @@ createApp({
                 pcScroll: true,
                 useNativeWheel: false,
                 correction: 0,
+                vacationDays: 25, // Default
             }, window.slothData.settings || {}),
             calc: { sapMissing: null, absentDays: 0, planHours: 8.0 },
             tempCorrection: 0,
-            lastScrollTime: 0
+            lastScrollTime: 0,
+            
+            // NEU: Urlaubs-Statistik
+            vacationStats: { used: 0, total: 25, dates: [], yearHolidays: {} }
         }
     },
     watch: {
@@ -34,7 +38,6 @@ createApp({
             if (this.isDesktop && this.settings.pcScroll) return 'text';
             return this.settings.useNativeWheel ? 'time' : 'text'; 
         },
-        
         totals() {
             const stats = TimeLogic.calculateDayStats(this.blocks, this.settings, this.isNonWorkDay);
             let prefix = stats.saldoMin > 0 ? '+' : '';
@@ -72,7 +75,6 @@ createApp({
             }
             
             let yesterdaySum = sum;
-            
             let todayDelta = 0;
             const isTodayDisplayed = (this.isoDate === todayStr);
             if (isTodayDisplayed) {
@@ -83,20 +85,14 @@ createApp({
                 }
             }
             
-            return {
-                yesterday: yesterdaySum,
-                current: yesterdaySum + todayDelta
-            };
+            return { yesterday: yesterdaySum, current: yesterdaySum + todayDelta };
         },
         quota() {
             return TimeLogic.calculateMonthlyQuota(
                 this.currentDateObj, this.entriesCache, this.holidaysMap, this.settings
             );
         },
-        calcDeduction() {
-            const dailyDed = this.settings.sollStunden * 0.40;
-            return (this.calc.absentDays * dailyDed);
-        },
+        calcDeduction() { return (this.calc.absentDays * (this.settings.sollStunden * 0.40)); },
         calcResult() {
             if(!this.calc.sapMissing || this.calc.sapMissing <= 0) return 0;
             const realMissing = this.calc.sapMissing - this.calcDeduction;
@@ -125,41 +121,25 @@ createApp({
         },
         prediction() {
             if (this.blocks.length === 0 || this.isNonWorkDay) return { target: '--:--', max: '--:--', reached: false };
-            
-            let firstStart = 9999; 
-            let lastEnd = 0;
-            
+            let firstStart = 9999; let lastEnd = 0;
             this.blocks.forEach(b => {
-                let s = TimeLogic.toMinutes(b.start); 
-                let e = TimeLogic.toMinutes(b.end);
+                let s = TimeLogic.toMinutes(b.start); let e = TimeLogic.toMinutes(b.end);
                 if (s > 0 && s < firstStart) firstStart = s;
                 if (e > lastEnd) lastEnd = e;
             });
-            
             if (firstStart === 9999) return { target: '--:--', max: '--:--', reached: false };
             
             let maxTime = firstStart + 630; 
-            let maxStr = TimeLogic.minutesToString(maxTime);
-
             let currentNetto = this.totals.sapTime;
             let remaining = (this.todaySoll * 60) - currentNetto;
-            
             let finish = lastEnd + remaining;
             
-            if (this.totals.pause === 0 && (this.todaySoll * 60) > 360) {
-                 finish += 30;
-            }
+            if (this.totals.pause === 0 && (this.todaySoll * 60) > 360) finish += 30;
             
             let base = (lastEnd > 0 && lastEnd > firstStart) ? lastEnd : firstStart;
-            if(base === firstStart) { 
-                finish = firstStart + (this.todaySoll * 60) + (this.todaySoll > 6 ? 30 : 0);
-            }
+            if(base === firstStart) finish = firstStart + (this.todaySoll * 60) + (this.todaySoll > 6 ? 30 : 0);
 
-            return { 
-                target: TimeLogic.minutesToString(finish), 
-                max: maxStr, 
-                reached: (remaining <= 0) 
-            };
+            return { target: TimeLogic.minutesToString(finish), max: TimeLogic.minutesToString(maxTime), reached: (remaining <= 0) };
         },
         monthDays() {
             let days = [];
@@ -186,24 +166,13 @@ createApp({
                     }
                 });
 
-                let dayName = date.toLocaleDateString('de-DE', { weekday: 'long' });
-                let isWeekend = (date.getDay()===0 || date.getDay()===6);
-                let ph = isWeekend ? dayName : (holidayName || '');
-
                 days.push({
-                    iso: iso,
-                    dateNum: date.getDate(),
+                    iso: iso, dateNum: date.getDate(),
                     dayShort: date.toLocaleDateString('de-DE', { weekday: 'short' }),
-                    kw: this.getKw(date),
-                    status: status,
-                    sapTime: stats.sapMin, 
-                    blocks: blocks,
-                    isWeekend: isWeekend,
-                    isToday: (iso === todayIso),
-                    hasOffice: hasOffice,
-                    hasHome: hasHome,
-                    comment: entry ? entry.comment : '',
-                    placeholder: ph
+                    kw: this.getKw(date), status: status, sapTime: stats.sapMin, blocks: blocks,
+                    isWeekend: (date.getDay()===0 || date.getDay()===6),
+                    isToday: (iso === todayIso), hasOffice: hasOffice, hasHome: hasHome,
+                    comment: entry ? entry.comment : '', placeholder: (date.getDay()===0||date.getDay()===6) ? date.toLocaleDateString('de-DE', { weekday: 'long' }) : (holidayName || '')
                 });
                 date.setDate(date.getDate() + 1);
             }
@@ -213,34 +182,165 @@ createApp({
     methods: {
         openCorrectionModal() {
             this.tempCorrection = this.settings.correction || 0;
-            const modal = new bootstrap.Modal(document.getElementById('correctionModal'));
-            modal.show();
+            new bootstrap.Modal(document.getElementById('correctionModal')).show();
+        },
+        openYearModal() {
+             new bootstrap.Modal(document.getElementById('yearModal')).show();
         },
         async saveCorrection() {
             this.settings.correction = this.tempCorrection;
             try {
                 await axios.post('/api/settings', this.settings);
-                const modalEl = document.getElementById('correctionModal');
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                if (modal) modal.hide();
-            } catch(e) {
-                alert("Fehler beim Speichern: " + e);
+                bootstrap.Modal.getInstance(document.getElementById('correctionModal')).hide();
+            } catch(e) { alert("Fehler beim Speichern: " + e); }
+        },
+        // --- SCROLL LOGIC NEU (CURSOR BASIERT) ---
+        onWheel(event, block, field, day = null) {
+            if (!this.settings.pcScroll) return;
+            // Nur wenn das Feld Fokus hat (damit man nicht aus Versehen scrollt)
+            if (document.activeElement !== event.target) return;
+            
+            event.preventDefault();
+
+            // Bremse
+            const now = Date.now();
+            if (this.lastScrollTime && (now - this.lastScrollTime < 40)) return;
+            this.lastScrollTime = now;
+
+            const input = event.target;
+            const cursor = input.selectionStart || 0;
+            let val = block[field] || "00:00";
+            
+            // Cursor Position entscheidet:
+            // 0,1,2 -> Stunden
+            // 3,4,5 -> Minuten
+            // 6+ -> Sekunden
+            let mode = 'min';
+            if (cursor <= 2) mode = 'hour';
+            else if (cursor >= 6) mode = 'sec';
+
+            // Richtung
+            const direction = event.deltaY > 0 ? -1 : 1;
+            // Schrittweite: Bei Minuten machen wir 5er Schritte für "Speed"
+            const step = (mode === 'min') ? 5 : 1;
+
+            let parts = val.split(':');
+            let h = parseInt(parts[0] || 0);
+            let m = parseInt(parts[1] || 0);
+            let s = parseInt(parts[2] || 0);
+
+            if (mode === 'hour') {
+                h += direction;
+            } else if (mode === 'min') {
+                m += (direction * step);
+                // Smart Overflow: Minuten ziehen Stunden mit? Nein, lieber loopen, das ist intuitiver beim "Feintuning"
+                if (m > 59) m = 0;
+                if (m < 0) m = 55;
+            } else if (mode === 'sec') {
+                s += (direction * 5);
+                if (s > 59) s = 0;
+                if (s < 0) s = 55;
+            }
+
+            if (h > 23) h = 0; if (h < 0) h = 23;
+            
+            const pad = (n) => n.toString().padStart(2, '0');
+            const hasSeconds = parts.length > 2 || mode === 'sec';
+            
+            if (hasSeconds) block[field] = `${pad(h)}:${pad(m)}:${pad(s)}`;
+            else block[field] = `${pad(h)}:${pad(m)}`;
+
+            // Wichtig: Cursor Position halten!
+            this.$nextTick(() => {
+                if (document.activeElement === input) {
+                    input.setSelectionRange(cursor, cursor);
+                }
+            });
+
+            if (day) this.triggerListSave(day);
+            else this.triggerAutoSave();
+        },
+
+        // --- CALENDAR & VACATION ---
+        async fetchVacationStats() {
+            try {
+                const year = this.currentDateObj.getFullYear();
+                const res = await axios.get(`/api/get_year_stats?year=${year}`);
+                this.vacationStats.used = res.data.used;
+                this.vacationStats.dates = res.data.dates; 
+                this.vacationStats.yearHolidays = res.data.holidays || {};
+                this.vacationStats.total = this.settings.vacationDays || 25;
+            } catch(e) { console.error(e); }
+        },
+        getDaysInMonth(monthIndex) {
+            const year = this.currentDateObj.getFullYear();
+            const date = new Date(year, monthIndex, 1);
+            const days = [];
+            while(date.getMonth() === monthIndex) {
+                const iso = this.formatIsoDate(date);
+                const wd = date.getDay();
+                days.push({
+                    iso: iso, day: date.getDate(),
+                    isWeekend: (wd === 0 || wd === 6),
+                    isHoliday: !!this.vacationStats.yearHolidays[iso],
+                    isVacation: this.vacationStats.dates.includes(iso)
+                });
+                date.setDate(date.getDate() + 1);
+            }
+            return days;
+        },
+        getDayClass(d) {
+            if (d.isVacation) return 'day-vacation'; // U hat Vorrang
+            if (d.isHoliday) return 'day-holiday';
+            if (d.isWeekend) return 'day-weekend';
+            return '';
+        },
+        async toggleVacationInCalendar(d) {
+            // Logik: Toggle U -> Ruft saveSingleEntry auf
+            // Wir müssen erst prüfen, ob für diesen Tag schon ein Eintrag existiert
+            if (d.isWeekend || d.isHoliday) return; // Blockade für WE/Feiertage? Oder erlauben? Meistens blockieren.
+            
+            const newStatus = d.isVacation ? null : 'U';
+            
+            // UI optimistisch updaten
+            if (d.isVacation) {
+                this.vacationStats.dates = this.vacationStats.dates.filter(x => x !== d.iso);
+                this.vacationStats.used--;
+            } else {
+                this.vacationStats.dates.push(d.iso);
+                this.vacationStats.used++;
+            }
+            
+            // Backend Call
+            try {
+                // Wenn wir im aktuellen Monat sind, müssen wir auch den Cache updaten
+                if (d.iso.startsWith(this.isoMonth)) {
+                    let entry = this.entriesCache.find(e => e.date === d.iso);
+                    if(entry) {
+                        entry.status = newStatus;
+                        // Falls der Tag gerade angezeigt wird
+                        if(this.isoDate === d.iso) this.dayStatus = newStatus;
+                    } else {
+                        this.entriesCache.push({ date: d.iso, blocks: [], status: newStatus, comment: '' });
+                    }
+                }
+                
+                await axios.post('/api/save_entry', { date: d.iso, blocks: [], status: newStatus, comment: '' });
+                // Keine kompletten Reload, stats sind schon aktuell durch optimistischen UI Update
+            } catch(e) { 
+                alert("Fehler beim Speichern");
+                this.fetchVacationStats(); // Rollback bei Fehler
             }
         },
+
+        // --- RESTLICHE HELPER (Unverändert, aber nötig) ---
         getBlockDuration(block) {
-            let s = TimeLogic.toMinutes(block.start);
-            let e = TimeLogic.toMinutes(block.end);
-            if (s > 0 && e > 0 && e > s) {
-                let diff = (e - s) / 60;
-                return this.formatNum(diff);
-            }
+            let s = TimeLogic.toMinutes(block.start); let e = TimeLogic.toMinutes(block.end);
+            if (s > 0 && e > 0 && e > s) return this.formatNum((e - s) / 60);
             return '';
         },
         getStep(block) { return (block.type === 'home') ? 60 : 1; },
-        formatNum(n) { 
-            if(n === null || n === undefined) return '0,00'; 
-            return parseFloat(n).toFixed(2).replace('.', ','); 
-        },
+        formatNum(n) { if(n == null) return '0,00'; return parseFloat(n).toFixed(2).replace('.', ','); },
         formatH(min) { return (min / 60).toFixed(2).replace('.', ','); },
         formatIsoDate(date) {
             const year = date.getFullYear();
@@ -257,185 +357,54 @@ createApp({
             if (day.isWeekend) return 'tr-weekend';
             return '';
         },
-        addBlock(type) {
-            this.blocks.push({ id: Date.now(), type: type, start: '', end: '' });
-            this.triggerAutoSave();
-        },
-        removeBlock(idx) {
-            this.blocks.splice(idx, 1);
-            this.triggerAutoSave();
-        },
+        addBlock(type) { this.blocks.push({ id: Date.now(), type: type, start: '', end: '' }); this.triggerAutoSave(); },
+        removeBlock(idx) { this.blocks.splice(idx, 1); this.triggerAutoSave(); },
         
-        onWheel(event, block, field, day = null) {
-            if (!this.settings.pcScroll) return;
-            if (this.inputType !== 'text') return; 
-            
-            // FOKUS CHECK
-            if (document.activeElement !== event.target) return;
-            
-            event.preventDefault(); 
-            
-            // --- 1. MINIMALE BREMSE (30ms) ---
-            const now = Date.now();
-            if (this.lastScrollTime && (now - this.lastScrollTime < 30)) {
-                return;
-            }
-            this.lastScrollTime = now;
-
-            const input = event.target;
-            const cursor = input.selectionStart || 0;
-            const val = block[field] || "00:00";
-            
-            // --- 2. ZIEL ERMITTELN (Nur Cursor!) ---
-            // 01234567
-            // HH:MM:SS
-            let segment = 'min'; 
-            
-            if (cursor <= 2) segment = 'hour';      // 0, 1, 2
-            else if (cursor >= 6) segment = 'sec';  // 6, 7, 8...
-            else segment = 'min';                   // 3, 4, 5
-            
-            if (block.type === 'home' && segment === 'sec') segment = 'min';
-
-            // --- 3. RICHTUNG ---
-            const direction = event.deltaY > 0 ? -1 : 1; 
-            
-            // --- 4. BERECHNUNG ---
-            block[field] = this.modifyTime(val, segment, direction, block.type === 'home');
-            
-            // --- 5. CURSOR RETTEN ---
-            // Wir warten kurz, bis Vue das Feld aktualisiert hat, und setzen den Cursor zurück.
-            // Ohne nextTick springt er sonst ans Ende.
-            this.$nextTick(() => {
-                if (document.activeElement === input) {
-                    input.setSelectionRange(cursor, cursor);
-                }
-            });
-            
-            // --- 6. SPEICHERN (Verzögert) ---
-            if (day) this.triggerListSave(day);
-            else this.triggerAutoSave();
-        },
-
-        modifyTime(timeStr, segment, dir, noSeconds) {
-            if (!timeStr) timeStr = "00:00";
-            
-            let parts = timeStr.split(':');
-            let h = parseInt(parts[0] || 0);
-            let m = parseInt(parts[1] || 0);
-            let s = parseInt(parts[2] || 0);
-            
-            if (segment === 'hour') {
-                h += dir;
-            } else if (segment === 'min') {
-                m += dir;
-            } else if (segment === 'sec') {
-                s += dir;
-            }
-            
-            // Überläufe (Loops 0-23 / 0-59)
-            if (h > 23) h = 0; if (h < 0) h = 23;
-            if (m > 59) m = 0; if (m < 0) m = 59;
-            if (s > 59) s = 0; if (s < 0) s = 59;
-            
-            const pad = (n) => n.toString().padStart(2,'0');
-            
-            if (noSeconds) return `${pad(h)}:${pad(m)}`;
-            
-            const hasSeconds = parts.length > 2 || segment === 'sec';
-            if (hasSeconds) return `${pad(h)}:${pad(m)}:${pad(s)}`;
-            
-            return `${pad(h)}:${pad(m)}`;
-        },
-
         changeBlockType(event, index, newType) {
             let oldBlock = this.blocks[index];
             this.blocks.splice(index, 1, { ...oldBlock, type: newType });
-            if(newType === 'home') {
-                this.smartFormat(this.blocks[index], 'start');
-                this.smartFormat(this.blocks[index], 'end');
-            }
+            if(newType === 'home') { this.smartFormat(this.blocks[index], 'start'); this.smartFormat(this.blocks[index], 'end'); }
             this.triggerAutoSave();
-            const dropdownToggle = event.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
-            if (dropdownToggle) {
-                const dropdown = bootstrap.Dropdown.getInstance(dropdownToggle);
-                if (dropdown) dropdown.hide();
-            }
+            const t = event.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
+            if(t) bootstrap.Dropdown.getInstance(t).hide();
         },
         addListBlock(day, type) {
-            if(this.saveTimer) clearTimeout(this.saveTimer);
-            this.saveState = 'idle';
-            if (day.status) {
-                day.status = null;
-                let entry = this.entriesCache.find(e => e.date === day.iso);
-                if (entry) entry.status = null;
-            }
+            if(this.saveTimer) clearTimeout(this.saveTimer); this.saveState = 'idle';
+            if (day.status) { day.status = null; let e = this.entriesCache.find(x => x.date === day.iso); if(e) e.status = null; }
             day.blocks.push({ id: Date.now(), type: type, start: '', end: '' });
             this.triggerListSave(day);
         },
         removeListBlock(day, index) {
-            if(this.saveTimer) clearTimeout(this.saveTimer);
-            this.saveState = 'idle';
+            if(this.saveTimer) clearTimeout(this.saveTimer); this.saveState = 'idle';
             day.blocks.splice(index, 1);
             this.triggerListSave(day);
         },
         changeListBlockType(event, day, index, newType) {
             day.blocks[index].type = newType;
-            if(newType === 'home') {
-                this.smartFormat(day.blocks[index], 'start');
-                this.smartFormat(day.blocks[index], 'end');
-            }
+            if(newType === 'home') { this.smartFormat(day.blocks[index], 'start'); this.smartFormat(day.blocks[index], 'end'); }
             this.triggerListSave(day);
-            const dropdownToggle = event.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
-            if (dropdownToggle) {
-                const dropdown = bootstrap.Dropdown.getInstance(dropdownToggle);
-                if (dropdown) dropdown.hide();
-            }
+            const t = event.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
+            if(t) bootstrap.Dropdown.getInstance(t).hide();
         },
         formatListTime(day, index, field) {
-            if (this.inputType === 'time') {
-                this.triggerListSave(day);
-                return;
-            }
-            this.smartFormat(day.blocks[index], field);
-            this.triggerListSave(day);
+            if (this.inputType === 'time') { this.triggerListSave(day); return; }
+            this.smartFormat(day.blocks[index], field); this.triggerListSave(day);
         },
         formatTimeInput(block, field) {
-            if (this.inputType === 'time') {
-                this.triggerAutoSave();
-                return;
-            }
-            this.smartFormat(block, field);
-            this.triggerAutoSave();
+            if (this.inputType === 'time') { this.triggerAutoSave(); return; }
+            this.smartFormat(block, field); this.triggerAutoSave();
         },
         smartFormat(block, field) {
-            let val = block[field];
-            if(!val) return;
+            let val = block[field]; if(!val) return;
             let clean = val.replace(/[^0-9]/g, '');
             let h = 0, m = 0, s = 0;
-
-            if(clean.length >= 5) {
-                h = parseInt(clean.substring(0,2));
-                m = parseInt(clean.substring(2,4));
-                s = parseInt(clean.substring(4,6) || '0');
-            } else if (clean.length === 4) {
-                h = parseInt(clean.substring(0,2)); 
-                m = parseInt(clean.substring(2,4));
-            } else if (clean.length === 3) {
-                h = parseInt(clean.substring(0,1)); 
-                m = parseInt(clean.substring(1,3));
-            } else if (clean.length <= 2) {
-                h = parseInt(clean);
-            }
+            if(clean.length >= 5) { h = parseInt(clean.substring(0,2)); m = parseInt(clean.substring(2,4)); s = parseInt(clean.substring(4,6) || '0'); }
+            else if (clean.length === 4) { h = parseInt(clean.substring(0,2)); m = parseInt(clean.substring(2,4)); }
+            else if (clean.length === 3) { h = parseInt(clean.substring(0,1)); m = parseInt(clean.substring(1,3)); }
+            else if (clean.length <= 2) { h = parseInt(clean); }
             if(h > 23) h = 23; if(m > 59) m = 59; if(s > 59) s = 59;
-            
             if(block.type === 'home') s = 0;
-
-            const showSeconds = (block.type !== 'home');
-            const pad = (n) => n.toString().padStart(2,'0');
-            
-            if(showSeconds) block[field] = `${pad(h)}:${pad(m)}:${pad(s)}`;
-            else block[field] = `${pad(h)}:${pad(m)}`;
+            block[field] = (block.type !== 'home') ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
         },
         getTypeIcon(t) { return (t==='office'?'bi-building':(t==='home'?'bi-house':'bi-bandaid')); },
         getStatusText(s) { return (s==='F'?'Feiertag 🎄':(s==='U'?'Urlaub 🌴':(s==='K'?'Krank 🤒':''))); },
@@ -446,90 +415,47 @@ createApp({
             return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
         },
         shiftDay(offset) {
-            let d = new Date(this.currentDateObj);
-            d.setDate(d.getDate() + offset);
-            let oldMonth = this.currentDateObj.getMonth();
-            this.currentDateObj = d;
-            if(d.getMonth() !== oldMonth) this.loadMonthData();
-            else this.loadFromCache();
+            let d = new Date(this.currentDateObj); d.setDate(d.getDate() + offset);
+            let oldMonth = this.currentDateObj.getMonth(); this.currentDateObj = d;
+            if(d.getMonth() !== oldMonth) this.loadMonthData(); else this.loadFromCache();
         },
         shiftMonth(offset) {
-            let d = new Date(this.currentDateObj);
-            d.setDate(1); d.setMonth(d.getMonth() + offset);
-            
-            const now = new Date();
-            if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
-                d = new Date(); 
-            }
-            this.currentDateObj = d;
-            this.loadMonthData();
+            let d = new Date(this.currentDateObj); d.setDate(1); d.setMonth(d.getMonth() + offset);
+            const now = new Date(); if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) d = new Date();
+            this.currentDateObj = d; this.loadMonthData();
         },
-        jumpToDay(iso) {
-            this.currentDateObj = new Date(iso);
-            this.viewMode = 'day';
-            this.loadFromCache();
-        },
-        jumpToToday() {
-            this.currentDateObj = new Date();
-            this.viewMode = 'day';
-            this.loadFromCache();
-        },
-        toggleStatus(s) {
-            this.dayStatus = (this.dayStatus === s) ? null : s;
-            this.triggerAutoSave();
-        },
+        jumpToDay(iso) { this.currentDateObj = new Date(iso); this.viewMode = 'day'; this.loadFromCache(); },
+        jumpToToday() { this.currentDateObj = new Date(); this.viewMode = 'day'; this.loadFromCache(); },
+        toggleStatus(s) { this.dayStatus = (this.dayStatus === s) ? null : s; this.triggerAutoSave(); },
         async quickToggle(day, status) {
-            if(this.saveTimer) clearTimeout(this.saveTimer);
-            this.saveState = 'idle';
+            if(this.saveTimer) clearTimeout(this.saveTimer); this.saveState = 'idle';
             const newStatus = (day.status === status) ? null : status;
             day.status = newStatus;
-
-            if (day.iso === this.isoDate) {
-                this.dayStatus = newStatus;
-                this.blocks = JSON.parse(JSON.stringify(day.blocks || []));
-            }
-
+            if (day.iso === this.isoDate) { this.dayStatus = newStatus; this.blocks = JSON.parse(JSON.stringify(day.blocks || [])); }
             let entry = this.entriesCache.find(e => e.date === day.iso);
-            if(entry) entry.status = newStatus;
-            else {
-                entry = { date: day.iso, blocks: [], status: newStatus, comment: '' };
-                this.entriesCache.push(entry);
-            }
+            if(entry) entry.status = newStatus; else { entry = { date: day.iso, blocks: [], status: newStatus, comment: '' }; this.entriesCache.push(entry); }
             this.saveSingleEntry(entry);
+            
+            // Stats updaten bei U Toggle
+            if (status === 'U') this.fetchVacationStats();
         },
         updateComment(day) {
             let entry = this.entriesCache.find(e => e.date === day.iso);
-            if(entry) {
-                entry.comment = day.comment;
-            } else {
-                entry = { date: day.iso, blocks: [], status: null, comment: day.comment };
-                this.entriesCache.push(entry);
-            }
+            if(entry) entry.comment = day.comment; else { entry = { date: day.iso, blocks: [], status: null, comment: day.comment }; this.entriesCache.push(entry); }
             this.saveSingleEntry(entry);
         },
         triggerListSave(day) {
-            if (day.iso === this.isoDate) {
-                this.blocks = JSON.parse(JSON.stringify(day.blocks));
-                this.dayStatus = day.status;
-            }
-            this.saveState = 'saving';
-            if(this.saveTimer) clearTimeout(this.saveTimer);
-            // 1.5s Verzögerung beim Speichern, damit man beim Scrollen nicht unterbrochen wird
+            if (day.iso === this.isoDate) { this.blocks = JSON.parse(JSON.stringify(day.blocks)); this.dayStatus = day.status; }
+            this.saveState = 'saving'; if(this.saveTimer) clearTimeout(this.saveTimer);
             this.saveTimer = setTimeout(() => {
                 let entry = this.entriesCache.find(e => e.date === day.iso);
-                if (!entry) {
-                    entry = { date: day.iso, blocks: [], status: null, comment: day.comment };
-                    this.entriesCache.push(entry);
-                }
-                entry.blocks = day.blocks;
-                entry.status = day.status;
+                if (!entry) { entry = { date: day.iso, blocks: [], status: null, comment: day.comment }; this.entriesCache.push(entry); }
+                entry.blocks = day.blocks; entry.status = day.status;
                 this.saveSingleEntry(entry);
             }, 1500); 
         },
         triggerAutoSave() {
-            this.saveState = 'saving';
-            if(this.saveTimer) clearTimeout(this.saveTimer);
-            // 1.5s Verzögerung
+            this.saveState = 'saving'; if(this.saveTimer) clearTimeout(this.saveTimer);
             this.saveTimer = setTimeout(() => { this.saveData(); }, 1500);
         },
         async saveData() {
@@ -537,60 +463,41 @@ createApp({
             let existing = this.entriesCache.find(e => e.date === this.isoDate);
             if(existing) payload.comment = existing.comment;
             await this.saveSingleEntry(payload);
+            // Wenn man Status auf U stellt im Dashboard
+            if(this.dayStatus === 'U') this.fetchVacationStats();
         },
         async saveSingleEntry(payload) {
             this.saveState = 'saving';
             try {
                 let existing = this.entriesCache.find(e => e.date === payload.date);
-                if(existing) {
-                    existing.blocks = payload.blocks;
-                    existing.status = payload.status;
-                    existing.comment = payload.comment;
-                } else {
-                    this.entriesCache.push(JSON.parse(JSON.stringify(payload)));
-                }
+                if(existing) { existing.blocks = payload.blocks; existing.status = payload.status; existing.comment = payload.comment; } 
+                else { this.entriesCache.push(JSON.parse(JSON.stringify(payload))); }
                 await axios.post('/api/save_entry', payload);
-                this.saveState = 'saved';
-                setTimeout(() => { if(this.saveState === 'saved') this.saveState = 'idle'; }, 2000);
+                this.saveState = 'saved'; setTimeout(() => { if(this.saveState === 'saved') this.saveState = 'idle'; }, 2000);
             } catch(e) { console.error(e); this.saveState = 'idle'; }
         },
         async loadMonthData() {
             try {
                 const res = await axios.get(`/api/get_entries?month=${this.isoMonth}`);
-                this.entriesCache = res.data.entries;
-                this.holidaysMap = res.data.holidays || {};
-                if(res.data.settings) {
-                    Object.assign(this.settings, res.data.settings);
-                    this.settings.sollStunden = parseFloat(this.settings.sollStunden);
-                }
+                this.entriesCache = res.data.entries; this.holidaysMap = res.data.holidays || {};
+                if(res.data.settings) { Object.assign(this.settings, res.data.settings); this.settings.sollStunden = parseFloat(this.settings.sollStunden); }
                 this.loadFromCache();
             } catch(e) { console.error(e); }
         },
         loadFromCache() {
-            const iso = this.isoDate;
-            let isHol = !!this.holidaysMap[iso];
-            let entry = this.entriesCache.find(e => e.date === iso);
-            if (entry) {
-                this.blocks = JSON.parse(JSON.stringify(entry.blocks || []));
-                this.dayStatus = entry.status;
-            } else {
-                this.blocks = [];
-                this.dayStatus = isHol ? 'F' : null;
-            }
+            const iso = this.isoDate; let isHol = !!this.holidaysMap[iso]; let entry = this.entriesCache.find(e => e.date === iso);
+            if (entry) { this.blocks = JSON.parse(JSON.stringify(entry.blocks || [])); this.dayStatus = entry.status; } 
+            else { this.blocks = []; this.dayStatus = isHol ? 'F' : null; }
         },
         async resetMonth() {
             if(!confirm("Möchtest du wirklich alle Einträge für diesen Monat löschen?")) return;
-            try {
-                await axios.post('/api/reset_month', { month: this.isoMonth });
-                this.loadMonthData();
-            } catch(e) {
-                console.error(e);
-                alert("Fehler beim Zurücksetzen: " + (e.response?.data?.error || "Unbekannt"));
-            }
+            try { await axios.post('/api/reset_month', { month: this.isoMonth }); this.loadMonthData(); } 
+            catch(e) { console.error(e); alert("Fehler: " + (e.response?.data?.error || "Unbekannt")); }
         }
     },
     mounted() {
         window.addEventListener('resize', () => { this.isDesktop = window.innerWidth >= 992; });
         this.loadMonthData();
+        this.fetchVacationStats(); // Initiale Urlaubs-Stats
     }
 }).mount('#app');

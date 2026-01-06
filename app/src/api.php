@@ -41,6 +41,13 @@ if ($uri === '/api/reset_month' && $method === 'POST') {
         json_response($res);
     } catch (Exception $e) { json_error($e->getMessage()); }
 }
+// NEU: Year Stats für Kalender
+if ($uri === '/api/get_year_stats') {
+    if (!is_logged_in()) { json_error('Unauthorized', 401); }
+    $service = new EntryService();
+    $year = $_GET['year'] ?? date('Y');
+    json_response($service->getYearStats($_SESSION['user']['id'], $year));
+}
 
 // 2. USER API
 if ($uri === '/api/settings' && $method === 'POST') {

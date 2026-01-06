@@ -4,7 +4,6 @@ class EntryService {
     public function getMonthEntries($userId, $month) {
         $db = get_db();
         
-        // Einträge laden
         $stmt = $db->prepare("SELECT * FROM entries WHERE user_id = ? AND date_str LIKE ?");
         $stmt->execute([$userId, "$month%"]);
         $rows = $stmt->fetchAll();
@@ -19,7 +18,6 @@ class EntryService {
             ];
         }
         
-        // Feiertage laden (Global für alle)
         $stmtHol = $db->prepare("SELECT date_str, name FROM global_holidays WHERE date_str LIKE ?");
         $stmtHol->execute(["$month%"]);
         $holidaysRaw = $stmtHol->fetchAll();
@@ -29,7 +27,6 @@ class EntryService {
             $holidayMap[$h['date_str']] = $h['name']; 
         }
         
-        // User Settings laden (brauchen wir für die Berechnung im Frontend)
         $stmtUser = $db->prepare("SELECT settings FROM users WHERE id = ?");
         $stmtUser->execute([$userId]);
         $userSettings = json_decode($stmtUser->fetchColumn() ?: '{}', true);
@@ -63,11 +60,34 @@ class EntryService {
         if (strlen($month) !== 7) { 
             throw new Exception('Invalid month format'); 
         }
-        
         $db = get_db();
         $stmt = $db->prepare("DELETE FROM entries WHERE user_id = ? AND date_str LIKE ?");
         $stmt->execute([$userId, "$month%"]);
         
         return ['status' => 'Deleted'];
+    }
+
+    // NEU: Statistik für Jahresansicht
+    public function getYearStats($userId, $year) {
+        $db = get_db();
+        // Alle Urlaubstage im Jahr zählen
+        $stmt = $db->prepare("SELECT COUNT(*) FROM entries WHERE user_id = ? AND status = 'U' AND date_str LIKE ?");
+        $stmt->execute([$userId, "$year%"]);
+        $used = $stmt->fetchColumn();
+
+        // Details laden für Kalender
+        $stmtCal = $db->prepare("SELECT date_str FROM entries WHERE user_id = ? AND status = 'U' AND date_str LIKE ?");
+        $stmtCal->execute([$userId, "$year%"]);
+        $vacationDates = $stmtCal->fetchAll(PDO::FETCH_COLUMN);
+        
+        // Globale Feiertage für das ganze Jahr laden
+        $stmtHol = $db->prepare("SELECT date_str, name FROM global_holidays WHERE date_str LIKE ?");
+        $stmtHol->execute(["$year%"]);
+        $holidays = $stmtHol->fetchAll(PDO::FETCH_ASSOC);
+        
+        $holidayMap = [];
+        foreach($holidays as $h) { $holidayMap[$h['date_str']] = $h['name']; }
+
+        return ['used' => $used, 'dates' => $vacationDates, 'holidays' => $holidayMap];
     }
 }

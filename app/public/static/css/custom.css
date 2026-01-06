@@ -55,7 +55,7 @@
     --bs-border-color: var(--border-color);
 }
 
-/* --- 2. SLEEPY BLINK ANIMATION (Die müden Augen) --- */
+/* --- 2. SLEEPY BLINK ANIMATION --- */
 #sloth-lids {
     display: block !important;
     position: fixed;
@@ -66,22 +66,17 @@
 
 .lid-top, .lid-bottom {
     position: absolute;
-    left: 0;
-    width: 100%;
-    height: 0;
+    left: 0; width: 100%; height: 0;
     background-color: var(--text-main); 
     transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0.95;
-    /* Borders entfernt */
 }
 
 .lid-top { top: 0; }
 .lid-bottom { bottom: 0; }
 
 .eyes-closed .lid-top, 
-.eyes-closed .lid-bottom {
-    height: 51%; 
-}
+.eyes-closed .lid-bottom { height: 51%; }
 
 /* --- 3. GLOBAL LAYOUT & TYPO --- */
 body { 
@@ -185,13 +180,9 @@ td { border-bottom: 1px solid var(--border-color); }
 
 @media (min-width: 992px) {
     .sticky-column { 
-        position: sticky; 
-        top: 90px; /* Abstand zur Navbar */
-        z-index: 900; 
-        align-self: start; /* WICHTIG: Verhindert Mit-Scrollen wenn Parent zu lang ist */
-        max-height: calc(100vh - 100px);
-        overflow-y: auto; 
-        scrollbar-width: none; 
+        position: sticky; top: 90px; z-index: 900; 
+        align-self: start; max-height: calc(100vh - 100px);
+        overflow-y: auto; scrollbar-width: none; 
     }
     .sticky-column::-webkit-scrollbar { display: none; }
     .mobile-only-switcher { display: none !important; }
@@ -200,47 +191,28 @@ td { border-bottom: 1px solid var(--border-color); }
 .animate-fade { animation: fadeInUp 0.5s ease-out forwards; opacity: 0; transform: translateY(10px); }
 @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 
-/* NEUE DREH-ANIMATION: FAULTIER STYLE (Slow & Pop) */
-.spin-animation { 
-    animation: slothSpin 3s ease-in-out; 
-}
-
+.spin-animation { animation: slothSpin 3s ease-in-out; }
 @keyframes slothSpin {
-    0% { 
-        transform: rotate(0deg) scale(1); 
-    }
-    50% { 
-        /* Hier passiert der "Pop": Halb gedreht und 1.5x so groß */
-        /* Dadurch "hängt" es kurz visuell über dem Slogan */
-        transform: rotate(180deg) scale(1.5); 
-    }
-    100% { 
-        transform: rotate(360deg) scale(1); 
-    }
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.5); }
+    100% { transform: rotate(360deg) scale(1); }
 }
 
 .dropdown-menu { background-color: var(--bg-card); border-color: var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 .dropdown-item { color: var(--text-main); }
 .dropdown-item:hover { background-color: var(--bg-tertiary); color: var(--sloth-primary); }
 
-/* --- 7. SPEZIAL: QUOTES --- */
-.sloth-quote {
-    display: block;
-    font-size: 0.75rem;
-    font-style: italic;
-    color: var(--text-muted);
-    margin-top: 6px;
-    min-width: 200px;
-    line-height: 1.2;
-}
+.sloth-quote { display: block; font-size: 0.75rem; font-style: italic; color: var(--text-muted); margin-top: 6px; min-width: 200px; line-height: 1.2; }
 
-/* --- 8. INPUTS & FOOTER --- */
+/* --- 8. INPUTS FIX --- */
 .table-input, 
 input[type="text"].form-control-sm.text-center {
     font-family: 'SF Mono', 'Consolas', 'Courier New', monospace !important;
     font-weight: 700;
     letter-spacing: -0.5px;
     width: 100%; 
+    max-width: 80px; /* <--- GUI FIX */
+    flex-shrink: 0;  /* <--- GUI FIX */
     border: 1px solid var(--border-color);
     background: var(--bg-tertiary);
     text-align: center;
@@ -253,30 +225,21 @@ input[type="text"].form-control-sm.text-center {
 .table-input:focus { outline: none; background: var(--bg-card); color: var(--text-main); border-color: var(--sloth-primary); box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.15); }
 
 /* FOOTER STYLING */
-.app-footer {
-    text-align: center; color: var(--text-subtle); font-size: 0.8rem;
-    margin-top: auto; width: 100%; position: relative;
-}
-.footer-actions {
-    display: inline-flex; align-items: center; gap: 15px;
-    background: var(--bg-card); padding: 5px 15px;
-    border-radius: 20px; border: 1px solid var(--border-color);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
+.app-footer { text-align: center; color: var(--text-subtle); font-size: 0.8rem; margin-top: auto; width: 100%; position: relative; }
+.footer-actions { display: inline-flex; align-items: center; gap: 15px; background: var(--bg-card); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 .theme-toggle-btn { cursor: pointer; color: var(--text-muted); transition: color 0.2s; }
 .theme-toggle-btn:hover { color: var(--sloth-primary); }
 
-/* --- 9. DURATION BADGE (Monatsansicht) --- */
-.duration-badge {
-    display: inline-block;
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
-    color: var(--text-muted);
-    font-size: 0.7rem;
-    font-weight: bold;
-    padding: 1px 5px;
-    border-radius: 4px;
-    vertical-align: middle;
-    /* Macht es dezent */
-    opacity: 0.8;
+.duration-badge { display: inline-block; background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.7rem; font-weight: bold; padding: 1px 5px; border-radius: 4px; vertical-align: middle; opacity: 0.8; }
+
+/* --- 9. CALENDAR STYLES --- */
+.day-box {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; border-radius: 4px; margin: 1px;
+    cursor: pointer; background: var(--bg-body); border: 1px solid var(--border-color);
 }
+.day-box:hover { border-color: var(--sloth-primary); box-shadow: 0 0 0 2px rgba(var(--bs-primary-rgb), 0.2); }
+.day-vacation { background-color: var(--st-vacation-txt) !important; color: white !important; border:none; }
+.day-holiday { background-color: var(--st-holiday-txt) !important; color: white !important; border:none; }
+.day-weekend { background-color: transparent; color: var(--text-muted); opacity: 0.5; border-color: transparent; }

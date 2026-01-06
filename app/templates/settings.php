@@ -32,7 +32,7 @@
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" role="switch" v-model="settings.pcScroll">
                         <label class="form-check-label fw-bold">Maus-Rad Support (PC)</label>
-                        <div class="small text-muted">Erlaubt das Ändern von Zeiten durch Scrollen.</div>
+                        <div class="small text-muted">Erlaubt das Ändern von Zeiten durch Scrollen über dem Feld.</div>
                     </div>
                     <hr class="my-3 text-secondary opacity-25">
                     <div class="form-check form-switch mb-3">
@@ -45,7 +45,6 @@
         </div>
 
         <div class="tab-pane fade" id="account-content" role="tabpanel">
-            
             <div class="widget-card border-danger mb-4">
                 <div class="widget-header bg-danger text-white d-flex justify-content-between">
                     <span>Passwort ändern</span>
@@ -54,71 +53,43 @@
                     </span>
                 </div>
                 <div class="widget-body">
-                    
                     <div v-if="!pwGameSolved" class="text-center py-3">
                         <h5 class="mb-3">Sicherheits-Check</h5>
-                        <p class="text-muted small mb-4">
-                            <i>"Welches Faultier produktiviert sich jedes Monat zu 98%?"</i>
-                        </p>
-                        
+                        <p class="text-muted small mb-4"><i>"Welches Faultier produktiviert sich jedes Monat zu 98%?"</i></p>
                         <div class="d-flex justify-content-center gap-5 align-items-center">
                             <div class="text-center cursor-pointer position-relative" @click="handleSlothClick(1, $event)">
                                 <img src="/static/img/logo.png" width="80" class="sloth-game-img" id="sloth-1" title="Bin ich es?">
                             </div>
-                            
                             <div class="text-center cursor-pointer position-relative" @click="handleSlothClick(2, $event)">
                                 <img src="/static/img/logo.png" width="80" class="sloth-game-img" id="sloth-2" title="Oder ich?">
                             </div>
                         </div>
-                        
                         <div class="mt-4" style="min-height: 24px;">
-                            <span v-if="gameMessage" class="fw-bold animate-fade" :class="gameError ? 'text-danger' : 'text-success'">
-                                [[ gameMessage ]]
-                            </span>
+                            <span v-if="gameMessage" class="fw-bold animate-fade" :class="gameError ? 'text-danger' : 'text-success'">[[ gameMessage ]]</span>
                         </div>
                     </div>
-
                     <form v-else @submit.prevent="changePassword" class="animate-fade">
-                        <div class="mb-2">
-                            <input type="password" class="form-control" v-model="passwords.old" placeholder="Altes Passwort" required>
-                        </div>
-                        <div class="mb-3">
-                            <input type="password" class="form-control" v-model="passwords.new" placeholder="Neues Passwort (min. 8 Zeichen)" required>
-                        </div>
+                        <div class="mb-2"><input type="password" class="form-control" v-model="passwords.old" placeholder="Altes Passwort" required></div>
+                        <div class="mb-3"><input type="password" class="form-control" v-model="passwords.new" placeholder="Neues Passwort (min. 8 Zeichen)" required></div>
                         <button type="submit" class="btn btn-danger w-100">Passwort ändern</button>
                     </form>
                 </div>
             </div>
-
             <div class="widget-card">
-                <div class="widget-header">
-                    <span>📜 Login Historie</span>
-                    <span class="badge bg-secondary">30 Tage</span>
-                </div>
+                <div class="widget-header"><span>📜 Login Historie</span><span class="badge bg-secondary">30 Tage</span></div>
                 <div class="widget-body p-0">
                     <div class="table-responsive" style="max-height: 250px;">
                         <table class="table table-striped table-sm mb-0 align-middle small">
-                            <thead class="bg-body-tertiary sticky-top">
-                                <tr>
-                                    <th class="ps-3">Zeit</th>
-                                    <th>Gerät</th>
-                                    <th class="text-end pe-3">IP</th>
-                                </tr>
-                            </thead>
+                            <thead class="bg-body-tertiary sticky-top"><tr><th class="ps-3">Zeit</th><th>Gerät</th><th class="text-end pe-3">IP</th></tr></thead>
                             <tbody>
                                 <?php foreach($logs as $log): ?>
-                                <tr>
-                                    <td class="ps-3"><?= date('d.m. H:i', strtotime($log['timestamp'])) ?></td>
-                                    <td class="fw-bold text-muted"><?= htmlspecialchars($log['browser_short'] ?? 'Unbekannt') ?></td>
-                                    <td class="text-end pe-3 font-monospace text-muted"><?= htmlspecialchars($log['ip_address']) ?></td>
-                                </tr>
+                                <tr><td class="ps-3"><?= date('d.m. H:i', strtotime($log['timestamp'])) ?></td><td class="fw-bold text-muted"><?= htmlspecialchars($log['browser_short'] ?? 'Unbekannt') ?></td><td class="text-end pe-3 font-monospace text-muted"><?= htmlspecialchars($log['ip_address']) ?></td></tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-
         </div>
 
         <div class="tab-pane fade" id="calc-content" role="tabpanel">
@@ -146,7 +117,7 @@
                         </div>
                     </div>
 
-                    <div class="p-3 bg-body-tertiary rounded border">
+                    <div class="p-3 bg-body-tertiary rounded border mb-3">
                         <label class="form-label fw-bold d-flex justify-content-between align-items-center mb-2">
                             <span><i class="bi bi-bank"></i> Start-Saldo (GLZ)</span>
                             <span class="badge bg-secondary">Aktueller Monat</span>
@@ -155,8 +126,19 @@
                             <input type="number" step="0.01" class="form-control fw-bold" v-model.number="settings.correction">
                             <span class="input-group-text">Stunden</span>
                         </div>
+                    </div>
+
+                    <div class="p-3 bg-body-tertiary rounded border">
+                        <label class="form-label fw-bold d-flex justify-content-between align-items-center mb-2">
+                            <span>🌴 Urlaubsanspruch (Jahr)</span>
+                            <span class="badge bg-secondary">Frei wählbar</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="number" step="0.5" class="form-control fw-bold" v-model.number="settings.vacationDays" placeholder="z.B. 25 oder 30">
+                            <span class="input-group-text">Tage</span>
+                        </div>
                         <div class="form-text small mt-2">
-                            Hier trägst du den Übertrag aus dem Vormonat (laut SAP) ein.
+                            Trage hier die Summe aus Vorjahr + Neuem Anspruch ein.
                         </div>
                     </div>
 
