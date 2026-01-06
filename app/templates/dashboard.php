@@ -53,7 +53,7 @@
                 <div class="widget-body text-center">
                     <div class="row g-2 mb-2">
                         <div class="col-6"><div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center"><small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">SAP (Netto)</small><span class="fs-5 fw-bold text-primary">[[ formatH(totals.sapTime) ]]</span></div></div>
-                        <div class="col-6"><div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center"><small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">CATS (Kunde)</small><span class="fs-5 fw-bold">[[ formatH(totals.catsTime) ]]</span></div></div>
+                        <div class="col-6"><div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center"><small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">CATS</small><span class="fs-5 fw-bold">[[ formatH(totals.catsTime) ]]</span></div></div>
                     </div>
                     <div v-if="prediction.target !== '--:--'" class="row g-2 mb-3">
                         <div class="col-6"><div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center"><small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">Gehen (Soll)</small><div class="fs-5 fw-bold" :class="prediction.reached ? 'text-success' : 'text-primary'">[[ prediction.target ]] <i v-if="prediction.reached" class="bi bi-check-lg"></i></div></div></div>

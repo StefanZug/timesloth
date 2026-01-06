@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.1.6 (The "Holiday" Update)
+**Features:**
+- **Jahres-Urlaubsplaner:** Ein neuer Kalender-Modal (erreichbar über das "Urlaubskonto" Widget) zeigt das komplette Jahr. Urlaubstage können dort direkt per Klick gesetzt oder entfernt werden.
+- **Globale Feiertage:** Im Admin-Panel können nun zentrale Feiertage angelegt werden, die für alle User gelten.
+- **Wochenend-Logik:** Der Urlaubs-Counter ignoriert nun korrekt Wochenenden. Ein Urlaub von Fr-Mo zählt nur noch als 2 Tage, nicht 4.
+
+**Technical & Database:**
+- **Neue Tabelle:** `global_holidays` wurde zur Datenbank hinzugefügt.
+- **API Erweiterung:** Neuer Endpunkt `/api/get_year_stats` liefert Jahresdaten für den Kalender.
+
+**Performance & UX:**
+- **Optimistic UI Updates:** Status-Änderungen (F, U, K) werden nun sofort im Browser angewendet, noch bevor der Server antwortet. Das "Laggy"-Gefühl ist weg.
+- **Input Design:** Die Zeiteingabefelder in der Monatsansicht wurden vergrößert und zeigen keine Sekunden mehr an (`HH:mm`), um das "gequetschte" Layout zu beheben.
+- **Smart Formatting:** Sekunden werden im Frontend nun standardmäßig ausgeblendet, solange sie `00` sind.
+
+**Fixes:**
+- Fix: Layout-Probleme in der Monatsansicht bei schmalen Bildschirmen.
+
 ## 0.1.5 (The "Smooth Operator" Update)
 **Dashboard & Usability:**
 - **Robustes Mausrad-Scrollen:** Das Timepicker-Verhalten am Desktop wurde komplett neu geschrieben. Es nutzt nun Textfelder (`type="text"`) für präzise Kontrolle via Cursor-Position (Stunden/Minuten/Sekunden) ohne ungewolltes Springen.

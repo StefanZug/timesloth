@@ -32,9 +32,19 @@ Um Diskrepanzen zu SAP zu vermeiden, nutzen wir **nicht** die echten Kalendertag
 * **Quote (40%):** `Büro-Ziel = Monats-Soll * 0,40`
 * **Abzüge (Deduction):** Jeder Tag mit Status **F** (Feiertag), **U** (Urlaub) oder **K** (Krank) reduziert das *Büro-Ziel* sofort um den jeweiligen Tageswert.
 
-### 4. Pausen-Automatik
-* Ab **6,01 Stunden** reiner Arbeitszeit (SAP) werden automatisch **30 Minuten** abgezogen.
-* Bei exakt **6,00 Stunden** oder weniger erfolgt kein Abzug.
+### 4. Pausen-Automatik (Smart Logic)
+Das System sorgt für die Einhaltung der gesetzlichen Ruhepausen, bestraft aber keine echten Pausen.
+* Ab **6,01 Stunden** reiner Arbeitszeit (SAP) sind **30 Minuten** Pause Pflicht.
+* **Intelligente Anrechnung:** TimeSloth erkennt Lücken zwischen eingetragenen Zeitblöcken automatisch als Pause an.
+* *Beispiel:* Wer von 12:00 bis 12:30 Uhr nicht eingestempelt ist (Lücke), hat seine Pflichtpause erfüllt – es erfolgt **kein** zusätzlicher Abzug. Wer durcharbeitet, bekommt die fehlende Zeit automatisch abgezogen.
+
+### 5. Monatliche Korrektur (Start-Saldo)
+Da TimeSloth statistisch rechnet und nicht mit der SAP-Datenbank verbunden ist, muss der **Gleitzeit-Saldo** initial synchronisiert werden.
+* Im Dashboard kann der **Start-Saldo** (Übertrag aus dem Vormonat laut SAP) direkt eingetragen werden.
+* Dieser Wert dient als Basis für die laufende Hochrechnung des aktuellen Monats.
+
+### 6. Urlaubszählung (Vacation Logic)
+* Urlaubszählung: Wochenenden (Sa/So) werden bei der Berechnung der verbrauchten Urlaubstage automatisch ignoriert, auch wenn sie im Zeitraum liegen.
 
 ---
 
@@ -84,15 +94,21 @@ Wir nutzen einen leichtgewichtigen PHP-Stack mit Service-Architektur.
 * `status` (TEXT) -> 'F', 'U', 'K' oder NULL
 * `comment` (TEXT)
 
-**Table `global_holidays`**
-* `date_str` (TEXT), `name` (TEXT)
+**Table `global_holidays`** (Neu in v0.1.6)
+* `id` (INT, PK)
+* `date_str` (TEXT, "YYYY-MM-DD", Unique)
+* `name` (TEXT) -> Name des Feiertags (z.B. "Neujahr")
 
 ---
 
 ## 🚀 Features
 
 * **Responsive Design:** "Mobile First" für Unterwegs, plus mächtiges 3-Spalten-Cockpit für den Desktop.
-* **Smart Input:** Unterstützt Eingaben wie `0800`, `8`, `08:00` und Mausrad-Support.
+* **Smart Input:** Unterstützt Eingaben wie 0800, 8, 08:00. Das UI wurde auf HH:mm optimiert, um Platz zu sparen, speichert im Hintergrund aber sekundengenau
 * **Live Prognose:** Zeigt im Dashboard an, wann man gehen darf (Soll) und wann man gehen muss (10h Limit).
+* **Instant Feedback:** Optimierte Oberfläche reagiert sofort auf Eingaben (Optimistic UI).
 * **Quota-Rechner:** Berechnet, wie viele Tage man noch ins Büro muss, um das 40% Ziel zu erreichen.
 * **Admin Panel:** Verwaltung von Usern und globalen Feiertagen.
+* **Urlaubsplaner:** Interaktive Jahresübersicht zur Planung.
+* **Feiertags-Management:** Globale Feiertage via Admin-Panel.
+* **Instant Feedback:** Optimierte Oberfläche reagiert sofort auf Eingaben (Optimistic UI).

@@ -309,7 +309,11 @@ createApp({
             if (s > 0 && e > 0 && e > s) return this.formatNum((e - s) / 60);
             return '';
         },
-        getStep(block) { return (block.type === 'home') ? 60 : 1; },
+        getStep(block) { 
+            // Wir erzwingen jetzt immer Minutenschritte (60s), 
+            // damit der Browser keine Sekunden anzeigt/erwartet.
+            return 60; 
+        },
         formatNum(n) { if(n == null) return '0,00'; return parseFloat(n).toFixed(2).replace('.', ','); },
         formatH(min) { return (min / 60).toFixed(2).replace('.', ','); },
         formatIsoDate(date) {
@@ -398,16 +402,61 @@ createApp({
         jumpToToday() { this.currentDateObj = new Date(); this.viewMode = 'day'; this.loadFromCache(); },
         toggleStatus(s) { this.dayStatus = (this.dayStatus === s) ? null : s; this.triggerAutoSave(); },
         async quickToggle(day, status) {
-            if(this.saveTimer) clearTimeout(this.saveTimer); this.saveState = 'idle';
+            // Timer stoppen, falls User gerade wild klickt
+            if(this.saveTimer) clearTimeout(this.saveTimer); 
+            this.saveState = 'idle';
+        
+            // 1. Zustand merken für Rollback
+            const oldStatus = day.status;
             const newStatus = (day.status === status) ? null : status;
+
+            // 2. Optimistic Update: Sofort im UI anzeigen!
             day.status = newStatus;
-            if (day.iso === this.isoDate) { this.dayStatus = newStatus; this.blocks = JSON.parse(JSON.stringify(day.blocks || [])); }
+
+            // Cache sofort aktualisieren (wichtig beim View-Wechsel)
             let entry = this.entriesCache.find(e => e.date === day.iso);
-            if(entry) entry.status = newStatus; else { entry = { date: day.iso, blocks: [], status: newStatus, comment: '' }; this.entriesCache.push(entry); }
-            this.saveSingleEntry(entry);
-            
-            // Stats updaten bei U Toggle
-            if (status === 'U') this.fetchVacationStats();
+            if(entry) {
+                entry.status = newStatus;
+            } else {
+                // Falls Tag neu ist, Dummy anlegen
+                entry = { date: day.iso, blocks: [], status: newStatus, comment: '' };
+                this.entriesCache.push(entry);
+            }
+        
+            // Wenn es "Heute" ist, auch den Haupt-Status aktualisieren
+            if (day.iso === this.isoDate) { 
+                this.dayStatus = newStatus; 
+                // Falls Blöcke da waren, kopieren wir sie (nur Kosmetik für View)
+                this.blocks = JSON.parse(JSON.stringify(day.blocks || []));
+            }
+        
+            // 3. Request im Hintergrund ("Fire and Forget" Gefühl für User)
+            // Wir setzen saveState auf 'saving', warten aber nicht mit 'await' auf das Blockieren des UIs
+            this.saveState = 'saving';
+
+            try {
+                await axios.post('/api/save_entry', { 
+                    date: day.iso, 
+                    blocks: day.blocks || [], 
+                    status: newStatus, 
+                    comment: day.comment || '' 
+                });
+
+                this.saveState = 'saved'; 
+                setTimeout(() => { if(this.saveState === 'saved') this.saveState = 'idle'; }, 1000);
+
+                // Urlaubs-Stats im Hintergrund aktualisieren, falls nötig
+                if (status === 'U' || oldStatus === 'U') this.fetchVacationStats();
+
+            } catch(e) { 
+                console.error("QuickToggle failed", e);
+                // 4. Rollback bei Fehler (nur dann merkt der User den Lag)
+                day.status = oldStatus;
+                if(entry) entry.status = oldStatus;
+                if(day.iso === this.isoDate) this.dayStatus = oldStatus;
+                this.saveState = 'error';
+                alert("Fehler beim Speichern! Status wurde zurückgesetzt."); 
+            }
         },
         updateComment(day) {
             let entry = this.entriesCache.find(e => e.date === day.iso);
