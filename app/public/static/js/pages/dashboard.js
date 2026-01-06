@@ -23,8 +23,6 @@ createApp({
             }, window.slothData.settings || {}),
             calc: { sapMissing: null, absentDays: 0, planHours: 8.0 },
             tempCorrection: 0,
-            
-            // Scroll-Bremse
             lastScrollTime: 0
         }
     },
@@ -33,11 +31,8 @@ createApp({
     },
     computed: {
         inputType() { 
-            // FIX: Hier lag der Fehler. Wir müssen am PC zwingend 'text' nehmen,
-            // damit selectionStart (Cursor-Position) funktioniert.
+            // Am PC erzwingen wir 'text' für Smart Input & Scrollen
             if (this.isDesktop && this.settings.pcScroll) return 'text';
-            
-            // Am Handy oder wenn Scrollen aus ist:
             return this.settings.useNativeWheel ? 'time' : 'text'; 
         },
         
@@ -274,18 +269,13 @@ createApp({
         
         onWheel(event, block, field, day = null) {
             if (!this.settings.pcScroll) return;
-            // Da wir jetzt inputType='text' erzwingen, greift das hier korrekt.
             if (this.inputType !== 'text') return; 
-            
-            // Nur wenn das Feld den Fokus hat
             if (document.activeElement !== event.target) return;
             
             event.preventDefault(); 
             
-            // --- 1. BREMSE (Throttle) auf 75ms ---
-            // Verhindert zu schnelles Springen
             const now = Date.now();
-            if (this.lastScrollTime && (now - this.lastScrollTime < 75)) {
+            if (this.lastScrollTime && (now - this.lastScrollTime < 100)) {
                 return;
             }
             this.lastScrollTime = now;
@@ -294,27 +284,30 @@ createApp({
             const cursor = input.selectionStart || 0;
             const val = block[field] || "00:00";
             
+            const w = input.offsetWidth;
+            const x = event.offsetX;
+            
             let segment = 'min'; 
             
-            // Bestimmung des Segments anhand der Cursor-Position
-            // HH:MM:SS -> Doppelpunkte bei Index 2 und 5
-            if (cursor <= 2) segment = 'hour'; // 0,1,2 = Stunden
-            else if (cursor >= 6) segment = 'sec'; // 6,7,8... = Sekunden
-            else segment = 'min'; // 3,4,5 = Minuten
+            if (x < w * 0.35) {
+                segment = 'hour';
+            } else if (x > w * 0.65) {
+                segment = 'sec';
+            } else {
+                segment = 'min';
+            }
             
-            // Ausnahme: Home Office hat keine Sekunden
             if (block.type === 'home' && segment === 'sec') segment = 'min';
 
-            // deltaY > 0 = runter scrollen (-), deltaY < 0 = hoch (+)
             const direction = event.deltaY > 0 ? -1 : 1; 
             
-            // --- 2. ISOLIERTE ÄNDERUNG ---
             block[field] = this.modifyTime(val, segment, direction, block.type === 'home');
             
-            // Cursor wiederherstellen
-            this.$nextTick(() => {
-                input.setSelectionRange(cursor, cursor);
-            });
+            setTimeout(() => {
+                if (document.activeElement === input) {
+                    input.setSelectionRange(cursor, cursor);
+                }
+            }, 0);
             
             if (day) this.triggerListSave(day);
             else this.triggerAutoSave();
@@ -328,28 +321,22 @@ createApp({
             let m = parseInt(parts[1] || 0);
             let s = parseInt(parts[2] || 0);
             
-            // Kein intelligenter Übertrag (Carry-Over) mehr. 
-            // Minuten ändern nur Minuten, Sekunden nur Sekunden.
             if (segment === 'hour') {
                 h += dir;
             } else if (segment === 'min') {
                 m += dir;
-                if (m > 59) m = 0;
-                if (m < 0) m = 59;
             } else if (segment === 'sec') {
                 s += dir;
-                if (s > 59) s = 0;
-                if (s < 0) s = 59;
             }
             
-            if (h > 23) h = 0;
-            if (h < 0) h = 23;
+            if (h > 23) h = 0; if (h < 0) h = 23;
+            if (m > 59) m = 0; if (m < 0) m = 59;
+            if (s > 59) s = 0; if (s < 0) s = 59;
             
             const pad = (n) => n.toString().padStart(2,'0');
             
             if (noSeconds) return `${pad(h)}:${pad(m)}`;
             
-            // Sekunden nur anzeigen, wenn sie existieren oder wir gerade Sekunden bearbeiten
             const hasSeconds = parts.length > 2 || segment === 'sec';
             if (hasSeconds) return `${pad(h)}:${pad(m)}:${pad(s)}`;
             
@@ -401,7 +388,8 @@ createApp({
             }
         },
         formatListTime(day, index, field) {
-            if (this.settings.useNativeWheel) {
+            // FIX: Nur skippen, wenn wir WIRKLICH den nativen Picker nutzen
+            if (this.inputType === 'time') {
                 this.triggerListSave(day);
                 return;
             }
@@ -409,7 +397,8 @@ createApp({
             this.triggerListSave(day);
         },
         formatTimeInput(block, field) {
-            if (this.settings.useNativeWheel) {
+            // FIX: Nur skippen, wenn wir WIRKLICH den nativen Picker nutzen
+            if (this.inputType === 'time') {
                 this.triggerAutoSave();
                 return;
             }
@@ -531,12 +520,12 @@ createApp({
                 entry.blocks = day.blocks;
                 entry.status = day.status;
                 this.saveSingleEntry(entry);
-            }, 350);
+            }, 1500);
         },
         triggerAutoSave() {
             this.saveState = 'saving';
             if(this.saveTimer) clearTimeout(this.saveTimer);
-            this.saveTimer = setTimeout(() => { this.saveData(); }, 250);
+            this.saveTimer = setTimeout(() => { this.saveData(); }, 1500);
         },
         async saveData() {
             const payload = { date: this.isoDate, blocks: this.blocks, status: this.dayStatus, comment: '' };
