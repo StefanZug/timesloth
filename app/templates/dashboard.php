@@ -50,9 +50,9 @@
                                             <li><button type="button" class="dropdown-item text-danger" @click="changeBlockType($event, index, 'doctor')"><i class="bi bi-bandaid me-2"></i>Arzt</button></li>
                                         </ul>
                                     </div>
-                                    <input :type="inputType" :step="getStep(block)" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave" @wheel="onWheel($event, block, 'start')" :aria-label="'Startzeit Eintrag ' + (index + 1)">
+                                    <input :type="inputType" :step="getStep(block)" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.start" placeholder="08:00" @blur="formatTimeInput(block, 'start')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'start')" :aria-label="'Startzeit Eintrag ' + (index + 1)">
                                     <span class="text-muted">-</span>
-                                    <input :type="inputType" :step="getStep(block)" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.end" placeholder="16:30" @blur="formatTimeInput(block, 'end')" @input="triggerAutoSave" @wheel="onWheel($event, block, 'end')" :aria-label="'Endzeit Eintrag ' + (index + 1)">
+                                    <input :type="inputType" :step="getStep(block)" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent" v-model="block.end" placeholder="16:30" @blur="formatTimeInput(block, 'end')" @input="triggerAutoSave" @wheel.prevent="onWheel($event, block, 'end')" :aria-label="'Endzeit Eintrag ' + (index + 1)">
                                     <button class="btn btn-link text-muted p-0 ms-auto" @click="removeBlock(index)" aria-label="Eintrag löschen"><i class="bi bi-x-lg"></i></button>
                                 </div>
                             </div>
@@ -185,7 +185,7 @@
                                                    v-model="block.start" 
                                                    @blur="formatListTime(day, index, 'start')" 
                                                    @input="triggerListSave(day)" 
-                                                   @wheel="onWheel($event, block, 'start', day)"
+                                                   @wheel.prevent="onWheel($event, block, 'start', day)"
                                                    :aria-label="'Startzeit ' + day.dayShort">
                                 
                                             <span class="text-muted" style="font-size: 0.8rem">-</span>
@@ -194,7 +194,7 @@
                                                    v-model="block.end" 
                                                    @blur="formatListTime(day, index, 'end')" 
                                                    @input="triggerListSave(day)" 
-                                                   @wheel="onWheel($event, block, 'end', day)"
+                                                   @wheel.prevent="onWheel($event, block, 'end', day)"
                                                    :aria-label="'Endzeit ' + day.dayShort">
                                             
                                             <span v-if="getBlockDuration(block)" class="duration-badge">
@@ -236,7 +236,6 @@
         </div>
 
         <div class="col-12 col-lg-3 order-1 order-lg-3 sticky-column">
-            
             <div class="widget-card">
                 <div class="widget-header">
                     <span class="text-primary"><i class="bi bi-buildings-fill"></i> Büro-Quote</span>
@@ -279,7 +278,6 @@
                      <span class="badge bg-secondary">-[[ formatNum(quota.deduction) ]] h</span>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -317,14 +315,15 @@
                             <span>Abwesenheit (Krank/Urlaub)</span>
                             <span class="text-success" v-if="calcDeduction > 0">- [[ formatNum(calcDeduction) ]] h</span>
                         </label>
-                        <input type="number" step="1" class="form-control" v-model.number="calc.absentDays" placeholder="Tage">
+                        <input type="number" step="1" class="form-control" v-model.number="calc.absentDays" placeholder="Tage" aria-label="Abwesenheit in Tagen">
+                        <div class="form-text small">Tage, die noch nicht in SAP verbucht sind.</div>
                     </div>
                     <div class="mb-4">
                         <label class="form-label small fw-bold d-flex justify-content-between">
                             <span>Geplante Bürozeit pro Tag</span>
                             <span class="text-primary">[[ formatNum(calc.planHours) ]] h</span>
                         </label>
-                        <input type="range" class="form-range" min="4" max="10" step="0.25" v-model.number="calc.planHours">
+                        <input type="range" class="form-range" min="4" max="10" step="0.25" v-model.number="calc.planHours" aria-label="Geplante Stunden Slider">
                     </div>
                     <div class="alert alert-primary text-center border-0 shadow-sm mb-0">
                         <small class="text-uppercase text-muted" style="font-size: 0.7rem;">Du musst noch ins Büro für:</small>

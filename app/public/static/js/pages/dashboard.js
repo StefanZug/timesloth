@@ -22,8 +22,6 @@ createApp({
                 correction: 0,
             }, window.slothData.settings || {}),
             calc: { sapMissing: null, absentDays: 0, planHours: 8.0 },
-            
-            // Temp Value für das Correction Modal
             tempCorrection: 0
         }
     },
@@ -31,6 +29,7 @@ createApp({
         viewMode(newVal) { localStorage.setItem('viewMode', newVal); }
     },
     computed: {
+        // Am PC immer 'time' für das Icon.
         inputType() { 
             if (this.isDesktop) return 'time';
             return this.settings.useNativeWheel ? 'time' : 'text'; 
@@ -47,9 +46,7 @@ createApp({
             };
         },
         balanceStats() {
-            // FIX: parseFloat sicherheitshalber auch hier
             let sum = parseFloat(this.settings.correction || 0);
-            
             const todayStr = this.formatIsoDate(new Date());
             const daysInMonth = new Date(this.currentDateObj.getFullYear(), this.currentDateObj.getMonth() + 1, 0).getDate();
             
@@ -76,7 +73,6 @@ createApp({
             
             let yesterdaySum = sum;
             
-            // Heute dazurechnen
             let todayDelta = 0;
             const isTodayDisplayed = (this.isoDate === todayStr);
             if (isTodayDisplayed) {
@@ -224,12 +220,9 @@ createApp({
             this.settings.correction = this.tempCorrection;
             try {
                 await axios.post('/api/settings', this.settings);
-                
                 const modalEl = document.getElementById('correctionModal');
                 const modal = bootstrap.Modal.getInstance(modalEl);
                 if (modal) modal.hide();
-                
-                // Wir müssen nicht neu laden, Vue aktualisiert balanceStats automatisch
             } catch(e) {
                 alert("Fehler beim Speichern: " + e);
             }
@@ -244,14 +237,10 @@ createApp({
             return '';
         },
         getStep(block) { return (block.type === 'home') ? 60 : 1; },
-        
-        // FIX: Absturzsicher machen!
         formatNum(n) { 
             if(n === null || n === undefined) return '0,00'; 
-            // parseFloat erzwingen, da 'n' aus der DB ein String sein kann
             return parseFloat(n).toFixed(2).replace('.', ','); 
         },
-        
         formatH(min) { return (min / 60).toFixed(2).replace('.', ','); },
         formatIsoDate(date) {
             const year = date.getFullYear();
@@ -278,10 +267,83 @@ createApp({
         },
         onWheel(event, block, field, day = null) {
             if (!this.settings.pcScroll) return;
-            if (this.inputType === 'time') return; 
-
+            
+            // FOKUS CHECK
             if (document.activeElement !== event.target) return;
-            event.preventDefault();
+            
+            const isHome = (block.type === 'home');
+            const input = event.target;
+            
+            // --- SMART SCROLL ---
+            // Wir berechnen per Mausposition (offsetX) welches Segment gemeint ist.
+            let isHoursTarget = true;
+            
+            try {
+                // Bei type="text" ginge selectionStart
+                if (input.type === 'text') {
+                     const cursor = input.selectionStart || 0;
+                     isHoursTarget = (cursor < 3);
+                } else {
+                    // Bei type="time": Segment raten
+                    const w = input.offsetWidth;
+                    const x = event.offsetX;
+                    const step = this.getStep(block); // 60 oder 1
+                    
+                    if (step === 60) {
+                        // HH:MM -> Split bei 50%
+                        isHoursTarget = (x < w / 2);
+                    } else {
+                        // HH:MM:SS -> Split gedrittelt
+                        // Links (35%): Stunden
+                        // Mitte: Minuten
+                        // Rechts (35%): Sekunden
+                        if (x < w * 0.35) isHoursTarget = true; // Stunden
+                        else if (x > w * 0.65) isHoursTarget = 'seconds'; // Sekunden
+                        else isHoursTarget = false; // Minuten
+                    }
+                }
+            } catch(e) {
+                isHoursTarget = false; 
+            }
+
+            let stepVal = 60; 
+            if (event.shiftKey) {
+                stepVal = 1; 
+            } else {
+                if (isHoursTarget === true) stepVal = 3600; // Stunden
+                else if (isHoursTarget === 'seconds') stepVal = 1; // Sekunden
+                else stepVal = 60; // Minuten
+            }
+
+            const direction = event.deltaY < 0 ? 1 : -1;
+            
+            let currentSec = TimeLogic.toMinutes(block[field]) * 60; 
+            const parts = block[field].split(':');
+            let h = parseInt(parts[0] || 0);
+            let m = parseInt(parts[1] || 0);
+            let s = parseInt(parts[2] || 0);
+            currentSec = (h * 3600) + (m * 60) + s;
+
+            let newSec = currentSec + (stepVal * direction);
+            
+            if(newSec < 0) newSec = (24 * 3600) + newSec;
+            if(newSec >= 24 * 3600) newSec = newSec % (24 * 3600);
+
+            h = Math.floor(newSec / 3600);
+            let rem = newSec % 3600;
+            m = Math.floor(rem / 60);
+            s = rem % 60;
+            
+            if(isHome) s = 0;
+
+            const pad = (n) => n.toString().padStart(2,'0');
+            const showSeconds = (block.type !== 'home');
+            
+            if(showSeconds) block[field] = `${pad(h)}:${pad(m)}:${pad(s)}`;
+            else block[field] = `${pad(h)}:${pad(m)}`;
+
+            if (day) this.triggerListSave(day);
+            else this.triggerAutoSave();
         },
         changeBlockType(event, index, newType) {
             let oldBlock = this.blocks[index];
