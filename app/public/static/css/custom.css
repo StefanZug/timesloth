@@ -202,8 +202,7 @@ td { border-bottom: 1px solid var(--border-color); }
 
 /* NEUE DREH-ANIMATION: FAULTIER STYLE (Slow & Pop) */
 .spin-animation { 
-    /* 3.0s = Richtig schön langsam für das Faultier */
-    animation: slothSpin 2s ease-in-out; 
+    animation: slothSpin 3s ease-in-out; 
 }
 
 @keyframes slothSpin {

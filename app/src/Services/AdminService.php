@@ -56,12 +56,10 @@ class AdminService {
 
     public function getUserLogs($userId) {
         $db = get_db();
-        // Hole die letzten 10 Logins dieses Users
         $stmt = $db->prepare("SELECT timestamp, ip_address, user_agent FROM login_log WHERE user_id = ? ORDER BY timestamp DESC LIMIT 10");
         $stmt->execute([$userId]);
         $logs = $stmt->fetchAll();
         
-        // Parse User Agent (gleiche Logik wie in auth.php, idealerweise in Helfer auslagern, hier inline)
         foreach($logs as &$log) {
             $ua = $log['user_agent'];
             $platform = 'Unbekannt';
@@ -99,12 +97,28 @@ class AdminService {
 
     public function getSystemStats() {
         $dbPath = DB_PATH;
-        $size = file_exists($dbPath) ? filesize($dbPath) : 0;
+        $size = 0;
         
-        $db = get_db();
-        $logs = $db->query("SELECT COUNT(*) FROM login_log")->fetchColumn();
-        $entries = $db->query("SELECT COUNT(*) FROM entries")->fetchColumn();
-        $users = $db->query("SELECT COUNT(*) FROM users")->fetchColumn();
+        // FIX: filesize mit @ unterdrücken, falls Permissions fehlen, und clearstatcache nutzen
+        if (file_exists($dbPath)) {
+            clearstatcache(true, $dbPath);
+            $size = @filesize($dbPath) ?: 0;
+        }
+        
+        $logs = 0;
+        $entries = 0;
+        $users = 0;
+
+        try {
+            $db = get_db();
+            // FIX: Explizite Casts und Fehlerbehandlung bei Queries
+            $logs = (int)$db->query("SELECT COUNT(*) FROM login_log")->fetchColumn();
+            $entries = (int)$db->query("SELECT COUNT(*) FROM entries")->fetchColumn();
+            $users = (int)$db->query("SELECT COUNT(*) FROM users")->fetchColumn();
+        } catch (Exception $e) {
+            // Fehler still loggen, damit die API nicht 500 wirft
+            error_log("Admin Stats Error: " . $e->getMessage());
+        }
 
         return [
             'db_size_bytes' => $size,

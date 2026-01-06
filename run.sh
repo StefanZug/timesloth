@@ -52,8 +52,14 @@ echo "server {
     }
 }" > /etc/nginx/http.d/default.conf
 
-echo "🦥 TimeSloth startet..."
-echo "📂 Datenbank Pfad: $DB_FOLDER/timesloth.sqlite"
+# Datenbank Größe ermitteln (falls vorhanden)
+if [ -f "$DB_FOLDER/timesloth.sqlite" ]; then
+    # 'du -h' gibt menschenlesbare Größe aus (z.B. 1.2M)
+    DB_SIZE=$(du -h "$DB_FOLDER/timesloth.sqlite" | cut -f1)
+    echo "📊 Aktuelle Datenbank-Größe von $DB_FOLDER/timesloth.sqlite: $DB_SIZE"
+else
+    echo "🆕 Datenbank existiert noch nicht (wird beim ersten Zugriff erstellt)."
+fi
 
 # PHP-FPM 8.4 konfigurieren
 # 1. User auf nobody setzen (sicherheitshalber)
@@ -66,6 +72,8 @@ sed -i 's/;clear_env = no/clear_env = no/g' /etc/php84/php-fpm.d/www.conf
 # 3. WICHTIG: Fehler in den Docker-Log leiten (damit du 500er Fehler siehst)
 sed -i 's/;catch_workers_output = yes/catch_workers_output = yes/g' /etc/php84/php-fpm.d/www.conf
 sed -i 's/;decorate_workers_output = no/decorate_workers_output = no/g' /etc/php84/php-fpm.d/www.conf
+
+echo "🦥 TimeSloth startet..."
 
 # PHP-FPM starten
 php-fpm84 -D
