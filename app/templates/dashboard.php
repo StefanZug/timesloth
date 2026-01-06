@@ -99,7 +99,10 @@
                                             <input :type="inputType" :step="getStep(block)" class="table-input" v-model="block.start" @blur="formatListTime(day, index, 'start')" @input="triggerListSave(day)" @wheel.prevent="onWheel($event, block, 'start', day)">
                                             <span class="text-muted" style="font-size: 0.8rem">-</span>
                                             <input :type="inputType" :step="getStep(block)" class="table-input" v-model="block.end" @blur="formatListTime(day, index, 'end')" @input="triggerListSave(day)" @wheel.prevent="onWheel($event, block, 'end', day)">
-                                            <span v-if="getBlockDuration(block)" class="duration-badge">[[ getBlockDuration(block) ]]</span>
+                                            <span class="duration-badge" 
+                                                  :style="{ visibility: getBlockDuration(block) ? 'visible' : 'hidden' }">
+                                                [[ getBlockDuration(block) || '0,00' ]]
+                                            </span>
                                             <button class="btn btn-link text-danger p-0 ms-1" style="font-size: 1rem; line-height: 1;" @click="removeListBlock(day, index)"><i class="bi bi-x"></i></button>
                                         </div>
                                         <div class="d-flex gap-1 mt-1">

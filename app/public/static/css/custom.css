@@ -258,8 +258,22 @@ input[type=time]::-webkit-datetime-edit-second-field {
 .theme-toggle-btn { cursor: pointer; color: var(--text-muted); transition: color 0.2s; }
 .theme-toggle-btn:hover { color: var(--sloth-primary); }
 
-.duration-badge { display: inline-block; background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.7rem; font-weight: bold; padding: 1px 5px; border-radius: 4px; vertical-align: middle; opacity: 0.8; }
-
+.duration-badge { 
+    display: inline-block; 
+    background-color: var(--bg-card); 
+    border: 1px solid var(--border-color); 
+    color: var(--text-muted); 
+    font-size: 0.75rem; 
+    font-weight: bold; 
+    padding: 2px 0; /* Weniger Padding seitlich, Breite regelt min-width */
+    border-radius: 4px; 
+    vertical-align: middle; 
+    
+    /* NEU: Feste Breite für perfektes Grid */
+    min-width: 50px; 
+    text-align: center;
+    margin-left: 4px; /* Abstand zum Input */
+}
 /* --- 9. CALENDAR STYLES (GRID) --- */
 .calendar-grid {
     display: grid;
