@@ -29,7 +29,6 @@ createApp({
         viewMode(newVal) { localStorage.setItem('viewMode', newVal); }
     },
     computed: {
-        // Am PC immer 'time' für das Icon.
         inputType() { 
             if (this.isDesktop) return 'time';
             return this.settings.useNativeWheel ? 'time' : 'text'; 
@@ -265,54 +264,48 @@ createApp({
             this.blocks.splice(idx, 1);
             this.triggerAutoSave();
         },
+        
+        /* --- SMART SCROLL LOGIK (Fixed & Improved) --- */
         onWheel(event, block, field, day = null) {
             if (!this.settings.pcScroll) return;
             
-            // FOKUS CHECK
+            // Wenn der User den Timepicker aufklappt, lassen wir das native Scrollen zu.
+            // Aber auf dem Input selbst übernehmen wir wieder die Kontrolle.
             if (document.activeElement !== event.target) return;
             
+            // Verhindert das Wegscrollen der Seite!
+            event.preventDefault(); 
+            
+            // Mikro-Ruckler ignorieren (für Touchpads)
+            if (Math.abs(event.deltaY) < 4) return;
+
             const isHome = (block.type === 'home');
             const input = event.target;
             
-            // --- SMART SCROLL ---
-            // Wir berechnen per Mausposition (offsetX) welches Segment gemeint ist.
-            let isHoursTarget = true;
+            // --- NEUE HITBOX LOGIK (Zentrum-basiert) ---
+            const rect = input.getBoundingClientRect();
+            const center = rect.width / 2;
+            const x = event.offsetX;
             
-            try {
-                // Bei type="text" ginge selectionStart
-                if (input.type === 'text') {
-                     const cursor = input.selectionStart || 0;
-                     isHoursTarget = (cursor < 3);
-                } else {
-                    // Bei type="time": Segment raten
-                    const w = input.offsetWidth;
-                    const x = event.offsetX;
-                    const step = this.getStep(block); // 60 oder 1
-                    
-                    if (step === 60) {
-                        // HH:MM -> Split bei 50%
-                        isHoursTarget = (x < w / 2);
-                    } else {
-                        // HH:MM:SS -> Split gedrittelt
-                        // Links (35%): Stunden
-                        // Mitte: Minuten
-                        // Rechts (35%): Sekunden
-                        if (x < w * 0.35) isHoursTarget = true; // Stunden
-                        else if (x > w * 0.65) isHoursTarget = 'seconds'; // Sekunden
-                        else isHoursTarget = false; // Minuten
-                    }
-                }
-            } catch(e) {
-                isHoursTarget = false; 
-            }
-
-            let stepVal = 60; 
+            // Definition der "Minuten-Zone" in der Mitte (ca. 44px breit)
+            // Alles links davon = Stunden
+            // Alles rechts davon = Sekunden (außer bei Home)
+            const zoneRadius = 22; // +/- 22px von der Mitte
+            
+            let stepVal = 60; // Default: Minuten
+            
             if (event.shiftKey) {
-                stepVal = 1; 
+                stepVal = 1; // Mit Shift immer Sekunden/Fein
             } else {
-                if (isHoursTarget === true) stepVal = 3600; // Stunden
-                else if (isHoursTarget === 'seconds') stepVal = 1; // Sekunden
-                else stepVal = 60; // Minuten
+                if (x < center - zoneRadius) {
+                    stepVal = 3600; // Links -> Stunden
+                } else if (x > center + zoneRadius) {
+                    // Rechts -> Sekunden (wenn nicht Home)
+                    stepVal = isHome ? 60 : 1; 
+                } else {
+                    // Mitte -> Minuten
+                    stepVal = 60;
+                }
             }
 
             const direction = event.deltaY < 0 ? 1 : -1;
@@ -345,6 +338,7 @@ createApp({
             if (day) this.triggerListSave(day);
             else this.triggerAutoSave();
         },
+
         changeBlockType(event, index, newType) {
             let oldBlock = this.blocks[index];
             this.blocks.splice(index, 1, { ...oldBlock, type: newType });
