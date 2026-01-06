@@ -55,7 +55,35 @@
     --bs-border-color: var(--border-color);
 }
 
-/* --- 2. GLOBAL LAYOUT & TYPO --- */
+/* --- 2. SLEEPY BLINK ANIMATION (Die müden Augen) --- */
+#sloth-lids {
+    display: block !important;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+.lid-top, .lid-bottom {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 0;
+    background-color: var(--text-main); 
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.95;
+    /* Borders entfernt */
+}
+
+.lid-top { top: 0; }
+.lid-bottom { bottom: 0; }
+
+.eyes-closed .lid-top, 
+.eyes-closed .lid-bottom {
+    height: 51%; 
+}
+
+/* --- 3. GLOBAL LAYOUT & TYPO --- */
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     transition: background-color var(--transition-speed), color var(--transition-speed);
@@ -70,7 +98,7 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3 { color: var(--text-main); }
 a { text-decoration: none; color: var(--sloth-primary); }
 a:hover { color: var(--sloth-primary-hover); }
 
-/* --- 3. COMPONENTS --- */
+/* --- 4. COMPONENTS --- */
 .card, .widget-card { 
     background-color: var(--bg-card); 
     border: 1px solid var(--border-color);
@@ -109,7 +137,7 @@ a:hover { color: var(--sloth-primary-hover); }
     font-weight: 700; font-size: 1rem; border: 2px solid var(--bg-card);
 }
 
-/* --- 4. STATUS & TABELLEN --- */
+/* --- 5. STATUS & TABELLEN --- */
 .table { --bs-table-bg: transparent; color: var(--text-main); border-color: var(--border-color); }
 thead th {
     background-color: var(--bg-tertiary) !important; color: var(--text-muted) !important;
@@ -138,7 +166,7 @@ td { border-bottom: 1px solid var(--border-color); }
 .type-home { border-left: 4px solid var(--st-home-txt) !important; }
 .type-doctor { border-left: 4px solid var(--st-sick-txt) !important; }
 
-/* --- 5. PROGRESS, FOOTER & UTILS --- */
+/* --- 6. PROGRESS, FOOTER & UTILS --- */
 .progress-sloth { height: 8px; border-radius: 10px; background-color: var(--bg-tertiary); overflow: hidden; }
 .progress-bar-sloth { height: 100%; background-color: var(--sloth-primary); transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
 
@@ -172,20 +200,32 @@ td { border-bottom: 1px solid var(--border-color); }
 .animate-fade { animation: fadeInUp 0.5s ease-out forwards; opacity: 0; transform: translateY(10px); }
 @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 
-.spin-animation { animation: slothSpin 1s ease-in-out; }
+/* NEUE DREH-ANIMATION: FLÜSSIG & DYNAMISCH */
+.spin-animation { 
+    /* cubic-bezier sorgt für einen schwungvollen Start und ein weiches Abbremsen */
+    animation: slothSpin 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+}
 @keyframes slothSpin {
-    0% { transform: rotate(0deg) scale(1); }
-    50% { transform: rotate(180deg) scale(1.2); }
-    100% { transform: rotate(360deg) scale(1); }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .dropdown-menu { background-color: var(--bg-card); border-color: var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 .dropdown-item { color: var(--text-main); }
 .dropdown-item:hover { background-color: var(--bg-tertiary); color: var(--sloth-primary); }
 
-/* --- NEU: INPUTS & FOOTER --- */
+/* --- 7. SPEZIAL: QUOTES --- */
+.sloth-quote {
+    display: block;
+    font-size: 0.75rem;
+    font-style: italic;
+    color: var(--text-muted);
+    margin-top: 6px;
+    min-width: 200px;
+    line-height: 1.2;
+}
 
-/* 1. MONOSPACE INPUTS */
+/* --- 8. INPUTS & FOOTER --- */
 .table-input, 
 input[type="text"].form-control-sm.text-center {
     font-family: 'SF Mono', 'Consolas', 'Courier New', monospace !important;
@@ -203,36 +243,7 @@ input[type="text"].form-control-sm.text-center {
 .table-input:hover { background: var(--bg-card); border-color: var(--text-muted); }
 .table-input:focus { outline: none; background: var(--bg-card); color: var(--text-main); border-color: var(--sloth-primary); box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.15); }
 
-/* --- 2. SLEEPY BLINK ANIMATION (Die müden Augen) --- */
-#sloth-lids {
-    display: block !important;
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 9999;
-}
-
-.lid-top, .lid-bottom {
-    position: absolute;
-    left: 0;
-    width: 100%;
-    height: 0;
-    background-color: var(--text-main); /* Nimmt die Farbe des Textes an (Dunkel/Hell) */
-    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    opacity: 0.95;
-}
-
-.lid-top { top: 0; border-bottom: 2px solid var(--sloth-primary); }
-.lid-bottom { bottom: 0; border-top: 2px solid var(--sloth-primary); }
-
-/* Klasse zum Schließen der Augen */
-.eyes-closed .lid-top, 
-.eyes-closed .lid-bottom {
-    height: 50%; /* Beide treffen sich in der Mitte */
-}
-
-/* 3. FOOTER STYLING */
-/* ... (Der Footer Style bleibt gleich, falls er hier stand) ... */
+/* FOOTER STYLING */
 .app-footer {
     text-align: center; color: var(--text-subtle); font-size: 0.8rem;
     margin-top: auto; width: 100%; position: relative;
@@ -245,14 +256,3 @@ input[type="text"].form-control-sm.text-center {
 }
 .theme-toggle-btn { cursor: pointer; color: var(--text-muted); transition: color 0.2s; }
 .theme-toggle-btn:hover { color: var(--sloth-primary); }
-
-/* --- 6. SPEZIAL: QUOTES --- */
-.sloth-quote {
-    display: block;                /* Damit Margin greift */
-    font-size: 0.75rem;            /* Kleinere Schrift */
-    font-style: italic;            /* Kursiv */
-    color: var(--text-muted);      /* Theme-Farbe */
-    margin-top: 6px;               /* Dein gewünschter Abstand */
-    min-width: 200px;              /* Verhindert Springen beim Laden */
-    line-height: 1.2;
-}
