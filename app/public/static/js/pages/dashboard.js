@@ -310,8 +310,7 @@ createApp({
             return '';
         },
         getStep(block) { 
-            // Wir erzwingen jetzt immer Minutenschritte (60s), 
-            // damit der Browser keine Sekunden anzeigt/erwartet.
+            // FIX: Immer 60 (Minuten) zurückgeben, damit Browser keine Sekunden anzeigen
             return 60; 
         },
         formatNum(n) { if(n == null) return '0,00'; return parseFloat(n).toFixed(2).replace('.', ','); },
@@ -401,39 +400,33 @@ createApp({
         jumpToDay(iso) { this.currentDateObj = new Date(iso); this.viewMode = 'day'; this.loadFromCache(); },
         jumpToToday() { this.currentDateObj = new Date(); this.viewMode = 'day'; this.loadFromCache(); },
         toggleStatus(s) { this.dayStatus = (this.dayStatus === s) ? null : s; this.triggerAutoSave(); },
+        
+        // FIX: Optimistic UI für Buttons
         async quickToggle(day, status) {
-            // Timer stoppen, falls User gerade wild klickt
             if(this.saveTimer) clearTimeout(this.saveTimer); 
             this.saveState = 'idle';
-        
-            // 1. Zustand merken für Rollback
+
             const oldStatus = day.status;
             const newStatus = (day.status === status) ? null : status;
-
-            // 2. Optimistic Update: Sofort im UI anzeigen!
+            
+            // UI sofort updaten
             day.status = newStatus;
-
-            // Cache sofort aktualisieren (wichtig beim View-Wechsel)
+            
             let entry = this.entriesCache.find(e => e.date === day.iso);
             if(entry) {
                 entry.status = newStatus;
             } else {
-                // Falls Tag neu ist, Dummy anlegen
                 entry = { date: day.iso, blocks: [], status: newStatus, comment: '' };
                 this.entriesCache.push(entry);
             }
-        
-            // Wenn es "Heute" ist, auch den Haupt-Status aktualisieren
+
             if (day.iso === this.isoDate) { 
                 this.dayStatus = newStatus; 
-                // Falls Blöcke da waren, kopieren wir sie (nur Kosmetik für View)
                 this.blocks = JSON.parse(JSON.stringify(day.blocks || []));
             }
-        
-            // 3. Request im Hintergrund ("Fire and Forget" Gefühl für User)
-            // Wir setzen saveState auf 'saving', warten aber nicht mit 'await' auf das Blockieren des UIs
-            this.saveState = 'saving';
 
+            // Hintergrund-Request
+            this.saveState = 'saving';
             try {
                 await axios.post('/api/save_entry', { 
                     date: day.iso, 
@@ -441,21 +434,18 @@ createApp({
                     status: newStatus, 
                     comment: day.comment || '' 
                 });
-
-                this.saveState = 'saved'; 
+                this.saveState = 'saved';
                 setTimeout(() => { if(this.saveState === 'saved') this.saveState = 'idle'; }, 1000);
-
-                // Urlaubs-Stats im Hintergrund aktualisieren, falls nötig
+                
                 if (status === 'U' || oldStatus === 'U') this.fetchVacationStats();
-
+                
             } catch(e) { 
-                console.error("QuickToggle failed", e);
-                // 4. Rollback bei Fehler (nur dann merkt der User den Lag)
+                console.error(e);
+                // Rollback bei Fehler
                 day.status = oldStatus;
                 if(entry) entry.status = oldStatus;
-                if(day.iso === this.isoDate) this.dayStatus = oldStatus;
                 this.saveState = 'error';
-                alert("Fehler beim Speichern! Status wurde zurückgesetzt."); 
+                alert("Fehler beim Speichern!");
             }
         },
         updateComment(day) {
@@ -466,16 +456,18 @@ createApp({
         triggerListSave(day) {
             if (day.iso === this.isoDate) { this.blocks = JSON.parse(JSON.stringify(day.blocks)); this.dayStatus = day.status; }
             this.saveState = 'saving'; if(this.saveTimer) clearTimeout(this.saveTimer);
+            // FIX: Timeout auf 500ms reduziert (Snappier)
             this.saveTimer = setTimeout(() => {
                 let entry = this.entriesCache.find(e => e.date === day.iso);
                 if (!entry) { entry = { date: day.iso, blocks: [], status: null, comment: day.comment }; this.entriesCache.push(entry); }
                 entry.blocks = day.blocks; entry.status = day.status;
                 this.saveSingleEntry(entry);
-            }, 1500); 
+            }, 500); 
         },
         triggerAutoSave() {
             this.saveState = 'saving'; if(this.saveTimer) clearTimeout(this.saveTimer);
-            this.saveTimer = setTimeout(() => { this.saveData(); }, 1500);
+            // FIX: Timeout auf 500ms reduziert
+            this.saveTimer = setTimeout(() => { this.saveData(); }, 500);
         },
         async saveData() {
             const payload = { date: this.isoDate, blocks: this.blocks, status: this.dayStatus, comment: '' };

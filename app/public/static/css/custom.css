@@ -163,7 +163,12 @@ td { border-bottom: 1px solid var(--border-color); }
 
 /* --- 6. PROGRESS, FOOTER & UTILS --- */
 .progress-sloth { height: 8px; border-radius: 10px; background-color: var(--bg-tertiary); overflow: hidden; }
-.progress-bar-sloth { height: 100%; background-color: var(--sloth-primary); transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+.progress-bar-sloth { 
+    height: 100%; 
+    /* FIX: Balken ist jetzt GRÜN (Büro Farbe), nicht mehr Blau */
+    background-color: green !important; 
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
+}
 
 .cursor-pointer { cursor: pointer; }
 .bg-body-tertiary { background-color: var(--bg-tertiary) !important; }
@@ -214,8 +219,8 @@ input[type="text"].form-control-sm.text-center {
     letter-spacing: 0;
     
     width: 100%;             
-    /* FIX: Kleiner als 80px erlaubt, damit HH:MM gut passt */
-    min-width: 60px;         
+    /* FIX: Deutlich breiter, damit HH:MM gut reinpasst */
+    min-width: 85px;         
     max-width: 160px;        
     flex: 1 1 auto;          
     
@@ -223,13 +228,19 @@ input[type="text"].form-control-sm.text-center {
     background: var(--bg-tertiary);
     text-align: center;
     color: inherit;
-    /* FIX: Weniger Padding an den Seiten */
+    /* FIX: Schrift etwas größer */
+    font-size: 0.95rem;
     padding: 4px 0;
     border-radius: 6px;
     transition: all 0.2s ease;
 }
 .table-input:hover { background: var(--bg-card); border-color: var(--text-muted); }
 .table-input:focus { outline: none; background: var(--bg-card); color: var(--text-main); border-color: var(--sloth-primary); box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.15); }
+
+/* FIX: Sekunden im Input verstecken (Chrome/Edge/Safari) */
+input[type=time]::-webkit-datetime-edit-second-field {
+    display: none;
+}
 
 /* FOOTER STYLING */
 .app-footer { text-align: center; color: var(--text-subtle); font-size: 0.8rem; margin-top: auto; width: 100%; position: relative; }
@@ -261,18 +272,11 @@ input[type="text"].form-control-sm.text-center {
     font-size: 0.75rem; border-radius: 4px;
     cursor: pointer; background: var(--bg-body); border: 1px solid var(--border-color);
 }
-/* UPDATE: Hover auch für Wochenende aktivieren */
+
 .day-box:hover:not(.day-empty) { border-color: var(--sloth-primary); box-shadow: 0 0 0 2px rgba(var(--bs-primary-rgb), 0.2); z-index: 1; }
 
 .day-vacation { background-color: var(--st-vacation-txt) !important; color: white !important; border:none; }
 .day-holiday { background-color: var(--st-holiday-txt) !important; color: white !important; border:none; }
-
-/* UPDATE: Wochenende Pointer Cursor (Klickbar) */
 .day-weekend { background-color: transparent; color: var(--text-muted); opacity: 0.4; border-color: transparent; }
 
 .day-empty { background: transparent; border: none; cursor: default; }
-
-/* --- Versteckt Sekunden in Webkit-Browsern --- */
-input[type=time]::-webkit-datetime-edit-second-field {
-    display: none;
-}
