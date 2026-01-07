@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.7 (The Überstundenpauschale Update)
+**Features:**
+- **Überstundenpauschale:** ÜP kann vom User in den Settings aktiviert werden und wird beim GLZ Konto berücksichtigt.
+
+**Technical & Database:**
+- **Update Alpine 3.23 & PHP 8.5:** Image auf Alpine 3.23 mit PHP 8.5 aktualisiert.
+- **Refactoring:** PHP Files von Styles befreit.
+
+**Performance & UX:**
+- **Mobile Fixes:** Diverse Anpassungen und Optimierungen
+
+---
+
 ## 0.1.6 (The "Holiday" Update)
 **Features:**
 - **Jahres-Urlaubsplaner:** Ein neuer Kalender-Modal (erreichbar über das "Urlaubskonto" Widget) zeigt das komplette Jahr. Urlaubstage können dort direkt per Klick gesetzt oder entfernt werden.

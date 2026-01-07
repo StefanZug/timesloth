@@ -20,7 +20,8 @@ createApp({
                 pcScroll: true,
                 useNativeWheel: false,
                 correction: 0,
-                vacationDays: 25, 
+                vacationDays: 25,
+                overtimeFlatrate: 0, 
             }, window.slothData.settings || {}),
             calc: { sapMissing: null, absentDays: 0, planHours: 8.0 },
             tempCorrection: 0,
@@ -29,7 +30,14 @@ createApp({
         }
     },
     watch: {
-        viewMode(newVal) { localStorage.setItem('viewMode', newVal); }
+        viewMode(newVal) { 
+            localStorage.setItem('viewMode', newVal);
+            if (!this.isDesktop) {
+                setTimeout(() => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 50);
+            }
+        }
     },
     computed: {
         inputType() { 
@@ -37,53 +45,41 @@ createApp({
             return this.settings.useNativeWheel ? 'time' : 'text'; 
         },
         totals() {
+            // Berechnet die reinen Tageswerte (für die Anzeige "Tages-Fazit")
             const stats = TimeLogic.calculateDayStats(this.blocks, this.settings, this.isNonWorkDay);
-            let prefix = stats.saldoMin > 0 ? '+' : '';
             return { 
                 sapTime: stats.sapMin, 
                 catsTime: stats.catsMin, 
                 pause: stats.pause, 
-                saldo: prefix + this.formatNum(stats.saldoMin / 60) + ' h' 
+                saldo: stats.saldoMin 
             };
         },
+        // Die Logik ist jetzt komplett in TimeLogic ausgelagert
+        aggregatedStats() {
+            // Wir übergeben die aktuellen Blocks (für Heute), damit TimeLogic live rechnen kann.
+            // Falls heute ein "Nicht-Arbeitstag" ist (F/U/K), übergeben wir leere Blocks für die Berechnung,
+            // damit TimeLogic nicht fälschlicherweise Arbeitszeit annimmt.
+            const blocksForCalc = this.isNonWorkDay ? [] : this.blocks;
+            
+            return TimeLogic.calculateMonthAggregates(
+                this.currentDateObj, 
+                this.entriesCache, 
+                this.holidaysMap, 
+                this.settings,
+                blocksForCalc
+            );
+        },
         balanceStats() {
-            let sum = parseFloat(this.settings.correction || 0);
-            const todayStr = this.formatIsoDate(new Date());
-            const daysInMonth = new Date(this.currentDateObj.getFullYear(), this.currentDateObj.getMonth() + 1, 0).getDate();
-            
-            for(let d = 1; d <= daysInMonth; d++) {
-                let date = new Date(this.currentDateObj.getFullYear(), this.currentDateObj.getMonth(), d);
-                let iso = this.formatIsoDate(date);
-                if (iso === todayStr) break;
-                
-                let wd = date.getDay();
-                if(wd === 0 || wd === 6) continue;
-
-                let entry = this.entriesCache.find(e => e.date === iso);
-                let isHol = !!this.holidaysMap[iso];
-                let status = (entry && entry.status) ? entry.status : (isHol ? 'F' : null);
-                
-                let dayBalance = 0;
-                if (!['F','U','K'].includes(status)) {
-                    let blocks = (entry && entry.blocks) ? entry.blocks : [];
-                    let stats = TimeLogic.calculateDayStats(blocks, this.settings, false);
-                    dayBalance = stats.saldoMin / 60;
-                }
-                sum += dayBalance;
-            }
-            
-            let yesterdaySum = sum;
-            let todayDelta = 0;
-            const isTodayDisplayed = (this.isoDate === todayStr);
-            if (isTodayDisplayed) {
-                let wd = new Date().getDay();
-                if (wd !== 0 && wd !== 6) {
-                     let stats = TimeLogic.calculateDayStats(this.blocks, this.settings, this.isNonWorkDay);
-                     todayDelta = stats.saldoMin / 60;
-                }
-            }
-            
-            return { yesterday: yesterdaySum, current: yesterdaySum + todayDelta };
+            return { 
+                yesterday: this.aggregatedStats.glzYesterday, 
+                current: this.aggregatedStats.glzCurrent 
+            };
+        },
+        flatrateStats() {
+            let used = this.aggregatedStats.flatrateUsed;
+            let total = this.aggregatedStats.flatrateTotal;
+            let percent = total > 0 ? (used / total) * 100 : 0;
+            return { used, total, percent, today: this.aggregatedStats.todayConsume };
         },
         quota() {
             return TimeLogic.calculateMonthlyQuota(
@@ -193,7 +189,6 @@ createApp({
             } catch(e) { alert("Fehler beim Speichern: " + e); }
         },
         
-        // --- CALENDAR & VACATION ---
         async fetchVacationStats() {
             try {
                 const year = this.currentDateObj.getFullYear();
@@ -238,20 +233,15 @@ createApp({
             return '';
         },
         async toggleVacationInCalendar(d) {
-            if (d.isEmpty || d.isHoliday) return; // FIX: Weekend Blockade entfernt
+            if (d.isEmpty || d.isHoliday) return;
             
             const newStatus = d.isVacation ? null : 'U';
             
-            // Optimistic UI update
             if (d.isVacation) {
-                // Removing vacation
                 this.vacationStats.dates = this.vacationStats.dates.filter(x => x !== d.iso);
-                // WICHTIG: Zähler nur reduzieren, wenn es KEIN Wochenende ist
                 if (!d.isWeekend) this.vacationStats.used--;
             } else {
-                // Adding vacation
                 this.vacationStats.dates.push(d.iso);
-                // WICHTIG: Zähler nur erhöhen, wenn es KEIN Wochenende ist
                 if (!d.isWeekend) this.vacationStats.used++;
             }
             
@@ -268,20 +258,16 @@ createApp({
                 
                 await axios.post('/api/save_entry', { date: d.iso, blocks: [], status: newStatus, comment: '' });
             } catch(e) { 
-                this.fetchVacationStats(); // Reset bei Fehler
+                this.fetchVacationStats();
             }
         },
 
-        // Helper
         getBlockDuration(block) {
             let s = TimeLogic.toMinutes(block.start); let e = TimeLogic.toMinutes(block.end);
             if (s > 0 && e > 0 && e > s) return this.formatNum((e - s) / 60);
             return '';
         },
-        getStep(block) { 
-            // FIX: Immer 60 (Minuten) zurückgeben, damit Browser keine Sekunden anzeigen
-            return 60; 
-        },
+        getStep(block) { return 60; },
         formatNum(n) { if(n == null) return '0,00'; return parseFloat(n).toFixed(2).replace('.', ','); },
         formatH(min) { return (min / 60).toFixed(2).replace('.', ','); },
         formatIsoDate(date) {
@@ -370,7 +356,6 @@ createApp({
         jumpToToday() { this.currentDateObj = new Date(); this.viewMode = 'day'; this.loadFromCache(); },
         toggleStatus(s) { this.dayStatus = (this.dayStatus === s) ? null : s; this.triggerAutoSave(); },
         
-        // FIX: Optimistic UI für Buttons
         async quickToggle(day, status) {
             if(this.saveTimer) clearTimeout(this.saveTimer); 
             this.saveState = 'idle';
@@ -378,7 +363,6 @@ createApp({
             const oldStatus = day.status;
             const newStatus = (day.status === status) ? null : status;
             
-            // UI sofort updaten
             day.status = newStatus;
             
             let entry = this.entriesCache.find(e => e.date === day.iso);
@@ -394,7 +378,6 @@ createApp({
                 this.blocks = JSON.parse(JSON.stringify(day.blocks || []));
             }
 
-            // Hintergrund-Request
             this.saveState = 'saving';
             try {
                 await axios.post('/api/save_entry', { 
@@ -410,7 +393,6 @@ createApp({
                 
             } catch(e) { 
                 console.error(e);
-                // Rollback bei Fehler
                 day.status = oldStatus;
                 if(entry) entry.status = oldStatus;
                 this.saveState = 'error';
@@ -425,7 +407,6 @@ createApp({
         triggerListSave(day) {
             if (day.iso === this.isoDate) { this.blocks = JSON.parse(JSON.stringify(day.blocks)); this.dayStatus = day.status; }
             this.saveState = 'saving'; if(this.saveTimer) clearTimeout(this.saveTimer);
-            // FIX: Timeout auf 500ms reduziert (Snappier)
             this.saveTimer = setTimeout(() => {
                 let entry = this.entriesCache.find(e => e.date === day.iso);
                 if (!entry) { entry = { date: day.iso, blocks: [], status: null, comment: day.comment }; this.entriesCache.push(entry); }
@@ -435,7 +416,6 @@ createApp({
         },
         triggerAutoSave() {
             this.saveState = 'saving'; if(this.saveTimer) clearTimeout(this.saveTimer);
-            // FIX: Timeout auf 500ms reduziert
             this.saveTimer = setTimeout(() => { this.saveData(); }, 500);
         },
         async saveData() {

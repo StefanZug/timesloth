@@ -123,6 +123,20 @@
                         </div>
                     </div>
 
+                    <div class="p-3 bg-body-tertiary rounded border mb-3">
+                        <label class="form-label fw-bold d-flex justify-content-between align-items-center mb-2">
+                            <span>📦 Überstundenpauschale (Monat)</span>
+                            <span class="badge bg-secondary">Optional</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="number" step="0.5" class="form-control fw-bold" v-model.number="settings.overtimeFlatrate" placeholder="z.B. 10">
+                            <span class="input-group-text">Stunden</span>
+                        </div>
+                        <div class="form-text small mt-2">
+                            Überstunden fließen zuerst in die Pauschale, bevor sie das GLZ-Konto erhöhen.
+                        </div>
+                    </div>
+
                     <div class="p-3 bg-body-tertiary rounded border">
                         <label class="form-label fw-bold d-flex justify-content-between align-items-center mb-2">
                             <span>🌴 Urlaubsanspruch (Jahr)</span>

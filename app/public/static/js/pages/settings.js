@@ -8,7 +8,9 @@ createApp({
                 percent: 100,
                 sollStunden: 7.70,
                 pcScroll: true,
-                useNativeWheel: false
+                useNativeWheel: false,
+                vacationDays: 25,
+                overtimeFlatrate: 0 // NEU: Standardwert für die Pauschale
             }, window.slothData.settings || {}),
             
             passwords: { old: '', new: '' },
