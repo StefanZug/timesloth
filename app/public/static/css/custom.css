@@ -385,28 +385,47 @@ td.text-center.fw-bold, .widget-body .fs-5 {
 .theme-toggle-btn:hover { color: var(--sloth-primary); }
 
 
-#settingsApp + .app-footer {
-    margin-bottom: 85px !important;
-    padding-bottom: 1.5rem !important;
-}
-
+/* =========================================
+   FIX 1: "X"-Button in der Tagesplanung (Mobile)
+   ========================================= */
 @media (max-width: 991px) {
-    #settingsApp + .app-footer {
-        margin-bottom: 140px !important;
+    /* Wir geben dem Button eine feste quadratische Form und zentrieren das Icon.
+       Dadurch wird nichts gequetscht und nichts verschoben. */
+    .widget-body .card .card-body .btn.ms-auto {
+        width: 36px !important;        /* Feste Breite erzwingen */
+        height: 36px !important;       /* Feste Höhe */
+        padding: 0 !important;         /* Kein Padding, das den Inhalt verschiebt */
+        
+        display: flex !important;      /* Flexbox für perfekte Zentrierung */
+        align-items: center !important;
+        justify-content: center !important;
+        
+        flex-shrink: 0 !important;     /* Verhindert das "Zusammendrücken" */
+        margin-right: 0 !important;    /* Resettet evtl. negative Margins */
+    }
+    
+    /* Optional: Icon etwas kleiner machen, damit es luftiger wirkt */
+    .widget-body .card .card-body .btn.ms-auto i {
+        font-size: 1.1rem !important;
     }
 }
 
 /* =========================================
-   FIX: Abgeschnittener X-Button (Mobile)
+   FIX 2: Settings Footer (Verdeckt durch Speichern-Leiste)
    ========================================= */
+/* Wir nutzen PADDING statt Margin. Das macht den Footer "unsichtbar länger" nach unten.
+   Der Text bleibt oben, aber man kann weiter runterscrollen, bis der Text
+   über der fixierten Leiste erscheint. */
+
+#settingsApp + .app-footer {
+    /* PC: Platz für die Leiste schaffen */
+    padding-bottom: 100px !important; 
+    margin-bottom: 0 !important;
+}
+
 @media (max-width: 991px) {
-    /* Wir zielen spezifisch auf den Löschen-Button (ms-auto) in den Dashboard-Karten */
-    .widget-body .card .card-body .btn.ms-auto {
-        /* Verhindert, dass die Eingabefelder den Button quetschen */
-        flex-shrink: 0 !important; 
-        
-        /* Gibt dem Button wieder etwas Breite und Abstand zum Rand */
-        padding-left: 10px !important;
-        padding-right: 4px !important; 
+    #settingsApp + .app-footer {
+        /* Mobile: Mehr Platz wegen Touch-Bedienung und Browser-Leisten */
+        padding-bottom: 140px !important; 
     }
 }
