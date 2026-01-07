@@ -336,11 +336,11 @@ td.text-center.fw-bold, .widget-body .fs-5 {
     /* Elemente ausblenden */
     .bi-clock, .input-group-text { display: none !important; }
     
-    /* INPUT FIXES für Mobile: Feste Breite, damit Zahlen lesbar bleiben */
+    /* INPUT FIXES für Mobile: Feste Breite (75px), damit Zahlen lesbar bleiben */
     .table-input { 
         flex: 0 0 auto !important; 
-        width: 50px !important; 
-        min-width: 50px !important;
+        width: 75px !important; /* Erhöht von 50px */
+        min-width: 75px !important;
         padding: 4px 0 !important; 
         font-size: 0.95rem !important; 
     }
@@ -348,8 +348,8 @@ td.text-center.fw-bold, .widget-body .fs-5 {
     /* BADGE FIXES für Mobile */
     .duration-badge {
         flex: 0 0 auto !important;
-        width: 45px !important;
-        min-width: 45px !important;
+        width: 55px !important; /* Leicht erhöht für zweistellige Stunden */
+        min-width: 55px !important;
     }
 
     /* DELETE BUTTON FIXES für Mobile */
