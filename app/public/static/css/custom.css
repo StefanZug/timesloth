@@ -386,98 +386,110 @@ td.text-center.fw-bold, .widget-body .fs-5 {
 
 
 /* =========================================
-   FIX: Generelles Layout & Footer (Stick to Bottom)
+   FIX: Settings Footer (Desktop & Mobile)
    ========================================= */
 
-/* 1. Desktop: Footer immer unten halten
-   Wir zwingen den Settings-Container, mindestens so hoch zu sein wie der Screen
-   minus Header und Footer-Höhe. Dadurch wird der Footer nach unten gedrückt. */
-.settings-container {
-    min-height: calc(100vh - 200px); 
-    display: flex;
-    flex-direction: column;
+/* Wir entfernen das erzwungene min-height, das das Scrollen verursacht hat.
+   Stattdessen heben wir den Footer an, wenn er auf die Settings folgt. */
+
+#settingsApp + .app-footer {
+    /* Hebt den Footer an, damit er NICHT hinter der fixierten Leiste liegt.
+       margin-bottom schiebt ihn physisch nach oben. */
+    margin-bottom: 80px !important; 
+    
+    /* Sicherheitsnetz: Falls der Inhalt sehr kurz ist, 
+       sorgt flex-grow im Layout dafür, dass der Footer unten bleibt. 
+       Wir müssen nur verhindern, dass er von der Leiste verdeckt wird. */
+    position: relative;
+    z-index: 1021; /* Höher als die Leiste (falls überlappend) */
 }
 
-/* 2. Mobile: Footer sichtbar machen (hinter Speichern-Leiste)
-   Wir geben dem Footer selbst das Margin. Das ist robuster als Sibling-Selektoren. */
 @media (max-width: 991px) {
-    .app-footer {
-        padding-bottom: 120px !important; /* Viel Platz für die blaue Leiste */
+    #settingsApp + .app-footer {
+        /* Mobile braucht mehr Abstand wegen Touch-Leisten */
+        margin-bottom: 120px !important;
     }
 }
 
 /* =========================================
    FIX: X-Button & Inputs (Tagesplanung Mobile)
    ========================================= */
+/* Dieser Teil hat gut funktioniert ("X passt jetzt"), den behalten wir bei,
+   aber ich habe ihn leicht optimiert. */
 
 @media (max-width: 991px) {
-    /* Den Container für die Zeit-Zeile etwas enger schnallen */
+    /* Container in der Tages-Karte */
     .widget-body .card .card-body {
-        padding-left: 8px !important;
-        padding-right: 8px !important;
-        gap: 4px !important; /* Bootstrap gap-2 (8px) ist zu viel, wir nehmen 4px */
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+        gap: 2px !important;
     }
 
-    /* Die Eingabefelder dürfen schrumpfen, damit der X-Button Platz hat */
+    /* Inputs flexibel machen */
     .widget-body .card .card-body input.form-control {
-        min-width: 0 !important; /* WICHTIG: Erlaubt das Schrumpfen unter 50px */
-        width: 100% !important;
-        flex: 1 1 auto !important;
-        font-size: 0.9rem !important; /* Text etwas kleiner */
+        min-width: 0 !important;
+        flex: 1 1 auto !important; /* Nimmt den Platz, der da ist */
+        font-size: 0.9rem !important;
         padding: 4px 0 !important;
     }
 
-    /* Der X-Button bekommt festen Platz und darf nicht gedrückt werden */
+    /* X-Button fixieren */
     .widget-body .card .card-body .btn.ms-auto {
-        flex: 0 0 32px !important; /* Feste Breite 32px */
+        flex: 0 0 32px !important;
         width: 32px !important;
         height: 32px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        margin-left: 4px !important; /* Kleiner Abstand zum Input */
+        margin-left: 4px !important;
     }
 }
 
 /* =========================================
-   FIX: Monatsansicht (Mobile Ausrichtung)
+   FIX: Monatsansicht Mobile (Reparatur)
    ========================================= */
 
 @media (max-width: 991px) {
-    /* Inputs in der Tabelle zähmen */
+    /* 1. NUR die Zeilen mit Zeiten (mb-2) anpassen, NICHT den Plus-Button! 
+       Wir nutzen .mb-2 als Erkennungsmerkmal für die Zeilen mit Inputs. */
+    td .d-flex.mb-2 {
+        flex-wrap: nowrap !important; /* Erzwingt eine Zeile */
+        gap: 2px !important;
+    }
+
+    /* 2. Inputs lesbar machen */
     .table-input {
-        min-width: 55px !important; /* Etwas breiter als vorher */
-        width: 55px !important;
-        font-size: 0.85rem !important;
-        height: 30px !important;
+        min-width: 0 !important; /* Schrumpfen erlauben */
+        width: 100% !important;  /* Aber versuchen Platz zu füllen */
+        flex: 1 !important;      /* Flexibles Verhalten */
+        
+        font-size: 0.8rem !important; /* Schrift etwas kleiner */
         padding: 0 !important;
-        margin: 0 2px !important; /* Abstand zwischen den Inputs */
+        height: 28px !important;
+        text-align: center !important;
     }
 
-    /* Den Container der Inputs (Start - Ende) aufräumen */
-    td > div {
+    /* 3. Icons und Löschen-Button klein halten */
+    .list-icon-btn, .list-remove-btn {
+        flex: 0 0 24px !important;
+        width: 24px !important;
+        justify-content: center !important;
+    }
+    
+    /* 4. Den Plus-Button (mt-1) reparieren!
+       Wir stellen sicher, dass er wieder die volle Breite nutzt. */
+    td .d-flex.mt-1 {
+        width: 100% !important;
         display: flex !important;
-        align-items: center !important;
-        flex-wrap: nowrap !important; /* Verhindert Umbruch */
     }
-
-    /* Die Dropdown-Buttons (Haus/Office Icon) fixieren */
-    .list-icon-btn, .list-dropdown-btn {
-        width: 24px !important;
-        flex-shrink: 0 !important;
+    td .d-flex.mt-1 .btn {
+        width: 100% !important; /* Button auf volle Breite ziehen */
+        flex: 1 !important;
     }
     
-    /* Dauer-Anzeige (z.B. 8,25) auf Mobile etwas kleiner oder ausblenden wenn nötig */
-    .duration-badge {
-        font-size: 0.7rem !important;
-        min-width: 30px !important;
-        padding: 2px 4px !important;
-        margin-left: 2px !important;
-    }
-    
-    /* Löschen Button in der Liste */
-    .list-remove-btn {
-        width: 24px !important;
-        padding: 0 !important;
+    /* Abstandhalter (Spacer) im Plus-Bereich ausblenden oder anpassen, 
+       damit der Button Platz hat */
+    .list-spacer-start, .list-spacer-end {
+        display: none !important; /* Weg damit auf Mobile, mehr Platz für Button */
     }
 }
