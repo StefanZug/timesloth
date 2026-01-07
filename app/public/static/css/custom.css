@@ -384,6 +384,29 @@ td.text-center.fw-bold, .widget-body .fs-5 {
 .theme-toggle-btn { cursor: pointer; color: var(--text-muted); transition: color 0.2s; }
 .theme-toggle-btn:hover { color: var(--sloth-primary); }
 
+
 #settingsApp + .app-footer {
-    padding-bottom: 100px !important;
+    margin-bottom: 85px !important;
+    padding-bottom: 1.5rem !important;
+}
+
+@media (max-width: 991px) {
+    #settingsApp + .app-footer {
+        margin-bottom: 140px !important;
+    }
+}
+
+/* =========================================
+   FIX: Abgeschnittener X-Button (Mobile)
+   ========================================= */
+@media (max-width: 991px) {
+    /* Wir zielen spezifisch auf den Löschen-Button (ms-auto) in den Dashboard-Karten */
+    .widget-body .card .card-body .btn.ms-auto {
+        /* Verhindert, dass die Eingabefelder den Button quetschen */
+        flex-shrink: 0 !important; 
+        
+        /* Gibt dem Button wieder etwas Breite und Abstand zum Rand */
+        padding-left: 10px !important;
+        padding-right: 4px !important; 
+    }
 }
