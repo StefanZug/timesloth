@@ -29,11 +29,6 @@
             <div class="widget-card">
                 <div class="widget-header">Bedienung & Optik</div>
                 <div class="widget-body">
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" role="switch" v-model="settings.pcScroll">
-                        <label class="form-check-label fw-bold">Maus-Rad Support (PC)</label>
-                        <div class="small text-muted">Erlaubt das Ändern von Zeiten durch Scrollen über dem Feld.</div>
-                    </div>
                     <hr class="my-3 text-secondary opacity-25">
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" role="switch" v-model="settings.useNativeWheel">

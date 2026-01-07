@@ -193,37 +193,6 @@ createApp({
             } catch(e) { alert("Fehler beim Speichern: " + e); }
         },
         
-        onWheel(event, block, field, day = null) {
-            if (!this.settings.pcScroll) return;
-            if (document.activeElement !== event.target) return;
-            event.preventDefault();
-            const now = Date.now();
-            if (this.lastScrollTime && (now - this.lastScrollTime < 40)) return;
-            this.lastScrollTime = now;
-            const input = event.target;
-            const cursor = input.selectionStart || 0;
-            let val = block[field] || "00:00";
-            let mode = 'min';
-            if (cursor <= 2) mode = 'hour';
-            else if (cursor >= 6) mode = 'sec';
-            const direction = event.deltaY > 0 ? -1 : 1;
-            const step = (mode === 'min') ? 5 : 1;
-            let parts = val.split(':');
-            let h = parseInt(parts[0] || 0);
-            let m = parseInt(parts[1] || 0);
-            let s = parseInt(parts[2] || 0);
-            if (mode === 'hour') { h += direction; } 
-            else if (mode === 'min') { m += (direction * step); if (m > 59) m = 0; if (m < 0) m = 55; } 
-            else if (mode === 'sec') { s += (direction * 5); if (s > 59) s = 0; if (s < 0) s = 55; }
-            if (h > 23) h = 0; if (h < 0) h = 23;
-            const pad = (n) => n.toString().padStart(2, '0');
-            const hasSeconds = parts.length > 2 || mode === 'sec';
-            if (hasSeconds) block[field] = `${pad(h)}:${pad(m)}:${pad(s)}`;
-            else block[field] = `${pad(h)}:${pad(m)}`;
-            this.$nextTick(() => { if (document.activeElement === input) { input.setSelectionRange(cursor, cursor); } });
-            if (day) this.triggerListSave(day); else this.triggerAutoSave();
-        },
-
         // --- CALENDAR & VACATION ---
         async fetchVacationStats() {
             try {

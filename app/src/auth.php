@@ -7,7 +7,6 @@ function parse_user_agent($ua) {
     $platform = 'Unbekannt';
     $browser = 'Unbekannt';
     
-    // Einfache Erkennung
     if (preg_match('/windows|win32/i', $ua)) $platform = 'Windows';
     elseif (preg_match('/android/i', $ua)) $platform = 'Android';
     elseif (preg_match('/iphone|ipad|ios/i', $ua)) $platform = 'iOS';
@@ -16,7 +15,7 @@ function parse_user_agent($ua) {
     
     if (preg_match('/firefox/i', $ua)) $browser = 'Firefox';
     elseif (preg_match('/edg/i', $ua)) $browser = 'Edge';
-    elseif (preg_match('/chrome|crios/i', $ua)) $browser = 'Chrome'; // Chrome nach Edge prüfen!
+    elseif (preg_match('/chrome|crios/i', $ua)) $browser = 'Chrome';
     elseif (preg_match('/safari/i', $ua)) $browser = 'Safari';
     
     return "$platform / $browser";
@@ -27,13 +26,11 @@ function handle_login() {
     $password = $_POST['password'] ?? '';
     
     $db = get_db();
-    // Select inkl. is_active
     $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
     $stmt->execute([$username]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user && password_verify($password, $user['password_hash'])) {
-        // CHECK ACTIVE
         if (isset($user['is_active']) && $user['is_active'] == 0) {
             error_log("🚫 LOGIN BLOCKED: Inactive User '{$username}'");
             $_SESSION['flash_error'] = "Account deaktiviert. Bitte Admin kontaktieren.";
@@ -47,11 +44,12 @@ function handle_login() {
         $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'];
         $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'Unbekannt';
         
-        $stmtLog = $db->prepare("INSERT INTO login_log (user_id, ip_address, user_agent) VALUES (?, ?, ?)");
-        $stmtLog->execute([$user['id'], $ip, $ua]);
+        // FIX: Zeitstempel explizit speichern (in lokaler Zeit)
+        // Statt sich auf DB DEFAULT CURRENT_TIMESTAMP (UTC) zu verlassen
+        $stmtLog = $db->prepare("INSERT INTO login_log (user_id, ip_address, user_agent, timestamp) VALUES (?, ?, ?, ?)");
+        $stmtLog->execute([$user['id'], $ip, $ua, date('Y-m-d H:i:s')]);
         
         error_log("✅ LOGIN SUCCESS: User '{$user['username']}' from {$ip}");
-        
         header('Location: /');
     } else {
         $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'];
@@ -82,8 +80,9 @@ function api_change_password() {
     }
     
     $newHash = password_hash($data['new_password'], PASSWORD_BCRYPT);
-    $stmt = $db->prepare("UPDATE users SET password_hash = ?, pw_last_changed = CURRENT_TIMESTAMP WHERE id = ?");
-    $stmt->execute([$newHash, $_SESSION['user_id']]);
+    // FIX: Auch hier explizite Zeit für konsistente Anzeige
+    $stmt = $db->prepare("UPDATE users SET password_hash = ?, pw_last_changed = ? WHERE id = ?");
+    $stmt->execute([$newHash, date('Y-m-d H:i:s'), $_SESSION['user_id']]);
     
     error_log("🔑 PASSWORD CHANGED: User ID {$_SESSION['user_id']}");
     echo json_encode(["status" => "success"]);
@@ -95,7 +94,6 @@ function get_login_logs($userId) {
     $stmt->execute([$userId]);
     $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Parser anwenden
     foreach($logs as &$log) {
         $log['browser_short'] = parse_user_agent($log['user_agent']);
     }

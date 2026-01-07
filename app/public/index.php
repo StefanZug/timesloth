@@ -1,4 +1,7 @@
 <?php
+// WICHTIG: Zeitzone sofort setzen
+date_default_timezone_set('Europe/Vienna');
+
 session_start();
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -23,6 +26,13 @@ if (str_starts_with($uri, '/api/')) {
     elseif ($uri === '/api/save_entry' && $method === 'POST') { api_save_entry(); }
     elseif ($uri === '/api/settings' && $method === 'POST') { api_save_settings(); }
     elseif ($uri === '/api/reset_month' && $method === 'POST') { api_reset_month(); }
+    // NEU: Year Stats Route
+    elseif ($uri === '/api/get_year_stats') { 
+        require_once APP_ROOT . '/src/Services/EntryService.php';
+        $service = new EntryService();
+        $year = $_GET['year'] ?? date('Y');
+        echo json_encode($service->getYearStats($_SESSION['user']['id'], $year));
+    }
     else { http_response_code(404); echo json_encode(['error' => 'Not found']); }
     exit;
 }
@@ -31,13 +41,16 @@ if (str_starts_with($uri, '/api/')) {
 if (str_starts_with($uri, '/admin/')) {
     if (!is_logged_in()) { http_response_code(401); exit; }
     
-    // Einfaches Routing für Admin Actions
     if ($method === 'POST' && $uri === '/admin/create_user') { api_admin_create_user(); exit; }
     if ($method === 'POST' && $uri === '/admin/holiday') { api_admin_add_holiday(); exit; }
+    if ($uri === '/admin/stats') { api_admin_stats(); exit; }
+    if ($method === 'POST' && $uri === '/admin/cleanup') { api_admin_cleanup(); exit; }
     
-    // DELETE Handling (/admin/delete_user/123)
     if (preg_match('#^/admin/delete_user/(\d+)$#', $uri, $m)) { api_admin_delete_user($m[1]); exit; }
     if (preg_match('#^/admin/holiday/(\d+)$#', $uri, $m) && $method === 'DELETE') { api_admin_delete_holiday($m[1]); exit; }
+    if (preg_match('#^/admin/toggle_active/(\d+)$#', $uri, $m) && $method === 'POST') { api_admin_toggle_active($m[1]); exit; }
+    if (preg_match('#^/admin/user_logs/(\d+)$#', $uri, $m)) { api_admin_user_logs($m[1]); exit; }
+    if (preg_match('#^/admin/reset_password/(\d+)$#', $uri, $m) && $method === 'POST') { api_admin_reset_pw($m[1]); exit; }
 }
 
 // --- AUTH PAGES ---
@@ -58,7 +71,6 @@ if ($uri === '/' || $uri === '/dashboard') {
     $logs = get_login_logs($_SESSION['user']['id']);
     render_view('settings', ['user' => $_SESSION['user'], 'logs' => $logs]);
 } elseif ($uri === '/admin') {
-    // Admin Check
     if(!($_SESSION['user']['is_admin'] ?? false)) { header('Location: /'); exit; }
     
     $db = get_db();

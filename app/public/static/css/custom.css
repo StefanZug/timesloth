@@ -211,14 +211,13 @@ td { border-bottom: 1px solid var(--border-color); }
 
 .table-input, 
 input[type="text"].form-control-sm.text-center {
-    font-family: 'SF Mono', 'Consolas', 'Courier New', monospace !important;
-    font-weight: 700;
+    font-family: inherit !important; 
+    font-weight: 600;
     letter-spacing: 0;
     
-    /* FIX: "width: 0" zusammen mit "flex: 1" erzwingt exakt gleiche Breite für beide Felder */
     width: 0; 
-    min-width: 65px; /* Mindestbreite für Lesbarkeit */
-    flex: 1 1 0;     /* WICHTIG: Teilen sich den Platz gerecht auf */
+    min-width: 50px;
+    flex: 1 1 0;    
     
     border: 1px solid var(--border-color);
     background: var(--bg-tertiary);

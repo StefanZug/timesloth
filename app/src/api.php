@@ -28,6 +28,8 @@ if ($uri === '/api/get_entries') {
 if ($uri === '/api/save_entry' && $method === 'POST') {
     if (!is_logged_in()) { json_error('Unauthorized', 401); }
     $input = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($input)) $input = [];
+    }
     $service = new EntryService();
     $res = $service->saveEntry($_SESSION['user']['id'], $input);
     json_response($res);
@@ -35,6 +37,7 @@ if ($uri === '/api/save_entry' && $method === 'POST') {
 if ($uri === '/api/reset_month' && $method === 'POST') {
     if (!is_logged_in()) { json_error('Unauthorized', 401); }
     $input = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($input)) $input = []; //
     $service = new EntryService();
     try {
         $res = $service->resetMonth($_SESSION['user']['id'], $input['month'] ?? '');
@@ -53,6 +56,7 @@ if ($uri === '/api/get_year_stats') {
 if ($uri === '/api/settings' && $method === 'POST') {
     if (!is_logged_in()) { json_error('Unauthorized', 401); }
     $input = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($input)) $input = [];
     $service = new UserService();
     $res = $service->updateSettings($_SESSION['user']['id'], $input);
     json_response($res);
@@ -64,16 +68,23 @@ if (str_starts_with($uri, '/admin/')) {
     
     $service = new AdminService();
     $input = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($input)) $input = [];
 
     if ($method === 'POST' && $uri === '/admin/create_user') { 
         try {
-            $res = $service->createUser($input['username'], $input['password'], !empty($input['is_admin']));
+            // FIX: ?? '' hinzufügen, damit niemals null an trim() übergeben wird
+            $res = $service->createUser(
+                $input['username'] ?? '', 
+                $input['password'] ?? '', 
+                !empty($input['is_admin'])
+            );
             json_response($res);
         } catch (Exception $e) { json_error($e->getMessage()); }
     }
     if ($method === 'POST' && $uri === '/admin/holiday') { 
         try {
-            $res = $service->addHoliday($input['date'], $input['name']);
+            // FIX: auch hier Inputs sichern
+            $res = $service->addHoliday($input['date'] ?? '', $input['name'] ?? '');
             json_response($res);
         } catch (Exception $e) { json_error($e->getMessage()); }
     }

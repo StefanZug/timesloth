@@ -1,6 +1,6 @@
 FROM ghcr.io/home-assistant/aarch64-base:3.21
 
-# Pakete installieren
+# Pakete installieren (NEU: tzdata hinzugefügt)
 RUN apk add --no-cache \
     nginx \
     php84 \
@@ -15,12 +15,16 @@ RUN apk add --no-cache \
     php84-curl \
     php84-mbstring \
     curl \
-    jq
+    jq \
+    tzdata
+
+# Zeitzone auf Wien setzen
+ENV TZ=Europe/Vienna
 
 # PHP Verlinkung
 RUN ln -sf /usr/bin/php84 /usr/bin/php
 
-# LOGGING FIX: Nginx Logs auf stdout/stderr umleiten für Home Assistant
+# LOGGING FIX: Nginx Logs auf stdout/stderr umleiten
 RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
 
