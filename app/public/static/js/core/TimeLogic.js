@@ -117,7 +117,7 @@ class TimeLogic {
             let date = new Date(currentDateObj.getFullYear(), currentDateObj.getMonth(), d);
             let iso = formatIso(date);
             
-            // Stopp, wenn Zukunft (optional, hier einfach weiterlaufen lassen oder breaken)
+            // Stopp, wenn Zukunft
             if (date > new Date()) break; 
 
             let isToday = (iso === todayStr);
@@ -125,16 +125,11 @@ class TimeLogic {
             
             // Datenquelle wählen
             if (isToday && currentBlocks) {
-                // Für Heute nehmen wir die Live-Blöcke aus dem Editor
+                // Für Heute nehmen wir die Live-Blöcke
                 let wd = date.getDay();
-                let dayStatus = null; // Status für heute müsste ggf. übergeben werden, hier vereinfacht:
-                // Wir nehmen an, wenn Blocks da sind, ist es kein F/U/K Tag, oder Logik prüft extern.
-                // In Dashboard wird isNonWorkDay geprüft. Hier nehmen wir vereinfacht an:
                 if (wd !== 0 && wd !== 6) {
-                     // Check ob heute Feiertag/Urlaub ist (müsste man eigentlich aus entries/holidays holen)
-                     // Da wir 'currentBlocks' übergeben, gehen wir davon aus, dass der Caller weiß was er tut.
-                     // Ein sauberer Fix wäre, auch den 'todayStatus' zu übergeben.
-                     // Workaround: Wir schauen in holidaysMap
+                     // Vereinfacht: Wir nehmen an, wenn Blocks da sind, ist es kein F/U/K Tag
+                     // (oder der User hat manuell welche trotz Feiertag eingetragen)
                      if(!holidaysMap[iso]) { 
                         dayStats = this.calculateDayStats(currentBlocks, settings, false);
                      }
@@ -145,7 +140,6 @@ class TimeLogic {
                 if(wd !== 0 && wd !== 6) {
                     let entry = entries.find(e => e.date === iso);
                     let isHol = !!holidaysMap[iso];
-                    // Korrigierte Status-Logik
                     let status = (entry && entry.status) ? entry.status : (isHol ? 'F' : null);
                     
                     if (!['F','U','K'].includes(status)) {

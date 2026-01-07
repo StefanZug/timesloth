@@ -2,14 +2,14 @@
 
 ## 0.1.7 (The Überstundenpauschale Update)
 **Features:**
-- **Überstundenpauschale:** ÜP kann vom User in den Settings aktiviert werden und wird beim GLZ Konto berücksichtigt.
+- **Überstundenpauschale:** Eine monatliche Pauschale (z.B. 10h) kann nun in den Settings hinterlegt werden. Überstunden füllen zuerst diesen "Topf", bevor sie das Gleitzeitkonto erhöhen.
 
 **Technical & Database:**
-- **Update Alpine 3.23 & PHP 8.5:** Image auf Alpine 3.23 mit PHP 8.5 aktualisiert.
-- **Refactoring:** PHP Files von Styles befreit.
+- **Update Alpine 3.23 & PHP 8.5:** Base-Image wurde auf Alpine 3.23 aktualisiert und läuft nun mit PHP 8.5.
+- **Refactoring:** Der Code wurde bereinigt. Inline-Styles wurden aus den PHP-Templates entfernt und in eine zentrale CSS-Datei ausgelagert.
 
 **Performance & UX:**
-- **Mobile Fixes:** Diverse Anpassungen und Optimierungen
+- **Mobile Fixes:** Diverse Optimierungen für kleine Bildschirme (Sticky-Date Spalte, angepasste Input-Größen, bessere Lesbarkeit).
 
 ---
 

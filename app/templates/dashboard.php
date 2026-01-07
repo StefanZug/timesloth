@@ -65,6 +65,11 @@
                     <div class="border-top pt-2 mt-2">
                         <div class="d-flex justify-content-between align-items-center mb-1"><span class="text-muted small">Saldo Vortag:</span><span class="fw-bold" :class="balanceStats.yesterday >= 0 ? 'text-success' : 'text-danger'">[[ formatNum(balanceStats.yesterday) ]] h</span></div>
                         <div class="d-flex justify-content-between align-items-center"><span class="text-muted small fw-bold">Saldo Aktuell:</span><span class="fw-bold fs-5" :class="balanceStats.current >= 0 ? 'text-success' : 'text-danger'">[[ formatNum(balanceStats.current) ]] h</span></div>
+                        
+                        <div v-if="flatrateStats.today > 0" class="text-center mt-2 small text-muted">
+                            <i class="bi bi-box-seam"></i> Davon in Pauschale: <span class="fw-bold text-body">[[ formatNum(flatrateStats.today) ]] h</span>
+                        </div>
+
                         <div class="text-center mt-2"><button class="btn btn-sm btn-link text-decoration-none text-muted p-0" style="font-size: 0.75rem;" @click="openCorrectionModal"><i class="bi bi-pencil-square me-1"></i> Start-Saldo: <strong>[[ formatNum(settings.correction) ]] h</strong></button></div>
                     </div>
                 </div>
@@ -157,6 +162,21 @@
                     <div class="d-flex justify-content-between text-muted small border-top pt-2"><span>Ist: <strong>[[ formatNum(quota.current) ]]h</strong></span><span>Soll: <strong>[[ formatNum(quota.target) ]]h</strong></span></div>
                     <div class="alert alert-light border mt-3 mb-0 p-2 d-flex align-items-center gap-2" v-if="quota.needed > 0"><i class="bi bi-info-circle text-primary"></i><div style="font-size: 0.8rem; line-height: 1.2;">Du musst noch <strong>[[ formatNum(quota.needed) ]]h</strong> ins Büro.</div></div>
                     <div class="alert alert-success border mt-3 mb-0 p-2 d-flex align-items-center gap-2" v-else><i class="bi bi-check-circle-fill text-success"></i><div style="font-size: 0.8rem; line-height: 1.2;">Quote erfüllt! 🥳</div></div>
+                </div>
+            </div>
+
+            <div class="widget-card" v-if="flatrateStats.total > 0">
+                <div class="widget-header">📦 Pauschale (ÜP)</div>
+                <div class="widget-body">
+                    <div class="d-flex justify-content-between align-items-end mb-2">
+                        <span class="fs-2 fw-bold">[[ formatNum(flatrateStats.used) ]]</span>
+                        <span class="text-muted small mb-1">von [[ formatNum(flatrateStats.total) ]]</span>
+                    </div>
+                    <div class="progress-sloth mb-2" style="height: 6px;">
+                        <div class="progress-bar-sloth bg-secondary" :style="{ width: flatrateStats.percent + '%' }"></div>
+                    </div>
+                    <small class="text-muted d-block mt-2" v-if="flatrateStats.used >= flatrateStats.total">Pauschale voll. GLZ läuft! 🚀</small>
+                    <small class="text-muted d-block mt-2" v-else>Noch [[ formatNum(flatrateStats.total - flatrateStats.used) ]]h bis zum GLZ-Aufbau.</small>
                 </div>
             </div>
 

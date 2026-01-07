@@ -46,13 +46,18 @@ Da TimeSloth statistisch rechnet und nicht mit der SAP-Datenbank verbunden ist, 
 ### 6. Urlaubszählung (Vacation Logic)
 * Urlaubszählung: Wochenenden (Sa/So) werden bei der Berechnung der verbrauchten Urlaubstage automatisch ignoriert, auch wenn sie im Zeitraum liegen.
 
+### 7. Überstundenpauschale (Optional)
+User können in den Einstellungen eine monatliche Pauschale (z.B. 10h) hinterlegen.
+* **Bucket-Prinzip:** Positive Tagessalden fließen *zuerst* in den Pauschalen-Topf. Erst wenn dieser für den Monat voll ist, wächst das Gleitzeitkonto.
+* **Minusstunden:** Diese reduzieren das Gleitzeitkonto *sofort*. Die Pauschale schützt nicht vor Abzügen, sie "frisst" nur die Plusstunden.
+
 ---
 
 ## 🛠 Tech Stack & Architektur
 
 Wir nutzen einen leichtgewichtigen PHP-Stack mit Service-Architektur.
 
-* **Server:** Nginx + PHP 8.4 (via PHP-FPM) auf Alpine Linux.
+* **Server:** Nginx + PHP 8.5 (via PHP-FPM) auf Alpine Linux.
 * **Backend:** PHP mit Service-Klassen (`/app/src/Services/`), Plain PDO für SQLite.
 * **Frontend:** Vue.js 3 (CDN) + Bootstrap 5. Die Logik ist vom View getrennt (`/static/js/pages/`).
 * **Datenbank:** SQLite (`/data/timesloth.sqlite`) für Persistenz.
