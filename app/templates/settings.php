@@ -1,4 +1,4 @@
-<div id="settingsApp" class="container mt-4 mb-5" style="max-width: 700px;" v-cloak>
+<div id="settingsApp" class="container mt-4 mb-5 settings-container" v-cloak>
     
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold m-0"><i class="bi bi-sliders"></i> Einstellungen</h2>
@@ -59,7 +59,7 @@
                                 <img src="/static/img/logo.png" width="80" class="sloth-game-img" id="sloth-2" title="Oder ich?">
                             </div>
                         </div>
-                        <div class="mt-4" style="min-height: 24px;">
+                        <div class="mt-4 sloth-game-area">
                             <span v-if="gameMessage" class="fw-bold animate-fade" :class="gameError ? 'text-danger' : 'text-success'">[[ gameMessage ]]</span>
                         </div>
                     </div>
@@ -73,7 +73,7 @@
             <div class="widget-card">
                 <div class="widget-header"><span>📜 Login Historie</span><span class="badge bg-secondary">30 Tage</span></div>
                 <div class="widget-body p-0">
-                    <div class="table-responsive" style="max-height: 250px;">
+                    <div class="table-responsive settings-table-wrapper">
                         <table class="table table-striped table-sm mb-0 align-middle small">
                             <thead class="bg-body-tertiary sticky-top"><tr><th class="ps-3">Zeit</th><th>Gerät</th><th class="text-end pe-3">IP</th></tr></thead>
                             <tbody>
@@ -142,7 +142,7 @@
         </div>
     </div>
     
-    <div class="fixed-bottom p-3 bg-body border-top shadow-lg" style="z-index: 1020;">
+    <div class="settings-footer">
         <div class="container" style="max-width: 700px;">
             <button class="btn btn-primary w-100 py-2 fw-bold" @click="saveSettings" :disabled="saveState === 'saving'">
                 <span v-if="saveState === 'saving'" class="spinner-border spinner-border-sm me-2"></span>

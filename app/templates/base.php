@@ -31,7 +31,7 @@
     </div>
 
     <?php if (isset($_SESSION['user'])): ?>
-    <nav class="navbar navbar-expand bg-body-tertiary shadow-sm mb-3 border-bottom sticky-top" style="z-index: 1050;">
+    <nav class="navbar navbar-expand bg-body-tertiary shadow-sm mb-3 border-bottom navbar-sticky">
         <div class="container-fluid">
             <div class="d-flex align-items-center">
                 <img src="/static/img/logo.png" alt="Logo" width="42" height="42" 
@@ -84,10 +84,10 @@
                 
                 <div class="footer-actions">
                     <i class="bi bi-moon-stars-fill theme-toggle-btn" id="darkModeBtn" title="Lichtschalter"></i>
-                    <div style="width: 1px; height: 16px; background: var(--border-color);"></div>
+                    <div class="footer-separator"></div>
                     <div class="d-flex align-items-center gap-2" style="font-size: 0.85rem;">
                         <span>&copy; <?= date('Y') ?> TimeSloth</span>
-                        <img src="/static/img/logo.png" width="20" class="sloth-logo" style="filter: grayscale(1); opacity: 0.5;">
+                        <img src="/static/img/logo.png" width="20" class="sloth-logo footer-logo">
                     </div>
                 </div>
             </div>

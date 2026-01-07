@@ -45,11 +45,11 @@
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" :data-bs-target="'#user-'+u.id" @click="fetchUserLogs(u)">
                                 <span class="d-flex align-items-center gap-2 w-100">
-                                    <span class="avatar-circle" style="width: 28px; height: 28px; font-size: 0.8rem;">
+                                    <span class="avatar-circle admin-avatar">
                                         [[ u.username.charAt(0).toUpperCase() ]]
                                     </span>
                                     <span class="fw-bold">[[ u.username ]]</span>
-                                    <span v-if="u.is_admin" class="badge bg-primary rounded-pill ms-2" style="font-size: 0.6rem;">ADMIN</span>
+                                    <span v-if="u.is_admin" class="badge bg-primary rounded-pill ms-2 admin-badge">ADMIN</span>
                                     
                                     <span class="ms-auto me-3 d-flex align-items-center gap-2 small text-muted">
                                         <i class="bi bi-circle-fill" :class="u.is_active ? 'text-success' : 'text-danger'" style="font-size: 0.6rem;"></i>
@@ -75,9 +75,9 @@
                                 <div class="mb-3">
                                     <h6 class="text-muted small fw-bold text-uppercase border-bottom pb-1">Letzte Logins</h6>
                                     <div v-if="u.loadingLogs" class="text-center py-2 text-muted small">Lade...</div>
-                                    <div v-else-if="u.logs && u.logs.length > 0" class="table-responsive bg-body rounded border" style="max-height: 150px;">
+                                    <div v-else-if="u.logs && u.logs.length > 0" class="table-responsive bg-body rounded border log-table-wrapper">
                                         <table class="table table-sm table-borderless small mb-0">
-                                            <thead class="text-muted" style="font-size: 0.75rem;">
+                                            <thead class="text-muted table-th-small">
                                                 <tr><th class="ps-2">Zeit</th><th>Browser</th><th class="text-end pe-2">IP</th></tr>
                                             </thead>
                                             <tbody>
@@ -136,7 +136,7 @@
                         <button type="submit" class="btn btn-sm btn-success">+</button>
                     </form>
                     
-                    <div class="table-responsive" style="max-height: 400px;">
+                    <div class="table-responsive holiday-table-wrapper">
                         <table class="table table-sm table-striped align-middle small mb-0">
                             <tbody>
                                 <tr v-for="h in holidays" :key="h.id">

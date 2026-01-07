@@ -1,18 +1,17 @@
-<div class="d-flex flex-column align-items-center justify-content-center flex-grow-1" style="min-height: 70vh;">
+<div class="login-container flex-grow-1">
     
     <div class="text-center mb-4 animate-fade">
         <img src="/static/img/logo.png" alt="TimeSloth" 
-             width="140" height="140"
-             style="height: 140px; width: auto; cursor: pointer;" 
-             class="mb-2 sloth-logo" title="Klick mich!">
+             class="mb-2 sloth-logo sloth-logo-lg" 
+             title="Klick mich!">
         
-        <h1 class="fw-bold mb-0" style="letter-spacing: -1px;">TimeSloth</h1>
+        <h1 class="fw-bold mb-0 login-title">TimeSloth</h1>
         <div id="login-quote" class="sloth-quote">
             Effizient faul sein.
         </div>
     </div>
 
-    <div class="widget-card p-4 shadow-sm animate-fade" style="width: 100%; max-width: 360px; animation-delay: 0.1s;">
+    <div class="widget-card p-4 shadow-sm animate-fade login-card">
         <form method="POST" action="/login">
             <div class="form-floating mb-3">
                 <input type="text" name="username" class="form-control" id="floatingInput" 

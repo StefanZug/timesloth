@@ -9,7 +9,7 @@
 
     <div class="row g-4">
         
-        <div class="col-12 col-lg-3 order-2 order-lg-1 sticky-column" v-show="isDesktop || viewMode === 'day'">
+        <div class="col-12 col-lg-3 order-1 order-lg-1 sticky-column" v-show="isDesktop || viewMode === 'day'">
             <div class="widget-card">
                 <div class="widget-header"><span>📅 Tages-Planung</span><button class="btn btn-sm btn-link text-muted p-0" @click="jumpToToday()">Heute</button></div>
                 <div class="widget-body">
@@ -18,11 +18,13 @@
                         <div class="text-center"><h5 class="m-0 fw-bold">[[ displayDateDayView ]]</h5><small class="text-muted" v-if="isNonWorkDay">[[ getStatusText(dayStatus) ]]</small></div>
                         <button class="btn btn-outline-secondary btn-sm rounded-circle" @click="shiftDay(1)"><i class="bi bi-chevron-right"></i></button>
                     </div>
+                    
                     <div class="d-flex justify-content-center gap-2 mb-4">
-                        <div class="btn-xs-status st-f" :class="{active: dayStatus === 'F'}" style="width:50px; height:40px; font-size:1rem;" @click="toggleStatus('F')">F</div>
-                        <div class="btn-xs-status st-u" :class="{active: dayStatus === 'U'}" style="width:50px; height:40px; font-size:1rem;" @click="toggleStatus('U')">U</div>
-                        <div class="btn-xs-status st-k" :class="{active: dayStatus === 'K'}" style="width:50px; height:40px; font-size:1rem;" @click="toggleStatus('K')">K</div>
+                        <div class="btn-xs-status btn-status-lg st-f" :class="{active: dayStatus === 'F'}" @click="toggleStatus('F')">F</div>
+                        <div class="btn-xs-status btn-status-lg st-u" :class="{active: dayStatus === 'U'}" @click="toggleStatus('U')">U</div>
+                        <div class="btn-xs-status btn-status-lg st-k" :class="{active: dayStatus === 'K'}" @click="toggleStatus('K')">K</div>
                     </div>
+                    
                     <div v-if="!isNonWorkDay">
                         <transition-group name="list" tag="div">
                             <div v-for="(block, index) in blocks" :key="block.id" class="card mb-2 shadow-sm border-0 bg-body-tertiary" :class="'type-' + block.type">
@@ -69,7 +71,7 @@
             </div>
         </div>
 
-        <div class="col-12 col-lg-6 order-3 order-lg-2" v-show="isDesktop || viewMode === 'month'">
+        <div class="col-12 col-lg-6 order-1 order-lg-2" v-show="isDesktop || viewMode === 'month'">
             <div class="widget-card h-100">
                 <div class="widget-header">
                     <div class="d-flex align-items-center gap-2">
@@ -81,15 +83,28 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover table-compact align-middle mb-0" style="font-size: 0.9rem;">
-                        <thead class="bg-body-tertiary"><tr><th class="ps-3">Datum</th><th class="text-center ps-4">Zeiten</th><th class="text-center">SAP</th><th class="text-center">Status</th><th>Notiz</th></tr></thead>
+                        <thead class="bg-body-tertiary">
+                            <tr>
+                                <th class="ps-3">Datum</th>
+                                <th class="text-center ps-4">Zeiten</th>
+                                <th class="text-center">SAP</th>
+                                <th class="text-center">Status</th>
+                                <th>Notiz</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             <tr v-for="day in monthDays" :key="day.iso" :class="getRowClass(day)">
-                                <td class="ps-3 cursor-pointer text-nowrap" @click="jumpToDay(day.iso)"><div class="fw-bold" :class="day.isToday ? 'text-primary' : 'text-body'">[[ day.dayShort ]] [[ day.dateNum ]].</div><div class="text-subtle">KW [[ day.kw ]]</div></td>
+                                <td class="ps-3 cursor-pointer text-nowrap" @click="jumpToDay(day.iso)">
+                                    <div class="fw-bold" :class="day.isToday ? 'text-primary' : 'text-body'">[[ day.dayShort ]] [[ day.dateNum ]].</div>
+                                    <div class="text-subtle">KW [[ day.kw ]]</div>
+                                </td>
                                 <td style="min-width: 180px;">
                                     <div v-if="!day.status">
                                         <div v-for="(block, index) in day.blocks" :key="block.id" class="d-flex align-items-center gap-1 mb-2">
-                                            <div class="dropdown d-inline-block" style="width: 24px;">
-                                                <button class="btn btn-sm p-0 border-0 w-100" type="button" data-bs-toggle="dropdown"><i class="bi" :class="getTypeIcon(block.type)" :style="{color: block.type === 'office' ? 'var(--sloth-primary)' : 'inherit'}" style="font-size: 1rem;"></i></button>
+                                            <div class="dropdown d-inline-block list-icon-btn">
+                                                <button class="btn btn-sm p-0 border-0 w-100" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi" :class="getTypeIcon(block.type)" :style="{color: block.type === 'office' ? 'var(--sloth-primary)' : 'inherit'}" style="font-size: 1rem;"></i>
+                                                </button>
                                                 <ul class="dropdown-menu shadow">
                                                     <li><button type="button" class="dropdown-item" @click="changeListBlockType($event, day, index, 'office')"><i class="bi bi-building me-2 text-success"></i>Büro</button></li>
                                                     <li><button type="button" class="dropdown-item" @click="changeListBlockType($event, day, index, 'home')"><i class="bi bi-house me-2 text-info"></i>Home</button></li>
@@ -99,28 +114,24 @@
                                             <input :type="inputType" :step="getStep(block)" class="table-input" v-model="block.start" @blur="formatListTime(day, index, 'start')" @input="triggerListSave(day)" @wheel.prevent="onWheel($event, block, 'start', day)">
                                             <span class="text-muted" style="font-size: 0.8rem">-</span>
                                             <input :type="inputType" :step="getStep(block)" class="table-input" v-model="block.end" @blur="formatListTime(day, index, 'end')" @input="triggerListSave(day)" @wheel.prevent="onWheel($event, block, 'end', day)">
-                                            <span class="duration-badge" 
-                                                  :style="{ visibility: getBlockDuration(block) ? 'visible' : 'hidden' }">
+                                            <span class="duration-badge" :style="{ visibility: getBlockDuration(block) ? 'visible' : 'hidden' }">
                                                 [[ getBlockDuration(block) || '0,00' ]]
                                             </span>
-                                            <button class="btn btn-link text-danger p-0 ms-1" style="font-size: 1rem; line-height: 1;" @click="removeListBlock(day, index)"><i class="bi bi-x"></i></button>
+                                            <button class="btn btn-link text-danger list-remove-btn" @click="removeListBlock(day, index)"><i class="bi bi-x"></i></button>
                                         </div>
                                         <div class="d-flex gap-1 mt-1">
-                                        <div style="width: 24px; flex-shrink: 0;"></div>
-                                        
-                                        <button class="btn btn-dashed btn-sm flex-fill py-1" @click="addListBlock(day, 'office')">
-                                            <i class="bi bi-plus-lg"></i>
-                                        </button>
-                                        
-                                        <div style="width: 20px; flex-shrink: 0;"></div>
+                                            <div class="list-spacer-start"></div>
+                                            <button class="btn btn-dashed btn-sm flex-fill py-1" @click="addListBlock(day, 'office')"><i class="bi bi-plus-lg"></i></button>
+                                            <div class="list-spacer-end"></div>
+                                        </div>
                                     </div>
                                 </td>
                                 <td class="text-center fw-bold cursor-pointer" @click="jumpToDay(day.iso)">[[ day.sapTime > 0 ? formatH(day.sapTime) : '-' ]]</td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-1">
-                                        <div class="btn-xs-status st-f" :class="{active: day.status === 'F'}" style="width:24px; height:24px; font-size:0.7rem;" @click.stop="quickToggle(day, 'F')">F</div>
-                                        <div class="btn-xs-status st-u" :class="{active: day.status === 'U'}" style="width:24px; height:24px; font-size:0.7rem;" @click.stop="quickToggle(day, 'U')">U</div>
-                                        <div class="btn-xs-status st-k" :class="{active: day.status === 'K'}" style="width:24px; height:24px; font-size:0.7rem;" @click.stop="quickToggle(day, 'K')">K</div>
+                                        <div class="btn-xs-status btn-status-sm st-f" :class="{active: day.status === 'F'}" @click.stop="quickToggle(day, 'F')">F</div>
+                                        <div class="btn-xs-status btn-status-sm st-u" :class="{active: day.status === 'U'}" @click.stop="quickToggle(day, 'U')">U</div>
+                                        <div class="btn-xs-status btn-status-sm st-k" :class="{active: day.status === 'K'}" @click.stop="quickToggle(day, 'K')">K</div>
                                     </div>
                                 </td>
                                 <td><input type="text" class="form-control form-control-sm border-0 bg-transparent p-0" style="font-size: 0.85rem;" v-model.lazy="day.comment" :placeholder="day.placeholder" @change="updateComment(day)"></td>
@@ -131,7 +142,7 @@
             </div>
         </div>
 
-        <div class="col-12 col-lg-3 order-1 order-lg-3 sticky-column">
+        <div class="col-12 col-lg-3 order-2 order-lg-3 sticky-column">
             <div class="widget-card">
                 <div class="widget-header">
                     <span class="text-primary"><i class="bi bi-buildings-fill"></i> Büro-Quote</span>
