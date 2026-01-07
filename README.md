@@ -28,7 +28,7 @@ Arztbesuche sind ein Sonderfall.
 ### 3. Berechnung der Büro-Quote (Statistical Average Logic)
 Um Diskrepanzen zu SAP zu vermeiden, nutzen wir **nicht** die echten Kalendertage des Monats, sondern einen statistischen Mittelwert (wie SAP).
 
-* **Basis-Berechnung:** `Monats-Soll = (Wochenstunden * 52 Wochen) / 12 Monate`
+* **SAP Basis-Berechnung:** `Monats-Soll = (Wochenstunden * 4,33)`
 * **Quote (40%):** `Büro-Ziel = Monats-Soll * 0,40`
 * **Abzüge (Deduction):** Jeder Tag mit Status **F** (Feiertag), **U** (Urlaub) oder **K** (Krank) reduziert das *Büro-Ziel* sofort um den jeweiligen Tageswert.
 

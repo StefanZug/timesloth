@@ -165,7 +165,6 @@ td { border-bottom: 1px solid var(--border-color); }
 .progress-sloth { height: 8px; border-radius: 10px; background-color: var(--bg-tertiary); overflow: hidden; }
 .progress-bar-sloth { 
     height: 100%; 
-    /* FIX: Balken ist jetzt GRÜN (Büro Farbe), nicht mehr Blau */
     background-color: green !important; 
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
 }
@@ -264,15 +263,15 @@ input[type=time]::-webkit-datetime-edit-second-field {
     color: var(--text-muted); 
     font-size: 0.75rem; 
     font-weight: bold; 
-    padding: 2px 0; /* Weniger Padding seitlich, Breite regelt min-width */
+    padding: 2px 0;
     border-radius: 4px; 
     vertical-align: middle; 
     
-    /* NEU: Feste Breite für perfektes Grid */
     min-width: 50px; 
     text-align: center;
-    margin-left: 4px; /* Abstand zum Input */
+    margin-left: 4px; 
 }
+
 /* --- 9. CALENDAR STYLES (GRID) --- */
 .calendar-grid {
     display: grid;
@@ -303,3 +302,62 @@ input[type=time]::-webkit-datetime-edit-second-field {
 .day-weekend { background-color: transparent; color: var(--text-muted); opacity: 0.4; border-color: transparent; }
 
 .day-empty { background: transparent; border: none; cursor: default; }
+
+/* --- 10. TWEAKS (Option A & Modern Look) --- */
+
+/* 1. Monospace für präzise Zahlendarstellung (verhindert "wackelnde" Doppelpunkte) */
+.table-input, 
+.duration-badge, 
+.font-monospace-fix {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+    font-size: 0.9em !important; /* Monospace ist meist breiter, daher etwas kleiner */
+    letter-spacing: -0.5px;
+}
+
+/* 2. SAP-Spalte und Summen-Anzeigen ebenfalls in Monospace */
+td.text-center.fw-bold, 
+.widget-body .fs-5 {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+    letter-spacing: -0.5px;
+}
+
+/* 3. Modernes Input-Styling (Light Mode) */
+.table-input {
+    background-color: rgba(0,0,0,0.03) !important; /* Dezentes Grau statt Weiß */
+    border-radius: 6px;
+    font-weight: 500 !important; /* Medium Weight für bessere Lesbarkeit */
+    color: var(--text-main);
+    border: 1px solid transparent; /* Rahmen nur bei Hover/Focus sichtbar */
+}
+.table-input:hover { border-color: var(--border-color); }
+
+/* 4. Modernes Input-Styling (Dark Mode) */
+[data-bs-theme="dark"] .table-input {
+    background-color: rgba(255,255,255,0.05) !important;
+}
+
+/* Mobile Optimierungen */
+@media (max-width: 991px) {
+    /* 1. Datum fixieren */
+    table.table {
+        border-collapse: separate; /* Wichtig für Sticky */
+        border-spacing: 0;
+    }
+    
+    /* Die erste Spalte (Datum) bleibt stehen */
+    td:first-child, th:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        background-color: var(--bg-card) !important; /* Überdeckt den Rest beim Scrollen */
+        border-right: 2px solid var(--border-color); /* Visuelle Trennung */
+        max-width: 80px; /* Schmaler machen */
+        padding-left: 0.5rem !important;
+    }
+
+    /* Header (th) braucht auch Background */
+    th:first-child {
+        background-color: var(--bg-tertiary) !important;
+        z-index: 11;
+    }
+}
