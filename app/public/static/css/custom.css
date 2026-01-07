@@ -383,3 +383,7 @@ td.text-center.fw-bold, .widget-body .fs-5 {
 .footer-actions { display: inline-flex; align-items: center; gap: 15px; background: var(--bg-card); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 .theme-toggle-btn { cursor: pointer; color: var(--text-muted); transition: color 0.2s; }
 .theme-toggle-btn:hover { color: var(--sloth-primary); }
+
+#settingsApp + .app-footer {
+    padding-bottom: 100px !important;
+}
