@@ -29,7 +29,6 @@
             <div class="widget-card">
                 <div class="widget-header">Bedienung & Optik</div>
                 <div class="widget-body">
-                    <hr class="my-3 text-secondary opacity-25">
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" role="switch" v-model="settings.useNativeWheel">
                         <label class="form-check-label fw-bold">Native Zeit-Picker (Handy)</label>

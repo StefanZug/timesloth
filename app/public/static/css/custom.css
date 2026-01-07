@@ -319,7 +319,12 @@ td.text-center.fw-bold, .widget-body .fs-5 {
    ========================================= */
 @media (max-width: 991px) {
     /* Sticky Datum Spalte */
-    table.table { border-collapse: separate; border-spacing: 0; }
+    table.table { 
+        border-collapse: separate; 
+        border-spacing: 0; 
+        /* FIX: Tabelle auf Mindestbreite zwingen -> Ermöglicht Scrollen statt Quetschen */
+        min-width: 800px !important;
+    }
     td:first-child, th:first-child {
         position: sticky; left: 0; z-index: 10;
         background-color: var(--bg-card) !important;
@@ -331,9 +336,8 @@ td.text-center.fw-bold, .widget-body .fs-5 {
     /* Elemente ausblenden */
     .bi-clock, .input-group-text { display: none !important; }
     
-    /* INPUT FIXES für Mobile */
+    /* INPUT FIXES für Mobile: Feste Breite, damit Zahlen lesbar bleiben */
     .table-input { 
-        /* Wir zwingen die Breite auf 50px und verbieten das Schrumpfen */
         flex: 0 0 auto !important; 
         width: 50px !important; 
         min-width: 50px !important;
@@ -353,6 +357,11 @@ td.text-center.fw-bold, .widget-body .fs-5 {
         flex-shrink: 0 !important;
         width: 24px !important;
         padding: 0 5px !important; 
+    }
+
+    /* Notiz Spalte: Mindestbreite geben, damit sie nicht verschwindet */
+    td:last-child input {
+        min-width: 150px;
     }
 
     /* Abstände minimieren */
