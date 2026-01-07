@@ -336,10 +336,10 @@ td.text-center.fw-bold, .widget-body .fs-5 {
     /* Elemente ausblenden */
     .bi-clock, .input-group-text { display: none !important; }
     
-    /* INPUT FIXES für Mobile: Feste Breite (75px), damit Zahlen lesbar bleiben */
+    /* INPUT FIXES für Mobile */
     .table-input { 
         flex: 0 0 auto !important; 
-        width: 75px !important; /* Erhöht von 50px */
+        width: 75px !important; 
         min-width: 75px !important;
         padding: 4px 0 !important; 
         font-size: 0.95rem !important; 
@@ -348,16 +348,24 @@ td.text-center.fw-bold, .widget-body .fs-5 {
     /* BADGE FIXES für Mobile */
     .duration-badge {
         flex: 0 0 auto !important;
-        width: 55px !important; /* Leicht erhöht für zweistellige Stunden */
+        width: 55px !important;
         min-width: 55px !important;
     }
 
-    /* DELETE BUTTON FIXES für Mobile */
+    /* DELETE BUTTON FIXES für Mobile: Explizite Breite und kein Shrink */
     .list-remove-btn { 
-        flex-shrink: 0 !important;
-        width: 24px !important;
-        padding: 0 5px !important; 
+        flex: 0 0 auto !important; /* Verhindert Schrumpfen */
+        width: 32px !important;    /* Etwas breiter als vorher */
+        height: 32px !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-left: 0.5rem !important; /* Abstand zum Input */
     }
+    
+    /* Icon im Button zentrieren */
+    .list-remove-btn i { font-size: 1.2rem !important; }
 
     /* Notiz Spalte: Mindestbreite geben, damit sie nicht verschwindet */
     td:last-child input {
