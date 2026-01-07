@@ -122,13 +122,13 @@ class TimeLogic {
         let m = currentDateObj.getMonth();
         let isoMonth = currentDateObj.toISOString().substring(0, 7);
         
-        // 1. STATISTISCHE BASIS (Exakt nach deiner Formel)
+        // 1. STATISTISCHE BASIS (SAP Style)
         let dailyAvg = parseFloat(settings.sollStunden);
         let weeklyAvg = dailyAvg * 5; 
         
-        // KORREKTUR 1: Exakte Berechnung (52 Wochen / 12 Monate) statt 4.33
-        // (38.5 * 52) / 12 = 166.833... (statt 166.705)
-        let monthlyAvg = (weeklyAvg * 52) / 12; 
+        // KORREKTUR: SAP nutzt den Faktor 4.33, nicht 52/12.
+        // Das erklärt die Differenz von 0,05h (66,73 vs 66,68).
+        let monthlyAvg = weeklyAvg * 4.33; 
         
         let baseTarget = monthlyAvg * 0.40;
 
@@ -146,12 +146,12 @@ class TimeLogic {
             let entry = entries.find(e => e.date === iso);
             let isHol = !!holidaysMap[iso];
             
-            // KORREKTUR 2 (Bugfix aus Analyse): 
+            // KORREKTUR (Bugfix): 
             // Nimm den Status nur, wenn er existiert, sonst Feiertag-Fallback
+            // Verhindert, dass leere Einträge an Feiertagen den Abzug blockieren.
             let status = (entry && entry.status) ? entry.status : (isHol ? 'F' : null);
 
             if(['F','U','K'].includes(status)) {
-                // Abzug: Tageswert * 40%
                 deductionTotal += (dailyAvg * 0.40);
             } else if(entry && entry.blocks) {
                 entry.blocks.forEach(b => {
@@ -164,15 +164,13 @@ class TimeLogic {
             }
         });
 
-        // 3. Manuelle Korrektur (ENTFERNT für Quote)
-        // KORREKTUR 3: settings.correction (GLZ Saldo) darf NICHT das Büro-Soll erhöhen.
-        // Falls du doch eine explizite "Büro-Quote-Korrektur" brauchst, müsste das ein eigenes Feld sein.
-        // Aktuell flog der Block hier komplett raus, damit das Ziel sauber bleibt.
+        // 3. Ergebnis
+        // WICHTIG: settings.correction (GLZ Saldo) darf NICHT das Büro-Soll verändern!
+        // Daher wurde + correctionQuota entfernt.
         
-        let finalTarget = Math.max(0, baseTarget - deductionTotal); // + correctionQuota entfernt
+        let finalTarget = Math.max(0, baseTarget - deductionTotal);
         let currentHours = officeMinSum / 60;
         
-        // Prozentberechnung sicherstellen (Division durch 0 abfangen)
         let percent = finalTarget > 0 ? (currentHours / finalTarget) * 100 : 100;
 
         return {
