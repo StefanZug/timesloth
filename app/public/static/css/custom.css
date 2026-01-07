@@ -307,11 +307,31 @@ input[type=time]::-webkit-datetime-edit-second-field {
 
 /* 1. Monospace für präzise Zahlendarstellung (verhindert "wackelnde" Doppelpunkte) */
 .table-input, 
-.duration-badge, 
-.font-monospace-fix {
+.duration-badge {
+    /* Look der Inputs übernehmen */
+    background-color: rgba(0,0,0,0.03) !important;
+    border: 1px solid transparent !important;
+    color: var(--text-muted) !important; /* Etwas dunkler als Inputs, da Read-Only */
+    
+    /* Bestehende Geometrie behalten */
+    display: inline-block;
+    border-radius: 6px;
+    font-size: 0.75rem; 
+    font-weight: bold; 
+    padding: 6px 0; /* Padding angepasst an Inputs */
+    vertical-align: middle;
+    min-width: 50px; 
+    text-align: center;
+    margin-left: 4px;
+    
+    /* Monospace beibehalten (falls Option A gewählt wurde) */
     font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
-    font-size: 0.9em !important; /* Monospace ist meist breiter, daher etwas kleiner */
     letter-spacing: -0.5px;
+}
+
+/* Dark Mode Anpassung */
+[data-bs-theme="dark"] .duration-badge {
+    background-color: rgba(255,255,255,0.05) !important;
 }
 
 /* 2. SAP-Spalte und Summen-Anzeigen ebenfalls in Monospace */

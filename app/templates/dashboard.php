@@ -81,7 +81,7 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover table-compact align-middle mb-0" style="font-size: 0.9rem;">
-                        <thead class="bg-body-tertiary"><tr><th class="ps-3">Datum</th><th>Zeiten</th><th class="text-center">SAP</th><th class="text-center">Status</th><th>Notiz</th></tr></thead>
+                        <thead class="bg-body-tertiary"><tr><th class="ps-3">Datum</th><th class="text-center ps-4">Zeiten</th><th class="text-center">SAP</th><th class="text-center">Status</th><th>Notiz</th></tr></thead>
                         <tbody>
                             <tr v-for="day in monthDays" :key="day.iso" :class="getRowClass(day)">
                                 <td class="ps-3 cursor-pointer text-nowrap" @click="jumpToDay(day.iso)"><div class="fw-bold" :class="day.isToday ? 'text-primary' : 'text-body'">[[ day.dayShort ]] [[ day.dateNum ]].</div><div class="text-subtle">KW [[ day.kw ]]</div></td>
