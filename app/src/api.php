@@ -29,8 +29,7 @@ if ($uri === '/api/save_entry' && $method === 'POST') {
     if (!is_logged_in()) { json_error('Unauthorized', 401); }
     $input = json_decode(file_get_contents('php://input'), true);
     if (!is_array($input)) $input = [];
-    }
-    $service = new EntryService();
+     $service = new EntryService();
     $res = $service->saveEntry($_SESSION['user']['id'], $input);
     json_response($res);
 }
