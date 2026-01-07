@@ -386,46 +386,98 @@ td.text-center.fw-bold, .widget-body .fs-5 {
 
 
 /* =========================================
-   FIX 1: "X"-Button in der Tagesplanung (Mobile)
+   FIX: Generelles Layout & Footer (Stick to Bottom)
    ========================================= */
+
+/* 1. Desktop: Footer immer unten halten
+   Wir zwingen den Settings-Container, mindestens so hoch zu sein wie der Screen
+   minus Header und Footer-Höhe. Dadurch wird der Footer nach unten gedrückt. */
+.settings-container {
+    min-height: calc(100vh - 200px); 
+    display: flex;
+    flex-direction: column;
+}
+
+/* 2. Mobile: Footer sichtbar machen (hinter Speichern-Leiste)
+   Wir geben dem Footer selbst das Margin. Das ist robuster als Sibling-Selektoren. */
 @media (max-width: 991px) {
-    /* Wir geben dem Button eine feste quadratische Form und zentrieren das Icon.
-       Dadurch wird nichts gequetscht und nichts verschoben. */
-    .widget-body .card .card-body .btn.ms-auto {
-        width: 36px !important;        /* Feste Breite erzwingen */
-        height: 36px !important;       /* Feste Höhe */
-        padding: 0 !important;         /* Kein Padding, das den Inhalt verschiebt */
-        
-        display: flex !important;      /* Flexbox für perfekte Zentrierung */
-        align-items: center !important;
-        justify-content: center !important;
-        
-        flex-shrink: 0 !important;     /* Verhindert das "Zusammendrücken" */
-        margin-right: 0 !important;    /* Resettet evtl. negative Margins */
-    }
-    
-    /* Optional: Icon etwas kleiner machen, damit es luftiger wirkt */
-    .widget-body .card .card-body .btn.ms-auto i {
-        font-size: 1.1rem !important;
+    .app-footer {
+        padding-bottom: 120px !important; /* Viel Platz für die blaue Leiste */
     }
 }
 
 /* =========================================
-   FIX 2: Settings Footer (Verdeckt durch Speichern-Leiste)
+   FIX: X-Button & Inputs (Tagesplanung Mobile)
    ========================================= */
-/* Wir nutzen PADDING statt Margin. Das macht den Footer "unsichtbar länger" nach unten.
-   Der Text bleibt oben, aber man kann weiter runterscrollen, bis der Text
-   über der fixierten Leiste erscheint. */
-
-#settingsApp + .app-footer {
-    /* PC: Platz für die Leiste schaffen */
-    padding-bottom: 100px !important; 
-    margin-bottom: 0 !important;
-}
 
 @media (max-width: 991px) {
-    #settingsApp + .app-footer {
-        /* Mobile: Mehr Platz wegen Touch-Bedienung und Browser-Leisten */
-        padding-bottom: 140px !important; 
+    /* Den Container für die Zeit-Zeile etwas enger schnallen */
+    .widget-body .card .card-body {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+        gap: 4px !important; /* Bootstrap gap-2 (8px) ist zu viel, wir nehmen 4px */
+    }
+
+    /* Die Eingabefelder dürfen schrumpfen, damit der X-Button Platz hat */
+    .widget-body .card .card-body input.form-control {
+        min-width: 0 !important; /* WICHTIG: Erlaubt das Schrumpfen unter 50px */
+        width: 100% !important;
+        flex: 1 1 auto !important;
+        font-size: 0.9rem !important; /* Text etwas kleiner */
+        padding: 4px 0 !important;
+    }
+
+    /* Der X-Button bekommt festen Platz und darf nicht gedrückt werden */
+    .widget-body .card .card-body .btn.ms-auto {
+        flex: 0 0 32px !important; /* Feste Breite 32px */
+        width: 32px !important;
+        height: 32px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-left: 4px !important; /* Kleiner Abstand zum Input */
+    }
+}
+
+/* =========================================
+   FIX: Monatsansicht (Mobile Ausrichtung)
+   ========================================= */
+
+@media (max-width: 991px) {
+    /* Inputs in der Tabelle zähmen */
+    .table-input {
+        min-width: 55px !important; /* Etwas breiter als vorher */
+        width: 55px !important;
+        font-size: 0.85rem !important;
+        height: 30px !important;
+        padding: 0 !important;
+        margin: 0 2px !important; /* Abstand zwischen den Inputs */
+    }
+
+    /* Den Container der Inputs (Start - Ende) aufräumen */
+    td > div {
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important; /* Verhindert Umbruch */
+    }
+
+    /* Die Dropdown-Buttons (Haus/Office Icon) fixieren */
+    .list-icon-btn, .list-dropdown-btn {
+        width: 24px !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Dauer-Anzeige (z.B. 8,25) auf Mobile etwas kleiner oder ausblenden wenn nötig */
+    .duration-badge {
+        font-size: 0.7rem !important;
+        min-width: 30px !important;
+        padding: 2px 4px !important;
+        margin-left: 2px !important;
+    }
+    
+    /* Löschen Button in der Liste */
+    .list-remove-btn {
+        width: 24px !important;
+        padding: 0 !important;
     }
 }
