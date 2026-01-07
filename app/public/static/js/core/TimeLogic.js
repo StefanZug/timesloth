@@ -142,7 +142,7 @@ class TimeLogic {
             let entry = entries.find(e => e.date === iso);
             let isHol = !!holidaysMap[iso];
             
-            let status = entry ? entry.status : (isHol ? 'F' : null);
+            let status = (entry && entry.status) ? entry.status : (isHol ? 'F' : null);
 
             if(['F','U','K'].includes(status)) {
                 deductionTotal += (dailyAvg * 0.40);

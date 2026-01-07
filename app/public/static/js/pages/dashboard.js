@@ -61,7 +61,7 @@ createApp({
 
                 let entry = this.entriesCache.find(e => e.date === iso);
                 let isHol = !!this.holidaysMap[iso];
-                let status = entry ? entry.status : (isHol ? 'F' : null);
+                let status = (entry && entry.status) ? entry.status : (isHol ? 'F' : null);
                 
                 let dayBalance = 0;
                 if (!['F','U','K'].includes(status)) {
