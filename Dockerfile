@@ -1,6 +1,5 @@
-FROM ghcr.io/home-assistant/aarch64-base:3.21
+FROM ghcr.io/home-assistant/aarch64-base:3.23
 
-# Pakete installieren (NEU: tzdata hinzugefügt)
 RUN apk add --no-cache \
     nginx \
     php84 \
@@ -22,7 +21,7 @@ RUN apk add --no-cache \
 ENV TZ=Europe/Vienna
 
 # PHP Verlinkung
-RUN ln -sf /usr/bin/php84 /usr/bin/php
+RUN ln -sf /usr/bin/php85 /usr/bin/php
 
 # LOGGING FIX: Nginx Logs auf stdout/stderr umleiten
 RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
