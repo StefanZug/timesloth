@@ -37,10 +37,12 @@
         <div v-else class="alert text-center mt-3 shadow-sm border mb-0" :class="statusAlertClass"><h6 class="m-0">[[ getStatusText(dayStatus) ]]</h6></div>
     </div>
     
-    <div class="mt-4"> <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-            <span class="text-uppercase fw-bold text-primary" style="font-size: 0.8rem; letter-spacing: 0.05em;">
-                <i class="bi bi-journal-text me-2"></i>Tages-Notizen
-            </span>
+    <div class="mt-4 pt-3 border-top">
+        
+        <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+            <h6 class="m-0 fw-bold text-uppercase text-muted" style="font-size: 0.8rem; letter-spacing: 0.05em;">
+                📝 Tages-Notizen
+            </h6>
             
             <button v-if="!isEditingNote" class="btn btn-sm btn-link text-muted p-0" @click="isEditingNote = true" title="Bearbeiten">
                 <i class="bi bi-pencil-square"></i>
@@ -55,7 +57,7 @@
         </div>
 
         <div v-if="!isEditingNote" 
-             class="note-view-container" 
+             class="note-view-container bg-body-tertiary" 
              @click="isEditingNote = true">
             
             <div v-if="dayComment" class="markdown-preview" v-html="renderMarkdown(dayComment)"></div>

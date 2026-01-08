@@ -1,8 +1,9 @@
 <div class="widget-card">
     <div class="widget-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-buildings-fill text-primary me-1"></i> Büro-Quote</span>
-        <button class="btn btn-sm btn-link text-primary p-0" data-bs-toggle="modal" data-bs-target="#calcModal" title="Büro-Rechner öffnen">
-            <i class="bi bi-calculator"></i>
+        <span>🏢 Büro-Quote</span>
+        
+        <button class="btn btn-sm btn-link text-decoration-none p-0 fs-6" data-bs-toggle="modal" data-bs-target="#calcModal" title="Büro-Rechner öffnen">
+            🧮
         </button>
     </div>
     <div class="widget-body">
@@ -51,8 +52,9 @@
 <div class="widget-card">
     <div class="widget-header d-flex justify-content-between align-items-center">
         <span>🌴 Urlaubskonto</span>
-        <button class="btn btn-sm btn-link p-0 text-warning" @click="openYearModal" title="Jahreskalender öffnen">
-            <i class="bi bi-calendar3"></i>
+        
+        <button class="btn btn-sm btn-link text-decoration-none p-0 fs-6" @click="openYearModal" title="Jahreskalender öffnen">
+            🗓️
         </button>
     </div>
     <div class="widget-body">

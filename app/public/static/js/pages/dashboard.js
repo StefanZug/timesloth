@@ -82,7 +82,13 @@ createApp({
             let used = this.aggregatedStats.flatrateUsed;
             let total = this.aggregatedStats.flatrateTotal;
             let percent = total > 0 ? (used / total) * 100 : 0;
-            return { used, total, percent, today: this.aggregatedStats.todayConsume };
+            return { 
+                used, 
+                total, 
+                percent, 
+                today: this.aggregatedStats.todayConsume,
+                flatrateReduction: this.aggregatedStats.flatrateReduction
+            };
         },
         quota() {
             return TimeLogic.calculateMonthlyQuota(
