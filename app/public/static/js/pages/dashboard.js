@@ -7,7 +7,8 @@ createApp({
             isDesktop: window.innerWidth >= 992,
             currentDateObj: new Date(),
             viewMode: localStorage.getItem('viewMode') || 'day',
-            dayStatus: null, 
+            dayStatus: null,
+            dayComment: '', 
             blocks: [], 
             entriesCache: [],
             holidaysMap: {},
@@ -407,6 +408,7 @@ createApp({
         updateComment(day) {
             let entry = this.entriesCache.find(e => e.date === day.iso);
             if(entry) entry.comment = day.comment; else { entry = { date: day.iso, blocks: [], status: null, comment: day.comment }; this.entriesCache.push(entry); }
+            if(day.iso === this.isoDate) { this.dayComment = day.comment; }
             this.saveSingleEntry(entry);
         },
         triggerListSave(day) {
@@ -426,9 +428,9 @@ createApp({
         async saveData() {
             const payload = { date: this.isoDate, blocks: this.blocks, status: this.dayStatus, comment: '' };
             let existing = this.entriesCache.find(e => e.date === this.isoDate);
-            if(existing) payload.comment = existing.comment;
+            if(existing) payload.comment = this.dayComment; // Sicherstellen, dass Cache aktuell bleibt
             await this.saveSingleEntry(payload);
-            if(this.dayStatus === 'U') this.fetchVacationStats();
+            if(['F', 'U', 'K'].includes(this.dayStatus)) this.fetchVacationStats();
         },
         async saveSingleEntry(payload) {
             this.saveState = 'saving';
@@ -450,8 +452,8 @@ createApp({
         },
         loadFromCache() {
             const iso = this.isoDate; let isHol = !!this.holidaysMap[iso]; let entry = this.entriesCache.find(e => e.date === iso);
-            if (entry) { this.blocks = JSON.parse(JSON.stringify(entry.blocks || [])); this.dayStatus = entry.status; } 
-            else { this.blocks = []; this.dayStatus = isHol ? 'F' : null; }
+            if (entry) { this.blocks = JSON.parse(JSON.stringify(entry.blocks || [])); this.dayStatus = entry.status; this.dayComment = entry.comment || ''; } 
+            else { this.blocks = []; this.dayStatus = isHol ? 'F' : null; this.dayComment = ''; }
         },
         async resetMonth() {
             if(!confirm("Möchtest du wirklich alle Einträge für diesen Monat löschen?")) return;

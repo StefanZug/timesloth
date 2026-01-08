@@ -48,6 +48,10 @@
                     </div>
                     <div v-else class="alert text-center mt-3 shadow-sm border mb-0" :class="statusAlertClass"><h6 class="m-0">[[ getStatusText(dayStatus) ]]</h6></div>
                 </div>
+                <div class="mt-3 pt-3 border-top">
+                        <label class="form-label small text-muted fw-bold text-uppercase">Tages-Notizen</label>
+                        <textarea class="form-control form-control-sm" rows="3" v-model="dayComment" placeholder="Na? Was haben wir heute gemacht?" @input="triggerAutoSave"></textarea>
+                </div>
             </div>
 
             <div class="widget-card" v-if="!isNonWorkDay">
@@ -186,7 +190,32 @@
                                         <div class="btn-xs-status btn-status-sm st-k" :class="{active: day.status === 'K'}" @click.stop="quickToggle(day, 'K')">K</div>
                                     </div>
                                 </td>
-                                <td><input type="text" class="form-control form-control-sm border-0 bg-transparent p-0" style="font-size: 0.85rem;" v-model.lazy="day.comment" :placeholder="day.placeholder" @change="updateComment(day)"></td>
+                                <td style="min-width: 200px;">
+                                    <div class="d-flex align-items-center gap-2" v-if="!day.isExpanded">
+                                        <input type="text" 
+                                               class="form-control form-control-sm border-0 bg-transparent p-0 text-truncate" 
+                                               style="font-size: 0.85rem;" 
+                                               v-model.lazy="day.comment" 
+                                               :placeholder="day.placeholder" 
+                                               :title="day.comment" 
+                                               @change="updateComment(day)">
+                                        <button class="btn btn-sm btn-link text-muted p-0" @click="day.isExpanded = true" title="Großes Feld öffnen">
+                                            <i class="bi bi-arrows-expand"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="d-flex align-items-start gap-2" v-else>
+                                        <textarea class="form-control form-control-sm" 
+                                                  rows="3" 
+                                                  style="font-size: 0.85rem;" 
+                                                  v-model.lazy="day.comment" 
+                                                  @change="updateComment(day)"
+                                                  placeholder="Notiz..."></textarea>
+                                        <button class="btn btn-sm btn-link text-muted p-0" @click="day.isExpanded = false" title="Zuklappen">
+                                            <i class="bi bi-arrows-collapse"></i>
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
