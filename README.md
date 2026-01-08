@@ -64,7 +64,7 @@ TimeSloth nutzt einen modernen, leichtgewichtigen PHP-Stack mit MVC-ähnlicher A
 
 ### Projektstruktur (v0.1.9+)
 
-```text
+```
 /app
   /src
     /Controllers     # Steuerung (Auth, Api, Page, Admin)
@@ -78,7 +78,7 @@ TimeSloth nutzt einen modernen, leichtgewichtigen PHP-Stack mit MVC-ähnlicher A
       /js            # Vue.js Applikation & Core Logic
       /css           # Custom Styling (Variables, Theming)
     index.php        # Entry Point
-
+```
 
 ### Datenfluss
 1. **Request:** Alle Anfragen gehen zentral an `index.php`, welche den `Router.php` initialisiert.
@@ -114,4 +114,4 @@ TimeSloth nutzt einen modernen, leichtgewichtigen PHP-Stack mit MVC-ähnlicher A
 
 ## 🎨 Credits
 Logo & Design inspired by laziness.
-Built with ❤️ , 🍺 and <img src="https://www.google.com/search?q=https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg" height="16" style="vertical-align: middle;" alt="Gemini">
+Built with ❤️ , 🍺 & Gemini.

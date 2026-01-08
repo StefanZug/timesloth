@@ -26,12 +26,24 @@ class PageController extends BaseController {
         
         foreach($logs as &$log) {
             $ua = $log['user_agent'];
-            $b = 'Unbekannt';
-            if (strpos($ua, 'Firefox') !== false) $b = 'Firefox';
-            elseif (strpos($ua, 'Chrome') !== false) $b = 'Chrome';
-            elseif (strpos($ua, 'Safari') !== false) $b = 'Safari';
-            elseif (strpos($ua, 'Edge') !== false) $b = 'Edge';
-            $log['browser_short'] = $b;
+            
+            // 1. Platform (OS) erkennen (FIX: Hat gefehlt)
+            $platform = 'Unbekannt';
+            if (preg_match('/windows|win32/i', $ua)) $platform = 'Windows';
+            elseif (preg_match('/android/i', $ua)) $platform = 'Android';
+            elseif (preg_match('/iphone|ipad|ios/i', $ua)) $platform = 'iOS';
+            elseif (preg_match('/macintosh|mac os x/i', $ua)) $platform = 'Mac';
+            elseif (preg_match('/linux/i', $ua)) $platform = 'Linux';
+            
+            // 2. Browser erkennen
+            $browser = 'Unbekannt';
+            if (preg_match('/firefox/i', $ua)) $browser = 'Firefox';
+            elseif (preg_match('/edg/i', $ua)) $browser = 'Edge';
+            elseif (preg_match('/chrome|crios/i', $ua)) $browser = 'Chrome';
+            elseif (preg_match('/safari/i', $ua)) $browser = 'Safari';
+            
+            // 3. Kombinieren
+            $log['browser_short'] = "$platform / $browser";
         }
         return $logs;
     }

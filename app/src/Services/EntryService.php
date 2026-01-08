@@ -1,12 +1,19 @@
 <?php
 class EntryService {
     
+    private $entryRepo;
+    private $holidayRepo;
+    private $userRepo;
+
+    public function __construct() {
+        $this->entryRepo = new EntryRepository();
+        $this->holidayRepo = new HolidayRepository();
+        $this->userRepo = new UserRepository();
+    }
+
     public function getMonthEntries($userId, $month) {
-        $db = Database::getInstance()->getConnection();
-        
-        $stmt = $db->prepare("SELECT * FROM entries WHERE user_id = ? AND date_str LIKE ?");
-        $stmt->execute([$userId, "$month%"]);
-        $rows = $stmt->fetchAll();
+        // 1. Einträge laden
+        $rows = $this->entryRepo->findByMonth($userId, $month);
         
         $entries = [];
         foreach ($rows as $row) {
@@ -19,18 +26,11 @@ class EntryService {
             ];
         }
         
-        $stmtHol = $db->prepare("SELECT date_str, name FROM global_holidays WHERE date_str LIKE ?");
-        $stmtHol->execute(["$month%"]);
-        $holidaysRaw = $stmtHol->fetchAll();
+        // 2. Feiertage laden (via HolidayRepo)
+        $holidayMap = $this->holidayRepo->getHolidayMap("$month%");
         
-        $holidayMap = [];
-        foreach($holidaysRaw as $h) { 
-            $holidayMap[$h['date_str']] = $h['name']; 
-        }
-        
-        $stmtUser = $db->prepare("SELECT settings FROM users WHERE id = ?");
-        $stmtUser->execute([$userId]);
-        $userSettings = json_decode($stmtUser->fetchColumn() ?: '{}', true);
+        // 3. User Settings laden (via UserRepo)
+        $userSettings = $this->userRepo->getSettings($userId);
 
         return [
             'entries' => $entries, 
@@ -40,21 +40,16 @@ class EntryService {
     }
 
     public function saveEntry($userId, $data) {
-        $db = Database::getInstance()->getConnection();
-        
-        $stmt = $db->prepare("INSERT INTO entries (user_id, date_str, data, status, comment, status_note) 
-                              VALUES (:uid, :date, :data, :status, :comment, :status_note)
-                              ON CONFLICT(user_id, date_str) DO UPDATE SET
-                              data = :data, status = :status, comment = :comment, status_note = :status_note");
-        
-        $stmt->execute([
-            ':uid' => $userId,
-            ':date' => $data['date'],
-            ':data' => json_encode($data['blocks']),
-            ':status' => $data['status'],
-            ':comment' => $data['comment'] ?? '',
-            ':status_note' => $data['status_note'] ?? ''
-        ]);
+        if (empty($data['date'])) throw new Exception("Datum fehlt");
+
+        $this->entryRepo->save(
+            $userId, 
+            $data['date'], 
+            json_encode($data['blocks']), 
+            $data['status'], 
+            $data['comment'] ?? '', 
+            $data['status_note'] ?? ''
+        );
         
         return ['status' => 'Saved'];
     }
@@ -63,19 +58,13 @@ class EntryService {
         if (strlen($month) !== 7) { 
             throw new Exception('Invalid month format'); 
         }
-        $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare("DELETE FROM entries WHERE user_id = ? AND date_str LIKE ?");
-        $stmt->execute([$userId, "$month%"]);
-        
+        $this->entryRepo->deleteByMonth($userId, $month);
         return ['status' => 'Deleted'];
     }
 
     public function getYearStats($userId, $year) {
-        $db = Database::getInstance()->getConnection();
-        
-        $stmt = $db->prepare("SELECT date_str, status, status_note, comment FROM entries WHERE user_id = ? AND date_str LIKE ?");
-        $stmt->execute([$userId, "$year%"]);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // 1. Alle Einträge des Jahres holen
+        $rows = $this->entryRepo->findByYear($userId, $year);
         
         $usedCount = 0;
         $vacationDates = [];
@@ -83,6 +72,7 @@ class EntryService {
         $userHolidayDates = [];
         $notes = []; 
         
+        // Logik zur Verarbeitung der Raw-Daten
         foreach($rows as $row) {
             $d = $row['date_str'];
             $status = $row['status'];
@@ -90,7 +80,7 @@ class EntryService {
             if ($status === 'U') {
                 $vacationDates[] = $d;
                 $dt = new DateTime($d);
-                if ($dt->format('N') < 6) $usedCount++;
+                if ($dt->format('N') < 6) $usedCount++; // Wochenende ignorieren
             }
             elseif ($status === 'K') {
                 $sickDates[] = $d;
@@ -99,8 +89,8 @@ class EntryService {
                 $userHolidayDates[] = $d;
             }
             
+            // Notiz extrahieren
             $rawText = !empty($row['status_note']) ? $row['status_note'] : $row['comment'];
-            
             if (!empty($rawText)) {
                 $cleanText = trim(str_replace(["\r", "\n"], " ", $rawText));
                 if (mb_strlen($cleanText) > 50) {
@@ -110,13 +100,10 @@ class EntryService {
             }
         }
 
-        $stmtHol = $db->prepare("SELECT date_str, name FROM global_holidays WHERE date_str LIKE ?");
-        $stmtHol->execute(["$year%"]);
-        $holidays = $stmtHol->fetchAll(PDO::FETCH_ASSOC);
-        
-        $holidayMap = [];
-        foreach($holidays as $h) { $holidayMap[$h['date_str']] = $h['name']; }
+        // 2. Globale Feiertage holen
+        $holidayMap = $this->holidayRepo->getHolidayMap("$year%");
 
+        // Eigene 'F' Tage mit Notizen anreichern, falls kein globaler Feiertag
         foreach($userHolidayDates as $fDate) {
             if(!isset($holidayMap[$fDate])) {
                 $holidayMap[$fDate] = $notes[$fDate] ?? "Persönlich";

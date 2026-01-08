@@ -7,6 +7,7 @@ spl_autoload_register(function ($className) {
         APP_ROOT . '/src/',              // für Router.php
         APP_ROOT . '/src/Controllers/',  // für AuthController, PageController...
         APP_ROOT . '/src/Services/'      // für EntryService, UserService...
+        APP_ROOT . '/src/Repositories/'  // für das Repository der "Bibliothekar"
     ];
 
     // Wir schauen in jedem Ordner nach
