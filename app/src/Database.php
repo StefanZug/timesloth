@@ -1,10 +1,8 @@
 <?php
 class Database {
-    // Statische Variable speichert die EINE Instanz
     private static $instance = null;
     private $pdo;
 
-    // Der Konstruktor ist "private", damit niemand "new Database()" rufen kann.
     private function __construct() {
         $dir = dirname(DB_PATH);
         if (!is_dir($dir)) mkdir($dir, 0777, true);
@@ -14,11 +12,17 @@ class Database {
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $this->pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         
-        // Tabellen initialisieren
+        // FIX 1: Performance & Concurrency Tuning
+        // WAL erlaubt gleichzeitiges Lesen & Schreiben (verhindert 'database is locked')
+        $this->pdo->exec("PRAGMA journal_mode = WAL;");
+        // Timeout: Warte bis zu 5000ms auf Unlock statt sofort zu crashen
+        $this->pdo->exec("PRAGMA busy_timeout = 5000;");
+        // Foreign Keys aktivieren (Good Practice)
+        $this->pdo->exec("PRAGMA foreign_keys = ON;");
+        
         $this->initTables();
     }
 
-    // Zugriffspunkt von außen
     public static function getInstance() {
         if (self::$instance === null) {
             self::$instance = new Database();
@@ -26,16 +30,13 @@ class Database {
         return self::$instance;
     }
 
-    // Gibt das PDO Objekt zurück
     public function getConnection() {
         return $this->pdo;
     }
 
-    // Migrationen & Tabellen-Erstellung ausgelagert
     private function initTables() {
         $pdo = $this->pdo;
         
-        // 1. Tabellen
         $pdo->exec("CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
@@ -71,7 +72,7 @@ class Database {
             name TEXT
         )");
 
-        // 2. Migrationen (Spalten prüfen)
+        // Migrationen
         $cols = $pdo->query("PRAGMA table_info(users)")->fetchAll(PDO::FETCH_COLUMN, 1);
         if (!in_array('is_active', $cols)) {
             $pdo->exec("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1");
@@ -81,7 +82,7 @@ class Database {
             $pdo->exec("UPDATE users SET pw_last_changed = CURRENT_TIMESTAMP WHERE pw_last_changed IS NULL");
         }
         
-        // 3. Default Admin
+        // Default Admin
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = 'admin'");
         $stmt->execute();
         if ($stmt->fetchColumn() == 0) {
@@ -89,7 +90,11 @@ class Database {
             $pdo->exec("INSERT INTO users (username, password_hash, is_admin, pw_last_changed) VALUES ('admin', '$hash', 1, CURRENT_TIMESTAMP)");
         }
         
-        // 4. Cleanup Logs (bei Verbindung)
-        $pdo->exec("DELETE FROM login_log WHERE timestamp < date('now', '-30 days')");
+        // FIX 2: Cleanup entschärfen (Lotterie)
+        // Nur noch bei 1% aller Aufrufe aufräumen, um Schreib-Locks zu minimieren.
+        // Alternativ kann man den Cleanup auch komplett in den Admin-Bereich/Cron verlagern.
+        if (rand(1, 100) === 1) {
+            $pdo->exec("DELETE FROM login_log WHERE timestamp < date('now', '-30 days')");
+        }
     }
 }

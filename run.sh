@@ -85,14 +85,34 @@ fi
 
 echo "🦥 TimeSloth startet..."
 
-# PHP-FPM starten (Wir suchen das Binary passend zum Config Ordner namen, z.B. php-fpm83)
-# Extrahiere Version aus Ordnernamen (z.B. /etc/php83 -> php-fpm83)
-PHP_VER_NAME=$(basename "$PHP_CONF_DIR")
-FPM_BIN="/usr/sbin/$PHP_VER_NAME-fpm"
+# PHP-FPM Binary finden (Intelligent Search)
+# Wir suchen im sbin Ordner nach allem was wie php-fpm aussieht
+# Priorität: Exakte Version (z.B. php-fpm85) -> Allgemeines Binary
+# Die Variable PHP_VER_NAME haben wir oben schon (z.B. "php85")
 
-# Fallback falls binary anders heißt (z.B. nur php-fpm)
-if [ ! -x "$FPM_BIN" ]; then
-    FPM_BIN="php-fpm"
+# 1. Versuch: /usr/sbin/php-fpm85 (Standard Alpine)
+# Wir strippen das "php" vom Ordnernamen "php85" -> "85"
+PURE_VERSION=${PHP_VER_NAME#php} 
+CANDIDATE_1="/usr/sbin/php-fpm${PURE_VERSION}"
+
+# 2. Versuch: /usr/sbin/php85-fpm (Manche Repos)
+CANDIDATE_2="/usr/sbin/${PHP_VER_NAME}-fpm"
+
+if [ -x "$CANDIDATE_1" ]; then
+    FPM_BIN="$CANDIDATE_1"
+elif [ -x "$CANDIDATE_2" ]; then
+    FPM_BIN="$CANDIDATE_2"
+else
+    # 3. Versuch: "Finde irgendein FPM Binary" (Verzweiflungstat)
+    echo "⚠️ Konnte kein Standard FPM Binary finden. Suche via 'find'..."
+    FPM_BIN=$(find /usr/sbin -name "php-fpm*" -o -name "php*fpm" | head -n 1)
+fi
+
+if [ -z "$FPM_BIN" ] || [ ! -x "$FPM_BIN" ]; then
+    echo "❌ CRITICAL: Kein PHP-FPM Binary gefunden! (Gesucht nach php-fpm${PURE_VERSION} oder ${PHP_VER_NAME}-fpm)"
+    echo "Inhalt von /usr/sbin:"
+    ls -la /usr/sbin/php*
+    exit 1
 fi
 
 echo "🚀 Starte $FPM_BIN..."
