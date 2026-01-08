@@ -1,0 +1,31 @@
+version: 2
+updates:
+  # 1. Frontend Abhängigkeiten (via package.json)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    # Optional: Labels für die PRs
+    labels:
+      - "dependencies"
+      - "frontend"
+
+  # 2. Docker Base Image (via Dockerfile)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  # 3. GitHub Actions (via .github/workflows)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "ci"

@@ -3,24 +3,23 @@ set -e
 
 CONFIG_PATH=/data/options.json
 
-# Config aus HA lesen
+# 1. Config lesen
 if [ -f "$CONFIG_PATH" ]; then
     export DB_FOLDER=$(jq --raw-output '.db_folder // "/data"' $CONFIG_PATH)
 else
     export DB_FOLDER="/data"
 fi
 
-# Sicherstellen, dass DB Ordner existiert und nobody gehört
+# 2. DB Setup
 mkdir -p "$DB_FOLDER"
 echo "🔧 Setze Berechtigungen für $DB_FOLDER..."
 chown -R nobody:nobody "$DB_FOLDER"
 
-# SSL Konfiguration lesen
+# 3. SSL Setup
 SSL=$(jq --raw-output '.ssl // false' $CONFIG_PATH)
 CERTFILE=$(jq --raw-output '.certfile // "fullchain.pem"' $CONFIG_PATH)
 KEYFILE=$(jq --raw-output '.keyfile // "privkey.pem"' $CONFIG_PATH)
 
-# Nginx Server Block dynamisch erstellen
 if [ "$SSL" == "true" ]; then
     echo "🔒 SSL ist AKTIVIERT. Nutze Zertifikate aus /ssl/..."
     LISTEN_DIRECTIVE="listen 8080 default_server ssl;
@@ -31,13 +30,12 @@ else
     LISTEN_DIRECTIVE="listen 8080 default_server;"
 fi
 
-# Config schreiben
+# 4. Nginx Config schreiben
 echo "server {
     $LISTEN_DIRECTIVE
     root /app/public;
     index index.php;
 
-    # Security Headers
     add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\" always;
     add_header X-Content-Type-Options \"nosniff\" always;
     add_header X-Frame-Options \"SAMEORIGIN\" always;
@@ -52,31 +50,53 @@ echo "server {
     }
 }" > /etc/nginx/http.d/default.conf
 
-# Datenbank Größe ermitteln (falls vorhanden)
-if [ -f "$DB_FOLDER/timesloth.sqlite" ]; then
-    # 'du -h' gibt menschenlesbare Größe aus (z.B. 1.2M)
-    DB_SIZE=$(du -h "$DB_FOLDER/timesloth.sqlite" | cut -f1)
-    echo "📊 Aktuelle Datenbank-Größe von $DB_FOLDER/timesloth.sqlite: $DB_SIZE"
-else
-    echo "🆕 Datenbank existiert noch nicht (wird beim ersten Zugriff erstellt)."
+# 5. PHP AUTO-DETECTION (Der wichtige Teil!)
+# Wir suchen den Config-Ordner. Alpine nutzt meist /etc/phpXY
+PHP_CONF_DIR=$(find /etc -maxdepth 1 -type d -name "php*" | head -n 1)
+
+if [ -z "$PHP_CONF_DIR" ]; then
+    echo "❌ CRITICAL: Kein PHP Konfigurations-Ordner in /etc gefunden!"
+    exit 1
 fi
 
-# PHP-FPM 8.4 konfigurieren
-# 1. User auf nobody setzen (sicherheitshalber)
-sed -i 's/user = nobody/user = nobody/g' /etc/php84/php-fpm.d/www.conf
-sed -i 's/group = nobody/group = nobody/g' /etc/php84/php-fpm.d/www.conf
+echo "🐘 PHP Config gefunden in: $PHP_CONF_DIR"
 
-# 2. WICHTIG: Umgebungsvariablen behalten (sonst ist DB_FOLDER leer!)
-sed -i 's/;clear_env = no/clear_env = no/g' /etc/php84/php-fpm.d/www.conf
+# PHP-FPM Konfigurieren (Dynamisch)
+FPM_CONF="$PHP_CONF_DIR/php-fpm.d/www.conf"
 
-# 3. WICHTIG: Fehler in den Docker-Log leiten (damit du 500er Fehler siehst)
-sed -i 's/;catch_workers_output = yes/catch_workers_output = yes/g' /etc/php84/php-fpm.d/www.conf
-sed -i 's/;decorate_workers_output = no/decorate_workers_output = no/g' /etc/php84/php-fpm.d/www.conf
+if [ -f "$FPM_CONF" ]; then
+    sed -i 's/user = nobody/user = nobody/g' "$FPM_CONF"
+    sed -i 's/group = nobody/group = nobody/g' "$FPM_CONF"
+    sed -i 's/;clear_env = no/clear_env = no/g' "$FPM_CONF"
+    sed -i 's/;catch_workers_output = yes/catch_workers_output = yes/g' "$FPM_CONF"
+    sed -i 's/;decorate_workers_output = no/decorate_workers_output = no/g' "$FPM_CONF"
+else
+    echo "❌ CRITICAL: $FPM_CONF nicht gefunden!"
+    exit 1
+fi
+
+# Datenbank Info
+if [ -f "$DB_FOLDER/timesloth.sqlite" ]; then
+    DB_SIZE=$(du -h "$DB_FOLDER/timesloth.sqlite" | cut -f1)
+    echo "📊 Aktuelle Datenbank-Größe: $DB_SIZE"
+else
+    echo "🆕 Datenbank wird beim ersten Zugriff erstellt."
+fi
 
 echo "🦥 TimeSloth startet..."
 
-# PHP-FPM starten
-php-fpm84 -D
+# PHP-FPM starten (Wir suchen das Binary passend zum Config Ordner namen, z.B. php-fpm83)
+# Extrahiere Version aus Ordnernamen (z.B. /etc/php83 -> php-fpm83)
+PHP_VER_NAME=$(basename "$PHP_CONF_DIR")
+FPM_BIN="/usr/sbin/$PHP_VER_NAME-fpm"
+
+# Fallback falls binary anders heißt (z.B. nur php-fpm)
+if [ ! -x "$FPM_BIN" ]; then
+    FPM_BIN="php-fpm"
+fi
+
+echo "🚀 Starte $FPM_BIN..."
+$FPM_BIN -D
 
 # Nginx starten
 nginx -g "daemon off;"

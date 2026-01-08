@@ -1,43 +1,32 @@
 FROM ghcr.io/home-assistant/aarch64-base:3.23
 
+ARG PHP_PKG="php85"
+
 RUN apk add --no-cache \
     nginx \
-    php84 \
-    php84-fpm \
-    php84-pdo \
-    php84-pdo_sqlite \
-    php84-sqlite3 \
-    php84-session \
-    php84-json \
-    php84-ctype \
-    php84-openssl \
-    php84-curl \
-    php84-mbstring \
+    ${PHP_PKG} \
+    ${PHP_PKG}-fpm \
+    ${PHP_PKG}-pdo \
+    ${PHP_PKG}-pdo_sqlite \
+    ${PHP_PKG}-sqlite3 \
+    ${PHP_PKG}-session \
+    ${PHP_PKG}-json \
+    ${PHP_PKG}-ctype \
+    ${PHP_PKG}-openssl \
+    ${PHP_PKG}-curl \
+    ${PHP_PKG}-mbstring \
     curl \
     jq \
     tzdata
 
-# Zeitzone auf Wien setzen
 ENV TZ=Europe/Vienna
 
 # PHP Verlinkung
-RUN ln -sf /usr/bin/php85 /usr/bin/php
+RUN ln -sf /usr/bin/${PHP_PKG} /usr/bin/php
 
-# LOGGING FIX: Nginx Logs auf stdout/stderr umleiten
+# Logs umleiten
 RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
-
-# Assets laden
-RUN mkdir -p /app/public/static/js /app/public/static/css/fonts /app/public/static/img && \
-    curl -f -L -o /app/public/static/js/vue.js https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js && \
-    curl -f -L -o /app/public/static/js/axios.js https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js && \
-    curl -f -L -o /app/public/static/js/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js && \
-    curl -f -L -o /app/public/static/js/marked.min.js https://cdn.jsdelivr.net/npm/marked/marked.min.js && \
-    curl -f -L -o /app/public/static/js/purify.min.js https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js && \
-    curl -f -L -o /app/public/static/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css && \
-    curl -f -L -o /app/public/static/css/bootstrap-icons.css https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css && \
-    curl -f -L -o /app/public/static/css/fonts/bootstrap-icons.woff2 https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2 && \
-    curl -f -L -o /app/public/static/css/fonts/bootstrap-icons.woff https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff
 
 COPY app /app
 COPY icon.png /app/public/static/img/favicon.png
