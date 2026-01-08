@@ -4,10 +4,10 @@ spl_autoload_register(function ($className) {
     
     // In diesen Ordnern suchen wir nach Klassen
     $directories = [
-        APP_ROOT . '/src/',              // für Router.php
-        APP_ROOT . '/src/Controllers/',  // für AuthController, PageController...
-        APP_ROOT . '/src/Services/'      // für EntryService, UserService...
-        APP_ROOT . '/src/Repositories/'  // für das Repository der "Bibliothekar"
+        APP_ROOT . '/src/',
+        APP_ROOT . '/src/Controllers/',
+        APP_ROOT . '/src/Services/',
+        APP_ROOT . '/src/Repositories/'
     ];
 
     // Wir schauen in jedem Ordner nach
