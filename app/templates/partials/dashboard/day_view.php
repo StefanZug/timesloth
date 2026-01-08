@@ -71,8 +71,7 @@
                       ref="noteInput"
                       v-model="dayComment" 
                       placeholder="Unterstützt Markdown (*, **, -)" 
-                      @input="triggerAutoSave"
-                      @blur="/* Optional: Automatisch schließen beim Rausklicken */">
+                      @input="triggerAutoSave">
             </textarea>
             
             <div v-if="dayComment" class="p-2 bg-body-tertiary rounded border markdown-preview mb-2" v-html="renderMarkdown(dayComment)"></div>
