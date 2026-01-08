@@ -1,13 +1,18 @@
 /* =========================================
-   1. THEMEN & VARIABLEN (Zentrale Steuerung)
+   1. VARIABLES & THEME
    ========================================= */
 :root {
     --sloth-radius: 12px;
     --transition-speed: 0.2s;
     --font-mono: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    
+    /* Spacing Utilities */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
 }
 
-/* LIGHT THEME (Clean & Soft) */
+/* LIGHT THEME */
 [data-bs-theme="light"] {
     --sloth-primary: #2563eb;
     --sloth-primary-hover: #1d4ed8;
@@ -21,20 +26,19 @@
     --text-muted: #4b5563;
     --text-subtle: #6b7280;
 
-    /* Status Farben (Hintergrund / Text) */
+    /* Status Colors */
     --st-office-bg: #dcfce7;   --st-office-txt: #14532d;
     --st-home-bg: #e0f2fe;     --st-home-txt: #0c4a6e;
     --st-sick-bg: #fee2e2;     --st-sick-txt: #7f1d1d;
-    --st-vacation: #fef3c7;    --st-vacation-txt: #78350f;
+    --st-vacation-bg: #fef3c7; --st-vacation-txt: #78350f; /* Fixed: vacation bg var name unified */
     --st-holiday-bg: #f3f4f6;  --st-holiday-txt: #374151;
     
-    /* Bootstrap Overrides */
     --bs-primary: var(--sloth-primary);
     --bs-body-bg: var(--bg-body);
     --bs-body-color: var(--text-main);
 }
 
-/* DARK THEME (GitHub Style Modern) */
+/* DARK THEME */
 [data-bs-theme="dark"] {
     --sloth-primary: #58a6ff;
     --sloth-primary-hover: #79c0ff;
@@ -51,7 +55,7 @@
     --st-office-bg: #112519;   --st-office-txt: #4ade80;
     --st-home-bg: #12222e;     --st-home-txt: #38bdf8;
     --st-sick-bg: #2e1214;     --st-sick-txt: #f87171;
-    --st-vacation: #2e2208;    --st-vacation-txt: #fcd34d;
+    --st-vacation-bg: #2e2208; --st-vacation-txt: #fcd34d;
     --st-holiday-bg: #1b1f24;  --st-holiday-txt: #9ca3af;
     
     --bs-primary: var(--sloth-primary);
@@ -61,7 +65,7 @@
 }
 
 /* =========================================
-   2. GLOBAL LAYOUT & TYPO
+   2. BASE & UTILITIES
    ========================================= */
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -73,18 +77,27 @@ body {
 a { text-decoration: none; color: var(--sloth-primary); }
 a:hover { color: var(--sloth-primary-hover); }
 
-/* Utility Classes */
+/* Text Utilities */
 .text-muted { color: var(--text-muted) !important; }
 .text-subtle { color: var(--text-subtle) !important; font-size: 0.85em; }
 .fw-bold { font-weight: 600 !important; }
+.font-monospace-fix { font-family: var(--font-mono) !important; letter-spacing: -0.5px; }
 .cursor-pointer { cursor: pointer; }
 .bg-body-tertiary { background-color: var(--bg-tertiary) !important; }
-.font-monospace-fix { font-family: var(--font-mono) !important; letter-spacing: -0.5px; }
+.lh-1 { line-height: 1 !important; }
+
+/* Size Utilities (replacing inline styles) */
+.text-xs { font-size: 0.7rem !important; }
+.text-2xs { font-size: 0.65rem !important; }
+.text-3xs { font-size: 0.6rem !important; }
+.icon-lg { font-size: 1.2rem; }
+.w-icon-btn { width: 36px; } /* Standard dropdown button width */
 
 /* =========================================
-   3. COMPONENTS (Cards, Widgets)
+   3. COMPONENTS
    ========================================= */
-.card, .widget-card { 
+/* Cards */
+.widget-card { 
     background-color: var(--bg-card); 
     border: 1px solid var(--border-color);
     border-radius: var(--sloth-radius);
@@ -100,7 +113,7 @@ a:hover { color: var(--sloth-primary-hover); }
 }
 .widget-body { padding: 16px; }
 
-/* Buttons & Inputs */
+/* Inputs & Forms */
 .form-control, .form-select {
     background-color: var(--bg-card); border: 1px solid var(--border-color);
     color: var(--text-main); border-radius: 8px; padding: 0.5rem 0.75rem;
@@ -116,16 +129,15 @@ a:hover { color: var(--sloth-primary-hover); }
 }
 .btn-dashed:hover { border-color: var(--sloth-primary); color: var(--sloth-primary); background-color: var(--bg-tertiary); }
 
+/* Avatars */
 .avatar-circle {
     width: 36px; height: 36px; border-radius: 50%;
     background-color: var(--sloth-primary); color: #fff;
     display: flex; align-items: center; justify-content: center;
     font-weight: 700; font-size: 1rem; border: 2px solid var(--bg-card);
 }
+.avatar-sm { width: 28px; height: 28px; font-size: 0.8rem; } /* Admin User List */
 
-/* =========================================
-   4. DASHBOARD SPEZIFISCH
-   ========================================= */
 /* Status Buttons (F, U, K) */
 .btn-xs-status {
     border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center;
@@ -137,11 +149,122 @@ a:hover { color: var(--sloth-primary-hover); }
 .st-u.active { background: var(--st-vacation-txt); color: #fff; border-color: transparent; }
 .st-k.active { background: var(--st-sick-txt); color: #fff; border-color: transparent; }
 
-/* Größenvarianten für Status Buttons */
 .btn-status-lg { width: 50px; height: 40px; font-size: 1rem; }
 .btn-status-sm { width: 24px; height: 24px; font-size: 0.7rem; }
 
-/* Sticky Column für Desktop Sidebar */
+/* Progress Bars */
+.progress-sloth { border-radius: 10px; background-color: var(--bg-tertiary); overflow: hidden; }
+.progress-bar-sloth { height: 100%; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); background-color: green; }
+.progress-bar-sloth.bg-warning { background-color: var(--bs-warning) !important; }
+.progress-bar-sloth.bg-secondary { background-color: var(--sloth-primary) !important; opacity: 0.6; }
+
+.progress-h-sm { height: 6px; }
+.progress-h-md { height: 10px; }
+
+/* =========================================
+   4. TABLES & LISTS
+   ========================================= */
+.table { --bs-table-bg: transparent; color: var(--text-main); border-color: var(--border-color); }
+thead th {
+    background-color: var(--bg-tertiary) !important; color: var(--text-muted) !important;
+    font-weight: 600; text-transform: uppercase; font-size: 0.75rem; border-bottom: 1px solid var(--border-color);
+}
+td { border-bottom: 1px solid var(--border-color); }
+
+/* Row Colors */
+.tr-office { background-color: var(--st-office-bg) !important; color: var(--st-office-txt) !important; }
+.tr-home { background-color: var(--st-home-bg) !important; color: var(--st-home-txt) !important; }
+.tr-sick { background-color: var(--st-sick-bg) !important; color: var(--st-sick-txt) !important; }
+.tr-vacation { background-color: var(--st-vacation-bg) !important; color: var(--st-vacation-txt) !important; }
+.tr-holiday { background-color: var(--st-holiday-bg) !important; color: var(--st-holiday-txt) !important; }
+.tr-weekend { background-color: var(--bg-tertiary) !important; color: var(--text-muted) !important; }
+
+/* Border Indicators */
+.type-office { border-left: 4px solid var(--st-office-txt) !important; }
+.type-home { border-left: 4px solid var(--st-home-txt) !important; }
+.type-doctor { border-left: 4px solid var(--st-sick-txt) !important; }
+
+/* Table Inputs */
+.table-input, 
+input[type="text"].form-control-sm.text-center {
+    font-family: var(--font-mono) !important; letter-spacing: -0.5px; font-weight: 600;
+    width: 0; min-width: 50px; flex: 1 1 0;    
+    border: 1px solid transparent; background: rgba(0,0,0,0.03);
+    text-align: center; color: inherit; font-size: 1rem; padding: 6px 0;
+    border-radius: 6px; transition: all 0.2s ease;
+}
+[data-bs-theme="dark"] .table-input { background-color: rgba(255,255,255,0.05) !important; }
+.table-input:hover { border-color: var(--border-color); z-index: 2; }
+.table-input:focus { 
+    outline: none; background: var(--bg-card); color: var(--text-main); 
+    border-color: var(--sloth-primary); box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.15); z-index: 3;
+}
+input[type=time]::-webkit-datetime-edit-second-field { display: none; }
+
+.duration-badge { 
+    display: inline-block; background-color: rgba(0,0,0,0.03) !important;
+    border: 1px solid transparent !important; color: var(--text-muted) !important;
+    font-family: var(--font-mono) !important; letter-spacing: -0.5px;
+    font-size: 0.75rem; font-weight: bold; padding: 6px 0; border-radius: 4px; 
+    vertical-align: middle; min-width: 50px; text-align: center; margin-left: 4px; 
+}
+[data-bs-theme="dark"] .duration-badge { background-color: rgba(255,255,255,0.05) !important; }
+
+/* Table Spacing Utilities */
+.col-min-date { min-width: 80px; }
+.col-min-time { min-width: 180px; }
+.col-min-note { min-width: 250px; }
+
+/* List Icons */
+.list-icon-btn { width: 24px; }
+.list-remove-btn { font-size: 1rem; line-height: 1; padding: 0; margin-left: 0.25rem; }
+.list-spacer-start { width: 24px; flex-shrink: 0; }
+.list-spacer-end { width: 20px; flex-shrink: 0; }
+
+/* =========================================
+   5. SPECIFIC VIEWS & ELEMENTS
+   ========================================= */
+/* Save Indicator */
+.save-indicator-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+.save-blob { width: 40px; height: 40px; }
+
+/* Note Popup (Month View) */
+.note-popup { position: relative; z-index: 100; min-width: 300px; }
+.note-preview-closed { border: 1px solid transparent; border-radius: 4px; padding: 2px 6px; }
+.note-preview-closed:hover { border-color: var(--border-color); background-color: rgba(0,0,0,0.02); }
+.table-input-note {
+    border: 1px solid var(--border-color) !important; background-color: var(--bg-body);
+    border-radius: 4px; padding: 2px 6px !important; transition: all 0.2s;
+}
+.table-input-note:hover { border-color: var(--sloth-primary) !important; background-color: var(--bg-card); }
+.table-input-note:focus { border-color: var(--sloth-primary) !important; box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.15); }
+
+/* Markdown Styles */
+.markdown-preview { font-size: 0.9rem; line-height: 1.5; color: var(--text-main); white-space: pre-wrap; }
+.markdown-preview p, .markdown-preview ul, .markdown-preview ol { margin-bottom: 0.5rem; }
+.markdown-preview h1, .markdown-preview h2, .markdown-preview h3 { 
+    font-size: 1rem; font-weight: bold; margin-top: 0.5rem; margin-bottom: 0.25rem; 
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Calendar Grid */
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 5px; }
+.day-header { text-align: center; font-size: 0.65rem; font-weight: bold; color: var(--text-muted); text-transform: uppercase; padding-bottom: 2px; }
+.day-box { 
+    aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; 
+    font-size: 0.75rem; border-radius: 4px; cursor: pointer; 
+    background: var(--bg-body); border: 1px solid var(--border-color); 
+}
+.day-box:hover:not(.day-empty) { border-color: var(--sloth-primary); box-shadow: 0 0 0 2px rgba(var(--bs-primary-rgb), 0.2); z-index: 1; }
+.day-vacation { background-color: #f59e0b !important; color: white !important; border:none !important; } /* Fix: Yellow in Light Mode */
+[data-bs-theme="dark"] .day-vacation { background-color: var(--st-vacation-txt) !important; }
+.day-sick { background-color: #dc3545 !important; color: white !important; border: none; }
+.day-sick:hover { background-color: #bb2d3b !important; box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3) !important; }
+.day-holiday { background-color: var(--st-holiday-txt) !important; color: white !important; border:none; }
+.day-weekend { background-color: transparent; color: var(--text-muted); opacity: 0.4; border-color: transparent; }
+.day-empty { background: transparent; border: none; cursor: default; }
+
+/* Sticky Elements */
 @media (min-width: 992px) {
     .sticky-column { 
         position: sticky; top: 90px; z-index: 900; 
@@ -152,452 +275,79 @@ a:hover { color: var(--sloth-primary-hover); }
     .mobile-only-switcher { display: none !important; }
 }
 
-/* View Switcher (Mobile) */
-.view-switcher {
-    background: var(--bg-tertiary); border: 1px solid var(--border-color);
-    border-radius: 20px; padding: 4px; display: inline-flex;
-}
-.view-btn {
-    border: none; background: transparent; padding: 6px 16px; border-radius: 16px;
-    color: var(--text-muted); font-size: 0.9rem; transition: all 0.2s;
-}
-.view-btn.active { background: var(--bg-card); color: var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-weight: 600; }
+/* Base Layout Specifics */
+.navbar-sticky { position: sticky; top: 0; z-index: 1050; }
+.footer-separator { width: 1px; height: 16px; background: var(--border-color); }
+.app-footer { text-align: center; color: var(--text-subtle); font-size: 0.8rem; margin-top: auto; width: 100%; position: relative; padding-bottom: 2rem; }
+.footer-actions { display: inline-flex; align-items: center; gap: 15px; background: var(--bg-card); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.sloth-logo-nav { cursor: pointer; border-radius: 50%; }
 
-/* Progress Bars */
-.progress-sloth { height: 8px; border-radius: 10px; background-color: var(--bg-tertiary); overflow: hidden; }
-.progress-bar-sloth { 
-    height: 100%; 
-    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
-}
-/* Farben für Progress Bars */
-.progress-bar-sloth.bg-warning { background-color: var(--bs-warning) !important; }
-.progress-bar-sloth.bg-secondary { background-color: var(--sloth-primary) !important; opacity: 0.6; }
-.progress-bar-sloth:not(.bg-warning):not(.bg-secondary) { background-color: green !important; }
-
-
-/* =========================================
-   5. TABELLEN & LISTEN
-   ========================================= */
-.table { --bs-table-bg: transparent; color: var(--text-main); border-color: var(--border-color); }
-thead th {
-    background-color: var(--bg-tertiary) !important; color: var(--text-muted) !important;
-    font-weight: 600; text-transform: uppercase; font-size: 0.75rem; border-bottom: 1px solid var(--border-color);
-}
-td { border-bottom: 1px solid var(--border-color); }
-
-/* Zeilen-Farben */
-.tr-office { background-color: var(--st-office-bg) !important; color: var(--st-office-txt) !important; }
-.tr-home { background-color: var(--st-home-bg) !important; color: var(--st-home-txt) !important; }
-.tr-sick { background-color: var(--st-sick-bg) !important; color: var(--st-sick-txt) !important; }
-.tr-vacation { background-color: var(--st-vacation) !important; color: var(--st-vacation-txt) !important; }
-.tr-holiday { background-color: var(--st-holiday-bg) !important; color: var(--st-holiday-txt) !important; }
-.tr-weekend { background-color: var(--bg-tertiary) !important; color: var(--text-muted) !important; }
-
-/* Linker Rand Indikatoren */
-.type-office { border-left: 4px solid var(--st-office-txt) !important; }
-.type-home { border-left: 4px solid var(--st-home-txt) !important; }
-.type-doctor { border-left: 4px solid var(--st-sick-txt) !important; }
-
-/* Tabellen Inputs (Option A: Modern & Monospace) */
-.table-input, 
-input[type="text"].form-control-sm.text-center {
-    font-family: var(--font-mono) !important;
-    letter-spacing: -0.5px;
-    font-weight: 600;
-    
-    width: 0; min-width: 50px; flex: 1 1 0;    
-    
-    border: 1px solid transparent; /* Rahmenlos bis Focus */
-    background: rgba(0,0,0,0.03);
-    text-align: center; color: inherit;
-    font-size: 1rem; padding: 6px 0;
-    border-radius: 6px; transition: all 0.2s ease;
-}
-/* Dark Mode Anpassung Input */
-[data-bs-theme="dark"] .table-input { background-color: rgba(255,255,255,0.05) !important; }
-
-.table-input:hover { border-color: var(--border-color); z-index: 2; }
-.table-input:focus { 
-    outline: none; background: var(--bg-card); color: var(--text-main); 
-    border-color: var(--sloth-primary); box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.15); z-index: 3;
-}
-/* Chrome/Safari Sekunden Fix */
-input[type=time]::-webkit-datetime-edit-second-field { display: none; }
-
-/* Dauer Badge (Zwischensumme) */
-.duration-badge { 
-    display: inline-block; 
-    background-color: rgba(0,0,0,0.03) !important;
-    border: 1px solid transparent !important;
-    color: var(--text-muted) !important;
-    
-    font-family: var(--font-mono) !important; letter-spacing: -0.5px;
-    font-size: 0.75rem; font-weight: bold; 
-    padding: 6px 0; border-radius: 4px; 
-    vertical-align: middle; 
-    min-width: 50px; text-align: center; margin-left: 4px; 
-}
-[data-bs-theme="dark"] .duration-badge { background-color: rgba(255,255,255,0.05) !important; }
-
-/* Monospace auch für SAP Spalten und Summen */
-td.text-center.fw-bold, .widget-body .fs-5 {
-    font-family: var(--font-mono) !important; letter-spacing: -0.5px;
-}
-
-/* Dropdown und Icons in Liste */
-.list-icon-btn { width: 24px; }
-.list-dropdown-btn { width: 24px; padding: 0; border: 0; }
-.list-remove-btn { font-size: 1rem; line-height: 1; padding: 0; margin-left: 0.25rem; }
-.list-spacer-start { width: 24px; flex-shrink: 0; }
-.list-spacer-end { width: 20px; flex-shrink: 0; }
-
-/* =========================================
-   6. PAGE SPECIFIC (Login, Settings, Admin)
-   ========================================= */
 /* Login */
 .login-container { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .sloth-logo-lg { height: 140px; width: auto; cursor: pointer; }
-.login-title { letter-spacing: -1px; }
 .login-card { width: 100%; max-width: 360px; animation-delay: 0.1s; }
 
-/* Settings */
-.settings-container { max-width: 700px; }
-.sloth-game-area { min-height: 24px; }
-.settings-table-wrapper { max-height: 250px; }
-.settings-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 1rem; background: var(--bg-card); border-top: 1px solid var(--border-color); z-index: 1020; box-shadow: 0 -4px 12px rgba(0,0,0,0.1); }
-
 /* Admin */
-.admin-avatar { width: 28px; height: 28px; font-size: 0.8rem; }
-.admin-badge { font-size: 0.6rem; }
 .log-table-wrapper { max-height: 150px; }
 .holiday-table-wrapper { max-height: 400px; }
 .table-th-small { font-size: 0.75rem; }
 
-/* Base Layout */
-.navbar-sticky { position: sticky; top: 0; z-index: 1050; }
-.footer-separator { width: 1px; height: 16px; background: var(--border-color); }
-.footer-logo { filter: grayscale(1); opacity: 0.5; }
+/* Settings */
+.settings-container { max-width: 700px; }
+.sloth-game-area { min-height: 24px; }
+.settings-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 1rem; background: var(--bg-card); border-top: 1px solid var(--border-color); z-index: 1020; box-shadow: 0 -4px 12px rgba(0,0,0,0.1); }
+#settingsApp + .app-footer { margin-bottom: 80px !important; position: relative; z-index: 1021; }
 
-/* =========================================
-   7. ANIMATIONS & EFFECTS
-   ========================================= */
+/* Animations */
 .animate-fade { animation: fadeInUp 0.5s ease-out forwards; opacity: 0; transform: translateY(10px); }
 @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
-
 .spin-animation { animation: slothSpin 3s ease-in-out; }
-@keyframes slothSpin {
-    0% { transform: rotate(0deg) scale(1); }
-    50% { transform: rotate(180deg) scale(1.5); }
-    100% { transform: rotate(360deg) scale(1); }
-}
-
-/* Sleepy Blink Animation */
+@keyframes slothSpin { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.5); } 100% { transform: rotate(360deg) scale(1); } }
 #sloth-lids { display: block !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
 .lid-top, .lid-bottom { position: absolute; left: 0; width: 100%; height: 0; background-color: var(--text-main); transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0.95; }
 .lid-top { top: 0; } .lid-bottom { bottom: 0; }
 .eyes-closed .lid-top, .eyes-closed .lid-bottom { height: 51%; }
 
-.sloth-quote { display: block; font-size: 0.75rem; font-style: italic; color: var(--text-muted); margin-top: 6px; min-width: 200px; line-height: 1.2; }
-.dropdown-menu { background-color: var(--bg-card); border-color: var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-.dropdown-item { color: var(--text-main); }
-.dropdown-item:hover { background-color: var(--bg-tertiary); color: var(--sloth-primary); }
-
 /* =========================================
-   8. CALENDAR GRID (Jahresplaner)
+   6. MOBILE OVERRIDES
    ========================================= */
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 5px; }
-.day-header { text-align: center; font-size: 0.65rem; font-weight: bold; color: var(--text-muted); text-transform: uppercase; padding-bottom: 2px; }
-.day-box { aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; border-radius: 4px; cursor: pointer; background: var(--bg-body); border: 1px solid var(--border-color); }
-.day-box:hover:not(.day-empty) { border-color: var(--sloth-primary); box-shadow: 0 0 0 2px rgba(var(--bs-primary-rgb), 0.2); z-index: 1; }
-.day-vacation { background-color: var(--st-vacation-txt) !important; color: white !important; border:none; }
-.day-holiday { background-color: var(--st-holiday-txt) !important; color: white !important; border:none; }
-.day-weekend { background-color: transparent; color: var(--text-muted); opacity: 0.4; border-color: transparent; }
-.day-empty { background: transparent; border: none; cursor: default; }
+.view-switcher { background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 20px; padding: 4px; display: inline-flex; }
+.view-btn { border: none; background: transparent; padding: 6px 16px; border-radius: 16px; color: var(--text-muted); font-size: 0.9rem; transition: all 0.2s; }
+.view-btn.active { background: var(--bg-card); color: var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-weight: 600; }
 
-/* =========================================
-   9. MOBILE OPTIMIZATIONS
-   ========================================= */
 @media (max-width: 991px) {
-    /* Sticky Datum Spalte */
-    table.table { 
-        border-collapse: separate; 
-        border-spacing: 0; 
-        /* FIX: Tabelle auf Mindestbreite zwingen -> Ermöglicht Scrollen statt Quetschen */
-        min-width: 800px !important;
-    }
-    td:first-child, th:first-child {
-        position: sticky; left: 0; z-index: 10;
-        background-color: var(--bg-card) !important;
-        border-right: 2px solid var(--border-color);
-        max-width: 80px; padding-left: 0.5rem !important;
-    }
+    /* Sticky Date Column */
+    table.table { border-collapse: separate; border-spacing: 0; min-width: 800px !important; }
+    td:first-child, th:first-child { position: sticky; left: 0; z-index: 10; background-color: var(--bg-card) !important; border-right: 2px solid var(--border-color); max-width: 80px; padding-left: 0.5rem !important; }
     th:first-child { background-color: var(--bg-tertiary) !important; z-index: 11; }
-
-    /* Elemente ausblenden */
+    
+    /* Hide specific desktop elements */
     .bi-clock, .input-group-text { display: none !important; }
     
-    /* INPUT FIXES für Mobile */
-    .table-input { 
-        flex: 0 0 auto !important; 
-        width: 75px !important; 
-        min-width: 75px !important;
-        padding: 4px 0 !important; 
-        font-size: 0.95rem !important; 
-    }
-    
-    /* BADGE FIXES für Mobile */
-    .duration-badge {
-        flex: 0 0 auto !important;
-        width: 55px !important;
-        min-width: 55px !important;
-    }
-
-    /* DELETE BUTTON FIXES für Mobile: Explizite Breite und kein Shrink */
-    .list-remove-btn { 
-        flex: 0 0 auto !important; /* Verhindert Schrumpfen */
-        width: 32px !important;    /* Etwas breiter als vorher */
-        height: 32px !important;
-        padding: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin-left: 0.5rem !important; /* Abstand zum Input */
-    }
-    
-    /* Icon im Button zentrieren */
+    /* Input sizing */
+    .table-input { flex: 0 0 auto !important; width: 75px !important; min-width: 75px !important; padding: 4px 0 !important; font-size: 0.95rem !important; }
+    .duration-badge { flex: 0 0 auto !important; width: 55px !important; min-width: 55px !important; }
+    .list-remove-btn { flex: 0 0 auto !important; width: 32px !important; height: 32px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin-left: 0.5rem !important; }
     .list-remove-btn i { font-size: 1.2rem !important; }
+    td:last-child input { min-width: 150px; }
 
-    /* Notiz Spalte: Mindestbreite geben, damit sie nicht verschwindet */
-    td:last-child input {
-        min-width: 150px;
-    }
-
-    /* Abstände minimieren */
+    /* Spacing fixes */
     .gap-1 { gap: 0.1rem !important; }
-    .list-dropdown-btn { width: 20px !important; }
     .list-icon-btn { width: 20px !important; }
-}
-
-/* Footer Styling */
-.app-footer { text-align: center; color: var(--text-subtle); font-size: 0.8rem; margin-top: auto; width: 100%; position: relative; }
-.footer-actions { display: inline-flex; align-items: center; gap: 15px; background: var(--bg-card); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-.theme-toggle-btn { cursor: pointer; color: var(--text-muted); transition: color 0.2s; }
-.theme-toggle-btn:hover { color: var(--sloth-primary); }
-
-
-/* =========================================
-   FIX: Settings Footer (Desktop & Mobile)
-   ========================================= */
-
-/* Wir entfernen das erzwungene min-height, das das Scrollen verursacht hat.
-   Stattdessen heben wir den Footer an, wenn er auf die Settings folgt. */
-
-#settingsApp + .app-footer {
-    /* Hebt den Footer an, damit er NICHT hinter der fixierten Leiste liegt.
-       margin-bottom schiebt ihn physisch nach oben. */
-    margin-bottom: 80px !important; 
     
-    /* Sicherheitsnetz: Falls der Inhalt sehr kurz ist, 
-       sorgt flex-grow im Layout dafür, dass der Footer unten bleibt. 
-       Wir müssen nur verhindern, dass er von der Leiste verdeckt wird. */
-    position: relative;
-    z-index: 1021; /* Höher als die Leiste (falls überlappend) */
-}
+    /* Settings Footer Space */
+    #settingsApp + .app-footer { margin-bottom: 120px !important; }
 
-@media (max-width: 991px) {
-    #settingsApp + .app-footer {
-        /* Mobile braucht mehr Abstand wegen Touch-Leisten */
-        margin-bottom: 120px !important;
-    }
-}
+    /* Day View Mobile Fixes */
+    .widget-body .card .card-body { padding-left: 6px !important; padding-right: 6px !important; gap: 2px !important; }
+    .widget-body .card .card-body input.form-control { min-width: 0 !important; flex: 1 1 auto !important; font-size: 0.9rem !important; padding: 4px 0 !important; }
+    .widget-body .card .card-body .btn.ms-auto { flex: 0 0 32px !important; width: 32px !important; height: 32px !important; margin-left: 4px !important; display: flex !important; align-items: center !important; justify-content: center !important; }
 
-/* =========================================
-   FIX: X-Button & Inputs (Tagesplanung Mobile)
-   ========================================= */
-/* Dieser Teil hat gut funktioniert ("X passt jetzt"), den behalten wir bei,
-   aber ich habe ihn leicht optimiert. */
-
-@media (max-width: 991px) {
-    /* Container in der Tages-Karte */
-    .widget-body .card .card-body {
-        padding-left: 6px !important;
-        padding-right: 6px !important;
-        gap: 2px !important;
-    }
-
-    /* Inputs flexibel machen */
-    .widget-body .card .card-body input.form-control {
-        min-width: 0 !important;
-        flex: 1 1 auto !important; /* Nimmt den Platz, der da ist */
-        font-size: 0.9rem !important;
-        padding: 4px 0 !important;
-    }
-
-    /* X-Button fixieren */
-    .widget-body .card .card-body .btn.ms-auto {
-        flex: 0 0 32px !important;
-        width: 32px !important;
-        height: 32px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin-left: 4px !important;
-    }
-}
-
-/* =========================================
-   FIX: Monatsansicht Mobile (Reparatur)
-   ========================================= */
-
-@media (max-width: 991px) {
-    /* 1. NUR die Zeilen mit Zeiten (mb-2) anpassen, NICHT den Plus-Button! 
-       Wir nutzen .mb-2 als Erkennungsmerkmal für die Zeilen mit Inputs. */
-    td .d-flex.mb-2 {
-        flex-wrap: nowrap !important; /* Erzwingt eine Zeile */
-        gap: 2px !important;
-    }
-
-    /* 2. Inputs lesbar machen */
-    .table-input {
-        min-width: 0 !important; /* Schrumpfen erlauben */
-        width: 100% !important;  /* Aber versuchen Platz zu füllen */
-        flex: 1 !important;      /* Flexibles Verhalten */
-        
-        font-size: 0.8rem !important; /* Schrift etwas kleiner */
-        padding: 0 !important;
-        height: 28px !important;
-        text-align: center !important;
-    }
-
-    /* 3. Icons und Löschen-Button klein halten */
-    .list-icon-btn, .list-remove-btn {
-        flex: 0 0 24px !important;
-        width: 24px !important;
-        justify-content: center !important;
-    }
-    
-    /* 4. Den Plus-Button (mt-1) reparieren!
-       Wir stellen sicher, dass er wieder die volle Breite nutzt. */
-    td .d-flex.mt-1 {
-        width: 100% !important;
-        display: flex !important;
-    }
-    td .d-flex.mt-1 .btn {
-        width: 100% !important; /* Button auf volle Breite ziehen */
-        flex: 1 !important;
-    }
-    
-    /* Abstandhalter (Spacer) im Plus-Bereich ausblenden oder anpassen, 
-       damit der Button Platz hat */
-    .list-spacer-start, .list-spacer-end {
-        display: none !important; /* Weg damit auf Mobile, mehr Platz für Button */
-    }
-}
-
-
-/* =========================================
-   FIX: Kalender Farben (Urlaub & Krank)
-   ========================================= */
-
-/* 1. Urlaub im LIGHT MODE auf Gelb zwingen 
-   (Standard war hier Braun, wir wollen aber das Gelb aus dem Darkmode) */
-[data-bs-theme="light"] .day-vacation {
-    background-color: #f59e0b !important; /* Ein kräftiges Gold-Gelb */
-    color: #fff !important;
-    border: none !important;
-}
-
-/* 2. Neue Klasse für Krankheitstage (Rot) 
-   Gilt für Light & Dark Mode gleich */
-.day-sick {
-    background-color: #dc3545 !important; /* Bootstrap Danger Red */
-    color: white !important;
-    border: none;
-}
-/* Hover-Effekt für Krank-Tage */
-.day-sick:hover {
-    background-color: #bb2d3b !important;
-    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3) !important;
-}
-
-/* =========================================
-   FEATURE: Notizen (Expand & Textarea)
-   ========================================= */
-
-/* Textarea in der Monats-Tabelle */
-td textarea.form-control {
-    resize: vertical; /* Erlaubt manuelles Vergrößern nach unten */
-    min-height: 80px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-/* Der Toggle-Button in der Tabelle */
-td .btn-link {
-    opacity: 0.5;
-    transition: opacity 0.2s;
-}
-td .btn-link:hover {
-    opacity: 1;
-    color: var(--sloth-primary) !important;
-}
-
-/* Input Feld Styling für "Kompakt-Ansicht" */
-td input.text-truncate {
-    cursor: text;
-}
-/* Mouseover soll zeigen, dass da mehr ist */
-td input.text-truncate:hover {
-    background-color: rgba(0,0,0,0.02) !important;
-}
-
-/* FIX: Überschrift Abstand */
-.label-fix-padding {
-    padding-left: 4px;
-    margin-bottom: 6px;
-}
-
-/* MARKDOWN STYLING */
-.markdown-preview {
-    font-size: 0.9rem;
-    line-height: 1.5;
-    color: var(--text-main);
-}
-.markdown-preview p { margin-bottom: 0.5rem; }
-.markdown-preview ul, .markdown-preview ol { padding-left: 1.2rem; margin-bottom: 0.5rem; }
-.markdown-preview h1, .markdown-preview h2, .markdown-preview h3 { 
-    font-size: 1rem; font-weight: bold; margin-top: 0.5rem; margin-bottom: 0.25rem; 
-    border-bottom: 1px solid var(--border-color);
-}
-/* WICHTIG: Damit Zeilenumbrüche auch ohne Markdown funktionieren */
-.markdown-preview {
-    white-space: pre-wrap; 
-}
-
-
-/* FIX: Input in Monatsansicht erkennbar machen */
-.table-input-note {
-    border: 1px solid var(--border-color) !important;
-    background-color: var(--bg-body);
-    border-radius: 4px;
-    padding: 2px 6px !important;
-    transition: all 0.2s;
-}
-.table-input-note:hover {
-    border-color: var(--sloth-primary) !important;
-    background-color: var(--bg-card);
-}
-.table-input-note:focus {
-    border-color: var(--sloth-primary) !important;
-    box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.15);
-}
-
-/* Vorschau im geschlossenen Zustand */
-.note-preview-closed {
-    border: 1px solid transparent; /* Platzhalter für Layout-Stabilität */
-    border-radius: 4px;
-    padding: 2px 6px;
-}
-.note-preview-closed:hover {
-    border-color: var(--border-color);
-    background-color: rgba(0,0,0,0.02);
+    /* Month View Mobile Fixes */
+    td .d-flex.mb-2 { flex-wrap: nowrap !important; gap: 2px !important; }
+    .table-input { min-width: 0 !important; width: 100% !important; flex: 1 !important; font-size: 0.8rem !important; padding: 0 !important; height: 28px !important; text-align: center !important; }
+    .list-icon-btn, .list-remove-btn { flex: 0 0 24px !important; width: 24px !important; justify-content: center !important; }
+    td .d-flex.mt-1 { width: 100% !important; display: flex !important; }
+    td .d-flex.mt-1 .btn { width: 100% !important; flex: 1 !important; }
+    .list-spacer-start, .list-spacer-end { display: none !important; }
 }

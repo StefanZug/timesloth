@@ -37,12 +37,12 @@
     <nav class="navbar navbar-expand bg-body-tertiary shadow-sm mb-3 border-bottom navbar-sticky">
         <div class="container-fluid">
             <div class="d-flex align-items-center">
-                <img src="/static/img/logo.png" alt="Logo" width="42" height="42" 
-                     class="me-3 rounded-circle sloth-logo" 
-                     style="cursor: pointer;" title="Klick mich für neue Weisheiten!">
+                <img src="/static/img/logo.png" alt="Logo" 
+                     class="me-3 rounded-circle sloth-logo sloth-logo-nav" 
+                     title="Klick mich für neue Weisheiten!">
 
                 <div class="d-flex flex-column justify-content-center">
-                    <a class="navbar-brand fw-bold m-0 p-0 fs-5" href="/" style="line-height: 1;">TimeSloth</a>
+                    <a class="navbar-brand fw-bold m-0 p-0 fs-5 lh-1" href="/">TimeSloth</a>
                     <small id="header-quote" class="sloth-quote animate-fade">
                         </small>
                 </div>
@@ -50,7 +50,7 @@
             
             <div class="d-flex align-items-center gap-3">
                 <div class="dropdown">
-                    <div class="avatar-circle" data-bs-toggle="dropdown" style="cursor: pointer;">
+                    <div class="avatar-circle cursor-pointer" data-bs-toggle="dropdown">
                         <?= strtoupper(substr($_SESSION['user']['username'], 0, 1)) ?>
                     </div>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
@@ -86,11 +86,11 @@
             <div class="d-flex flex-column align-items-center gap-3">
                 
                 <div class="footer-actions">
-                    <i class="bi bi-moon-stars-fill theme-toggle-btn" id="darkModeBtn" title="Lichtschalter"></i>
+                    <i class="bi bi-moon-stars-fill theme-toggle-btn cursor-pointer" id="darkModeBtn" title="Lichtschalter"></i>
                     <div class="footer-separator"></div>
-                    <div class="d-flex align-items-center gap-2" style="font-size: 0.85rem;">
+                    <div class="d-flex align-items-center gap-2 text-subtle">
                         <span>&copy; <?= date('Y') ?> TimeSloth</span>
-                        <img src="/static/img/logo.png" width="20" class="sloth-logo footer-logo">
+                        <img src="/static/img/logo.png" width="20" class="sloth-logo footer-logo" style="filter: grayscale(1); opacity: 0.5;">
                     </div>
                 </div>
             </div>

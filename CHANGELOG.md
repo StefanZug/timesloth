@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.9 (The Refactoring 3.0)
+**Architecture & Code Quality:**
+- **Controller Pattern:** Einführung einer MVC-ähnlichen Struktur. Die Logik wurde aus der monolithischen `api.php` und `index.php` in dedizierte Controller (`ApiController`, `PageController`, `AdminController`, `AuthController`) verschoben.
+- **Router:** Ein neuer `Router.php` übernimmt nun die zentrale Verteilung der Anfragen, was die `index.php` massiv entschlackt.
+- **View Partials:** Das Dashboard-Template (`dashboard.php`) wurde in handliche Module zerlegt (`day_view.php`, `month_table.php`, `stats_sidebar.php`), um die Wartbarkeit zu erhöhen.
+
+**Frontend & Design:**
+- **CSS Cleanup:** Die `custom.css` wurde komplett neu strukturiert (Base, Components, Utilities) und von "Notfall-Fixes" bereinigt.
+- **Inline-Styles entfernt:** Hunderte Zeilen Inline-CSS (`style="..."`) wurden aus den PHP-Templates entfernt und durch saubere CSS-Klassen ersetzt.
+- **Konsistenz:** Vereinheitlichung von Abständen und Farben durch zentrale CSS-Variablen.
+
+---
+
+
 ## 0.1.8 (The Notes Update)
 **Features:**
 - **Status-Notizen:** Bei Status F, U oder K kann nun eine spezifische Notiz hinterlegt werden (z.B. "Urlaub: Kroatien" oder "Krank: Grippe"). Diese Info wird im Kalender priorisiert angezeigt.

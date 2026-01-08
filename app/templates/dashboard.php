@@ -31,7 +31,7 @@
                             <div v-for="(block, index) in blocks" :key="block.id" class="card mb-2 shadow-sm border-0 bg-body-tertiary" :class="'type-' + block.type">
                                 <div class="card-body p-2 d-flex align-items-center gap-2">
                                     <div class="dropdown">
-                                        <button class="btn btn-sm dropdown-toggle shadow-sm" :class="'bg-' + block.type" data-bs-toggle="dropdown" style="width: 36px;"><i class="bi" :class="getTypeIcon(block.type)"></i></button>
+                                        <button class="btn btn-sm dropdown-toggle shadow-sm w-icon-btn" :class="'bg-' + block.type" data-bs-toggle="dropdown"><i class="bi" :class="getTypeIcon(block.type)"></i></button>
                                         <ul class="dropdown-menu shadow">
                                             <li><button type="button" class="dropdown-item" @click="changeBlockType($event, index, 'office')"><i class="bi bi-building me-2 text-success"></i>Büro</button></li>
                                             <li><button type="button" class="dropdown-item" @click="changeBlockType($event, index, 'home')"><i class="bi bi-house me-2 text-info"></i>Home</button></li>
@@ -77,13 +77,13 @@
                     <div class="row g-2 mb-2">
                         <div class="col-6">
                             <div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center">
-                                <small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">SAP (Netto)</small>
+                                <small class="d-block text-muted text-uppercase fw-bold text-2xs">SAP (Netto)</small>
                                 <span class="fs-5 fw-bold text-primary font-monospace">[[ formatH(totals.sapTime) ]]</span>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center">
-                                <small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">CATS</small>
+                                <small class="d-block text-muted text-uppercase fw-bold text-2xs">CATS</small>
                                 <span class="fs-5 fw-bold font-monospace">[[ formatH(totals.catsTime) ]]</span>
                             </div>
                         </div>
@@ -92,18 +92,18 @@
                     <div v-if="prediction.target !== '--:--'" class="row g-2 mb-3">
                         <div class="col-6">
                             <div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center position-relative">
-                                <small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">Gehen (Soll)</small>
+                                <small class="d-block text-muted text-uppercase fw-bold text-2xs">Gehen (Soll)</small>
                                 <div class="d-flex align-items-center justify-content-center w-100 position-relative">
                                     <div class="fs-5 fw-bold font-monospace" :class="prediction.reached ? 'text-success' : 'text-primary'">
                                         [[ prediction.target ]]
                                     </div>
-                                    <i v-if="prediction.reached" class="bi bi-check-lg text-success position-absolute end-0" style="font-size: 1.2rem;"></i>
+                                    <i v-if="prediction.reached" class="bi bi-check-lg text-success position-absolute end-0 icon-lg"></i>
                                 </div>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center">
-                                <small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">Max (10h)</small>
+                                <small class="d-block text-muted text-uppercase fw-bold text-2xs">Max (10h)</small>
                                 <div class="fs-5 fw-bold text-danger font-monospace">[[ prediction.max ]]</div>
                             </div>
                         </div>
@@ -127,7 +127,7 @@
                         </div>
                         
                         <div v-if="flatrateStats.today > 0" class="text-end mb-2">
-                            <small class="text-muted fst-italic" style="font-size: 0.75rem;">
+                            <small class="text-muted fst-italic text-xs">
                                 (davon [[ formatNum(flatrateStats.today) ]]h in Pauschale <i class="bi bi-box-seam"></i>)
                             </small>
                         </div>
@@ -157,11 +157,11 @@
                     <table class="table table-hover table-compact align-middle mb-0" style="font-size: 0.9rem;">
                         <thead class="bg-body-tertiary">
                             <tr>
-                                <th class="ps-3">Datum</th>
-                                <th class="text-center ps-4">Zeiten</th>
+                                <th class="ps-3 col-min-date">Datum</th>
+                                <th class="text-center ps-4 col-min-time">Zeiten</th>
                                 <th class="text-center">SAP</th>
                                 <th class="text-center">Status</th>
-                                <th>Notiz</th>
+                                <th class="col-min-note">Notiz</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -170,7 +170,7 @@
                                     <div class="fw-bold" :class="day.isToday ? 'text-primary' : 'text-body'">[[ day.dayShort ]] [[ day.dateNum ]].</div>
                                     <div class="text-subtle">KW [[ day.kw ]]</div>
                                 </td>
-                                <td style="min-width: 180px;">
+                                <td>
                                     <div v-if="!day.status">
                                         <div v-for="(block, index) in day.blocks" :key="block.id" class="d-flex align-items-center gap-1 mb-2">
                                             <div class="dropdown d-inline-block list-icon-btn">
@@ -184,7 +184,7 @@
                                                 </ul>
                                             </div>
                                             <input :type="inputType" :step="getStep(block)" class="table-input" v-model="block.start" @blur="formatListTime(day, index, 'start')" @input="triggerListSave(day)" @wheel.prevent="onWheel($event, block, 'start', day)">
-                                            <span class="text-muted" style="font-size: 0.8rem">-</span>
+                                            <span class="text-muted text-xs">-</span>
                                             <input :type="inputType" :step="getStep(block)" class="table-input" v-model="block.end" @blur="formatListTime(day, index, 'end')" @input="triggerListSave(day)" @wheel.prevent="onWheel($event, block, 'end', day)">
                                             <span class="duration-badge" :style="{ visibility: getBlockDuration(block) ? 'visible' : 'hidden' }">
                                                 [[ getBlockDuration(block) || '0,00' ]]
@@ -207,7 +207,7 @@
                                     </div>
                                 </td>
                                 
-                                <td style="min-width: 250px;">
+                                <td>
                                     <div v-if="expandedNoteIso !== day.iso" class="d-flex align-items-center gap-2">
                                         
                                         <div v-if="day.comment" 
@@ -230,7 +230,7 @@
                                         </button>
                                     </div>
 
-                                    <div v-else class="position-relative bg-card shadow p-2 rounded border border-primary" style="z-index: 100; min-width: 300px;">
+                                    <div v-else class="note-popup bg-card shadow p-2 rounded border border-primary">
                                         
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <div class="btn-group btn-group-sm">
@@ -269,7 +269,7 @@
                         <span class="fs-2 fw-bold">[[ quota.percent.toFixed(1) ]]%</span>
                         <span class="text-muted small mb-1">Ziel: 40%</span>
                     </div>
-                    <div class="progress-sloth mb-3" style="height: 10px;"><div class="progress-bar-sloth" :style="{ width: quota.percent + '%' }"></div></div>
+                    <div class="progress-sloth mb-3 progress-h-md"><div class="progress-bar-sloth" :style="{ width: quota.percent + '%' }"></div></div>
                     <div class="d-flex justify-content-between text-muted small border-top pt-2"><span>Ist: <strong>[[ formatNum(quota.current) ]]h</strong></span><span>Soll: <strong>[[ formatNum(quota.target) ]]h</strong></span></div>
                     <div class="alert alert-light border mt-3 mb-0 p-2 d-flex align-items-center gap-2" v-if="quota.needed > 0"><i class="bi bi-info-circle text-primary"></i><div style="font-size: 0.8rem; line-height: 1.2;">Du musst noch <strong>[[ formatNum(quota.needed) ]]h</strong> ins Büro.</div></div>
                     <div class="alert alert-success border mt-3 mb-0 p-2 d-flex align-items-center gap-2" v-else><i class="bi bi-check-circle-fill text-success"></i><div style="font-size: 0.8rem; line-height: 1.2;">Quote erfüllt! 🥳</div></div>
@@ -283,7 +283,7 @@
                         <span class="fs-2 fw-bold">[[ formatNum(flatrateStats.used) ]]</span>
                         <span class="text-muted small mb-1">von [[ formatNum(flatrateStats.total) ]]</span>
                     </div>
-                    <div class="progress-sloth mb-2" style="height: 6px;">
+                    <div class="progress-sloth mb-2 progress-h-sm">
                         <div class="progress-bar-sloth bg-secondary" :style="{ width: flatrateStats.percent + '%' }"></div>
                     </div>
                     <small class="text-muted d-block mt-2" v-if="flatrateStats.used >= flatrateStats.total">Pauschale voll. GLZ läuft! 🚀</small>
@@ -309,7 +309,7 @@
                         <span class="fs-2 fw-bold">[[ formatNum(vacationStats.total - vacationStats.used) ]]</span>
                         <span class="text-muted small mb-1">von [[ formatNum(vacationStats.total) ]]</span>
                     </div>
-                    <div class="progress-sloth mb-2" style="height: 6px;">
+                    <div class="progress-sloth mb-2 progress-h-sm">
                         <div class="progress-bar-sloth bg-warning" :style="{ width: (vacationStats.used / vacationStats.total * 100) + '%' }"></div>
                     </div>
                     <small class="text-muted">Bereits verplant: <strong>[[ formatNum(vacationStats.used) ]]</strong></small>
@@ -318,11 +318,11 @@
         </div>
     </div>
 
-    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+    <div class="save-indicator-container">
         <transition name="fade">
-            <div v-if="saveState === 'saved'" class="bg-success text-white rounded-circle shadow d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-check-lg fs-5"></i></div>
+            <div v-if="saveState === 'saved'" class="bg-success text-white rounded-circle shadow d-flex align-items-center justify-content-center save-blob"><i class="bi bi-check-lg fs-5"></i></div>
         </transition>
-        <div v-if="saveState === 'saving'" class="bg-warning text-white rounded-circle shadow d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><div class="spinner-border spinner-border-sm"></div></div>
+        <div v-if="saveState === 'saving'" class="bg-warning text-white rounded-circle shadow d-flex align-items-center justify-content-center save-blob"><div class="spinner-border spinner-border-sm"></div></div>
     </div>
 
     <div class="modal fade" id="calcModal" tabindex="-1">
@@ -333,7 +333,7 @@
                     <div class="mb-3"><label class="form-label small fw-bold">Offene Büro-Stunden (laut SAP)</label><div class="input-group"><input type="number" step="0.01" class="form-control" v-model.number="calc.sapMissing"><span class="input-group-text">h</span></div></div>
                     <div class="mb-3"><label class="form-label small fw-bold d-flex justify-content-between"><span>Abwesenheit (Krank/Urlaub)</span><span class="text-success" v-if="calcDeduction > 0">- [[ formatNum(calcDeduction) ]] h</span></label><input type="number" step="1" class="form-control" v-model.number="calc.absentDays" placeholder="Tage"><div class="form-text small">Tage, die noch nicht in SAP verbucht sind.</div></div>
                     <div class="mb-4"><label class="form-label small fw-bold d-flex justify-content-between"><span>Geplante Bürozeit pro Tag</span><span class="text-primary">[[ formatNum(calc.planHours) ]] h</span></label><input type="range" class="form-range" min="4" max="10" step="0.25" v-model.number="calc.planHours"></div>
-                    <div class="alert alert-primary text-center border-0 shadow-sm mb-0"><small class="text-uppercase text-muted" style="font-size: 0.7rem;">Du musst noch ins Büro für:</small><div class="fs-2 fw-bold mt-1">[[ formatNum(calcResult) ]] <span class="fs-6 fw-normal text-muted">Tage</span></div></div>
+                    <div class="alert alert-primary text-center border-0 shadow-sm mb-0"><small class="text-uppercase text-muted text-xs">Du musst noch ins Büro für:</small><div class="fs-2 fw-bold mt-1">[[ formatNum(calcResult) ]] <span class="fs-6 fw-normal text-muted">Tage</span></div></div>
                 </div>
             </div>
         </div>

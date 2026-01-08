@@ -45,14 +45,14 @@
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" :data-bs-target="'#user-'+u.id" @click="fetchUserLogs(u)">
                                 <span class="d-flex align-items-center gap-2 w-100">
-                                    <span class="avatar-circle admin-avatar">
+                                    <span class="avatar-circle admin-avatar avatar-sm">
                                         [[ u.username.charAt(0).toUpperCase() ]]
                                     </span>
                                     <span class="fw-bold">[[ u.username ]]</span>
-                                    <span v-if="u.is_admin" class="badge bg-primary rounded-pill ms-2 admin-badge">ADMIN</span>
+                                    <span v-if="u.is_admin" class="badge bg-primary rounded-pill ms-2 text-2xs">ADMIN</span>
                                     
                                     <span class="ms-auto me-3 d-flex align-items-center gap-2 small text-muted">
-                                        <i class="bi bi-circle-fill" :class="u.is_active ? 'text-success' : 'text-danger'" style="font-size: 0.6rem;"></i>
+                                        <i class="bi bi-circle-fill text-3xs" :class="u.is_active ? 'text-success' : 'text-danger'"></i>
                                         <span class="d-none d-sm-inline">[[ u.is_active ? 'Aktiv' : 'Gesperrt' ]]</span>
                                     </span>
                                 </span>
@@ -93,7 +93,7 @@
                                 </div>
                                 <div v-if="u.temp_password" class="alert alert-success d-flex align-items-center justify-content-between mt-3 mb-3 animate-fade">
                                     <div class="overflow-hidden">
-                                        <small class="d-block text-success-emphasis fw-bold" style="font-size: 0.7rem;">NEUES PASSWORT</small>
+                                        <small class="d-block text-success-emphasis fw-bold text-xs">NEUES PASSWORT</small>
                                         <span class="font-monospace fs-5 fw-bold user-select-all me-2">[[ u.temp_password ]]</span>
                                     </div>
                                     <button class="btn btn-light btn-sm text-success fw-bold shadow-sm text-nowrap" @click="copyPw(u.temp_password, $event)">
