@@ -241,10 +241,25 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
 
 /* Markdown Styles */
 .markdown-preview { font-size: 0.9rem; line-height: 1.5; color: var(--text-main); white-space: pre-wrap; }
+
+/* FIX 1: Abstände bei Absätzen und Listen normalisieren */
 .markdown-preview p, .markdown-preview ul, .markdown-preview ol { margin-bottom: 0.5rem; }
-.markdown-preview h1, .markdown-preview h2, .markdown-preview h3 { 
+
+/* WICHTIG: Wenn ein Absatz IN einer Liste ist -> Kein Abstand nach unten */
+.markdown-preview li p { margin-bottom: 0; }
+.markdown-preview li { margin-bottom: 0.25rem; }
+
+/* FIX 2: Überschriften dezenter gestalten */
+.markdown-preview h1, .markdown-preview h2 { 
+    font-size: 1.1rem; font-weight: bold; margin-top: 0.75rem; margin-bottom: 0.25rem; 
+    border-bottom: 1px solid var(--border-color); /* H1/H2 behalten den Strich als Haupt-Titel */
+}
+
+/* H3 (###) bekommt KEINEN Strich mehr und ist etwas kleiner */
+.markdown-preview h3 { 
     font-size: 1rem; font-weight: bold; margin-top: 0.5rem; margin-bottom: 0.25rem; 
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: none; /* Strich entfernt! */
+    text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); /* Optional: Etwas "Label"-artiger */
 }
 
 /* Calendar Grid */
