@@ -74,50 +74,51 @@ class EntryService {
     public function getYearStats($userId, $year) {
         $db = get_db();
         
-        // 1. Zähle echte Urlaubstage (Wochenenden ignorieren!) & hole Notizen
-        // WICHTIG: Wir holen jetzt auch 'status_note'
-        $stmt = $db->prepare("SELECT date_str, status_note FROM entries WHERE user_id = ? AND status = 'U' AND date_str LIKE ?");
+        // 1. Hole ALLE Einträge dieses Jahres (egal welcher Status)
+        // Wir brauchen status, status_note UND comment
+        $stmt = $db->prepare("SELECT date_str, status, status_note, comment FROM entries WHERE user_id = ? AND date_str LIKE ?");
         $stmt->execute([$userId, "$year%"]);
-        $uRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $usedCount = 0;
         $vacationDates = [];
-        $notes = []; // Hier sammeln wir alle Notizen (Datum => Text)
-        
-        foreach($uRows as $row) {
-            $d = $row['date_str'];
-            $vacationDates[] = $d;
-            if(!empty($row['status_note'])) $notes[$d] = $row['status_note'];
-            
-            // Check ob Wochenende
-            $dt = new DateTime($d);
-            if ($dt->format('N') < 6) $usedCount++;
-        }
-
-        // 2. Krank (K) mit Notizen
-        $stmtK = $db->prepare("SELECT date_str, status_note FROM entries WHERE user_id = ? AND status = 'K' AND date_str LIKE ?");
-        $stmtK->execute([$userId, "$year%"]);
-        $kRows = $stmtK->fetchAll(PDO::FETCH_ASSOC);
-        
         $sickDates = [];
-        foreach($kRows as $row) {
-            $d = $row['date_str'];
-            $sickDates[] = $d;
-            if(!empty($row['status_note'])) $notes[$d] = $row['status_note'];
-        }
-
-        // 3. User-Feiertage (F) mit Notizen
-        $stmtF = $db->prepare("SELECT date_str, status_note FROM entries WHERE user_id = ? AND status = 'F' AND date_str LIKE ?");
-        $stmtF->execute([$userId, "$year%"]);
-        $fRows = $stmtF->fetchAll(PDO::FETCH_ASSOC);
         $userHolidayDates = [];
-        foreach($fRows as $row) {
-             $d = $row['date_str'];
-             $userHolidayDates[] = $d;
-             if(!empty($row['status_note'])) $notes[$d] = $row['status_note'];
+        $notes = []; 
+        
+        foreach($rows as $row) {
+            $d = $row['date_str'];
+            $status = $row['status'];
+            
+            // Status zuordnen
+            if ($status === 'U') {
+                $vacationDates[] = $d;
+                // Urlaubstage zählen (ohne Wochenende)
+                $dt = new DateTime($d);
+                if ($dt->format('N') < 6) $usedCount++;
+            }
+            elseif ($status === 'K') {
+                $sickDates[] = $d;
+            }
+            elseif ($status === 'F') {
+                $userHolidayDates[] = $d;
+            }
+            
+            // --- LOGIK FÜR NOTIZEN ---
+            // Priorität: 1. Status-Notiz (z.B. "Kroatien") -> 2. Tages-Kommentar (z.B. "Wartung")
+            $rawText = !empty($row['status_note']) ? $row['status_note'] : $row['comment'];
+            
+            if (!empty($rawText)) {
+                // Text bereinigen und kürzen (max 50 Zeichen für Tooltip)
+                $cleanText = trim(str_replace(["\r", "\n"], " ", $rawText));
+                if (mb_strlen($cleanText) > 50) {
+                    $cleanText = mb_substr($cleanText, 0, 47) . '...';
+                }
+                $notes[$d] = $cleanText;
+            }
         }
 
-        // 4. Globale Feiertage laden
+        // 2. Globale Feiertage laden & mergen
         $stmtHol = $db->prepare("SELECT date_str, name FROM global_holidays WHERE date_str LIKE ?");
         $stmtHol->execute(["$year%"]);
         $holidays = $stmtHol->fetchAll(PDO::FETCH_ASSOC);
@@ -125,10 +126,9 @@ class EntryService {
         $holidayMap = [];
         foreach($holidays as $h) { $holidayMap[$h['date_str']] = $h['name']; }
 
-        // Merge User-Feiertage in die Map
         foreach($userHolidayDates as $fDate) {
             if(!isset($holidayMap[$fDate])) {
-                // Falls der User eine Notiz hat ("Geburtstag"), nimm die. Sonst "Persönlich"
+                // Eigener Feiertag: Nimm Notiz oder Standardtext
                 $holidayMap[$fDate] = $notes[$fDate] ?? "Persönlich";
             }
         }
@@ -138,7 +138,7 @@ class EntryService {
             'dates' => $vacationDates, 
             'sick_dates' => $sickDates,
             'holidays' => $holidayMap,
-            'notes' => $notes // Das ist NEU
+            'notes' => $notes 
         ];
     }
 }

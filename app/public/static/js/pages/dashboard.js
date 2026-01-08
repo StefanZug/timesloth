@@ -243,14 +243,14 @@ createApp({
             const year = this.currentDateObj.getFullYear();
             const date = new Date(year, monthIndex, 1);
             const days = [];
-                
+            
             let firstDay = date.getDay(); 
             let isoStart = (firstDay === 0) ? 6 : firstDay - 1; 
-                
+
             for(let i=0; i<isoStart; i++) {
                 days.push({ isEmpty: true });
             }
-        
+
             while(date.getMonth() === monthIndex) {
                 const iso = this.formatIsoDate(date);
                 const wd = date.getDay();
@@ -258,28 +258,35 @@ createApp({
                 const isHol = !!this.vacationStats.yearHolidays[iso];
                 const isVac = this.vacationStats.dates.includes(iso);
                 const isSick = this.vacationStats.sickDates.includes(iso);
+                const note = this.vacationStats.notes[iso]; // Die Notiz für diesen Tag
                 
-                // --- TOOLTIP LOGIK ---
+                // --- TOOLTIP BAUEN ---
                 let tooltipParts = [];
-                // 1. Datum
+                
+                // 1. Datum (z.B. "Mo 24.12.")
                 tooltipParts.push(date.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }));
                 
-                // 2. Status-Info
-                if (isHol) {
-                     tooltipParts.push(this.vacationStats.yearHolidays[iso]); // Name des Feiertags
-                } else if (isVac) {
-                    tooltipParts.push("Urlaub");
-                } else if (isSick) {
-                    tooltipParts.push("Krank");
-                }
+                // 2. Status Text
+                if (isHol) tooltipParts.push(this.vacationStats.yearHolidays[iso]);
+                else if (isVac) tooltipParts.push("Urlaub");
+                else if (isSick) tooltipParts.push("Krank");
                 
-                // 3. Eigene Notiz anhängen (z.B. "Kroatien")
-                if (this.vacationStats.notes[iso]) {
-                    tooltipParts.push(`(${this.vacationStats.notes[iso]})`);
+                // 3. Notiz anhängen (egal ob Status oder Arbeitstag)
+                if (note) {
+                    // Wenn wir schon einen Status-Text haben, setzen wir die Notiz in Klammern
+                    if (isHol || isVac || isSick) {
+                        // Verhindert doppelte Anzeige (z.B. wenn Notiz == Feiertagsname)
+                        if (!tooltipParts.includes(note)) {
+                            tooltipParts.push(`(${note})`);
+                        }
+                    } else {
+                        // Normaler Arbeitstag: Einfach anhängen
+                        tooltipParts.push(`- ${note}`);
+                    }
                 }
                 
                 const tooltipStr = tooltipParts.join(' ');
-            
+
                 days.push({
                     iso: iso, day: date.getDate(),
                     isEmpty: false,
@@ -287,7 +294,9 @@ createApp({
                     isHoliday: isHol,
                     isVacation: isVac,
                     isSick: isSick,
-                    tooltip: tooltipStr // Das nutzen wir im Template
+                    // Optional: Du könntest 'hasNote' nutzen, um im CSS z.B. einen kleinen Punkt anzuzeigen
+                    hasNote: !!note, 
+                    tooltip: tooltipStr
                 });
                 date.setDate(date.getDate() + 1);
             }

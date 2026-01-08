@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.1.8 (The Notes Update)
+**Features:**
+- **Status-Notizen:** Bei Status F, U oder K kann nun eine spezifische Notiz hinterlegt werden (z.B. "Urlaub: Kroatien" oder "Krank: Grippe"). Diese Info wird im Kalender priorisiert angezeigt.
+- **Markdown Support:** Tages-Notizen und Kommentare unterstützen nun Markdown-Formatierung (`**Fett**`, `* Kursiv`, `- Listen`, `### Überschriften`).
+- **Erweiterte Tooltips:** Im Jahreskalender und der Monatsansicht werden Notizen beim Mouseover (Tooltip) nun detailliert angezeigt.
+- **Offline-First:** Markdown-Bibliotheken (Marked & DOMPurify) werden nun lokal ausgeliefert statt via CDN, für besseren Datenschutz und Offline-Fähigkeit.
+
+**UX & Design:**
+- **Smarte Monatsansicht:** Das Notizfeld in der Tabelle zeigt nun im geschlossenen Zustand eine Vorschau an. Beim Klick öffnet sich nur noch der Editor (keine doppelte Vorschau mehr), was Platz spart.
+- **Input-Feedback:** Textfelder in der Tabelle haben nun einen sichtbaren Rahmen beim Hovern, damit sie leichter als Eingabefelder erkennbar sind.
+- **Jahresplaner:** Zeigt nun auch Status-Notizen an (z.B. "Urlaub (Kroatien)") statt nur pauschal "Urlaub".
+
+**Technical & Database:**
+- **Migration:** Automatische Erweiterung der `entries` Tabelle um die Spalte `status_note`.
+
+---
+
 ## 0.1.7 (The Überstundenpauschale Update)
 **Features:**
 - **Überstundenpauschale:** Eine monatliche Pauschale (z.B. 10h) kann nun in den Settings hinterlegt werden. Überstunden füllen zuerst diesen "Topf", bevor sie das Gleitzeitkonto erhöhen.

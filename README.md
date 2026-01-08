@@ -100,7 +100,8 @@ Wir nutzen einen leichtgewichtigen PHP-Stack mit Service-Architektur.
 * `date_str` (TEXT, "YYYY-MM-DD")
 * `data` (TEXT, JSON) -> Array von Zeitblöcken
 * `status` (TEXT) -> 'F', 'U', 'K' oder NULL
-* `comment` (TEXT)
+* `comment` (TEXT) -> Tages-Notizen (unterstützt Markdown)
+* `status_note` (TEXT) -> Spezifische Notiz zum Status (z.B. Urlaubsziel)
 
 **Table `global_holidays`** (Neu in v0.1.6)
 * `id` (INT, PK)

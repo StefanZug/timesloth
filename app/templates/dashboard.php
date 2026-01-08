@@ -208,17 +208,19 @@
                                 </td>
                                 
                                 <td style="min-width: 250px;">
-                                    <div v-if="expandedNoteIso !== day.iso" class="d-flex align-items-start gap-2">
+                                    <div v-if="expandedNoteIso !== day.iso" class="d-flex align-items-center gap-2">
+                                        
                                         <div v-if="day.comment" 
-                                             class="flex-grow-1 text-truncate p-1 rounded cursor-pointer markdown-preview" 
-                                             style="background: transparent; height: 30px; overflow: hidden;"
+                                             class="flex-grow-1 text-truncate cursor-pointer markdown-preview note-preview-closed" 
+                                             style="height: 28px; overflow: hidden; line-height: 1.5;"
                                              @click="toggleExpandNote(day)"
+                                             :title="day.comment" 
                                              v-html="renderMarkdown(day.comment)">
                                         </div>
                                         
                                         <input v-else 
                                                type="text" 
-                                               class="form-control form-control-sm border-0 bg-transparent p-0 text-truncate" 
+                                               class="form-control form-control-sm table-input-note text-truncate" 
                                                v-model.lazy="day.comment" 
                                                :placeholder="day.placeholder" 
                                                @change="updateComment(day)">
@@ -228,7 +230,7 @@
                                         </button>
                                     </div>
 
-                                    <div v-else class="position-relative bg-card shadow-sm p-2 rounded border" style="z-index: 10;">
+                                    <div v-else class="position-relative bg-card shadow p-2 rounded border border-primary" style="z-index: 100; min-width: 300px;">
                                         
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <div class="btn-group btn-group-sm">
@@ -240,13 +242,12 @@
                                             </button>
                                         </div>
 
-                                        <textarea class="form-control form-control-sm font-monospace mb-2" 
+                                        <textarea class="form-control form-control-sm font-monospace" 
                                                   rows="4" 
                                                   v-model.lazy="day.comment" 
                                                   @change="updateComment(day)"
-                                                  placeholder="Notiz..."></textarea>
-                                                  
-                                        <div v-if="day.comment" class="p-2 bg-body-tertiary rounded border markdown-preview small" v-html="renderMarkdown(day.comment)"></div>
+                                                  placeholder="Notiz...">
+                                        </textarea>
                                     </div>
                                 </td>
                             </tr>
