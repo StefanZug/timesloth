@@ -8,7 +8,7 @@
         <button class="btn btn-sm btn-link text-danger p-0" @click="resetMonth"><i class="bi bi-trash"></i></button>
     </div>
     <div class="table-responsive">
-        <table class="table table-hover table-compact align-middle mb-0" style="font-size: 0.9rem;">
+        <table class="table table-hover table-compact align-middle mb-0 mobile-dashboard-table" style="font-size: 0.9rem;">
             <thead class="bg-body-tertiary">
                 <tr>
                     <th class="ps-3 col-min-date">Datum</th>

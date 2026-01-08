@@ -163,38 +163,114 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
 .view-btn.active { background: var(--bg-card); color: var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-weight: 600; }
 
 @media (max-width: 991px) {
-    /* Globale Tabellen-Optimierung */
-    table.table { border-collapse: separate; border-spacing: 0; min-width: 0 !important; width: 100%; }
-    .table td, .table th { padding: 4px 2px !important; font-size: 0.8rem !important; white-space: nowrap; }
-
-    /* Sticky erste Spalte mit fixer Breite */
-    td:first-child, th:first-child { 
-        position: sticky; left: 0; z-index: 10; 
-        width: 50px !important; min-width: 50px !important; max-width: 50px !important;
-        border-right: 2px solid var(--border-color); 
-        padding-left: 2px !important; padding-right: 2px !important;
-        text-align: center !important; overflow: hidden;
-    }
-    th:first-child { background-color: var(--bg-tertiary) !important; z-index: 11; }
-
-    /* Fixierte Farben */
-    td:first-child { background-color: var(--bg-card) !important; }
-    .tr-office td:first-child { background-color: var(--st-office-bg) !important; color: var(--st-office-txt) !important; }
-    .tr-home td:first-child { background-color: var(--st-home-bg) !important; color: var(--st-home-txt) !important; }
-    .tr-sick td:first-child { background-color: var(--st-sick-bg) !important; color: var(--st-sick-txt) !important; }
-    .tr-vacation td:first-child { background-color: var(--st-vacation-bg) !important; color: var(--st-vacation-txt) !important; }
-    .tr-holiday td:first-child { background-color: var(--st-holiday-bg) !important; color: var(--st-holiday-txt) !important; }
-    .tr-weekend td:first-child { background-color: var(--bg-tertiary) !important; }
-
-    /* Zentrierung & Cleanup */
-    .table-input { text-align: center !important; padding: 2px 0 !important; font-size: 0.85rem !important; }
-    td:first-child .dropdown-toggle { border: none !important; background: transparent !important; padding: 0 !important; box-shadow: none !important; }
-    td:first-child .dropdown-toggle::after { display: none !important; }
-    td:first-child div.small { font-size: 0.65rem !important; line-height: 1; margin-top: 2px; }
     
-    /* Inputs */
-    td input.form-control { min-width: 60px !important; }
-    .btn-xs-status { width: 20px !important; height: 20px !important; font-size: 0.6rem !important; padding: 0 !important; }
-    .bi-clock, .input-group-text, .list-spacer-start, .list-spacer-end { display: none !important; }
+    /* --- ALLGEMEINE TABELLEN (Admin, Settings, Dashboard) --- */
+    table.table { 
+        width: 100%; 
+        border-collapse: separate; 
+        border-spacing: 0;
+    }
+    
+    /* Kompakte Zellen für alle Tabellen */
+    .table td, .table th {
+        padding: 6px 4px !important;
+        font-size: 0.8rem !important;
+        vertical-align: middle;
+    }
+
+    /* Admin & Settings: Text soll umbrechen dürfen, damit Spalten nicht zu breit werden */
+    .table:not(.mobile-dashboard-table) td {
+        white-space: normal; 
+        word-break: break-word;
+        min-width: 60px;
+    }
+
+    /* ============================================================
+       NUR FÜR DASHBOARD TABELLE (.mobile-dashboard-table)
+       ============================================================ */
+    
+    /* 1. Die FIXIERTE erste Spalte (Datum/Icon) */
+    .mobile-dashboard-table td:first-child, 
+    .mobile-dashboard-table th:first-child { 
+        position: sticky; 
+        left: 0; 
+        z-index: 10; 
+        
+        width: 50px !important; 
+        min-width: 50px !important; 
+        max-width: 50px !important;
+        
+        border-right: 2px solid var(--border-color); 
+        padding: 0 !important;
+        text-align: center !important;
+        overflow: visible; /* Wichtig für Dropdown Menü */
+    }
+    
+    .mobile-dashboard-table th:first-child { 
+        background-color: var(--bg-tertiary) !important; 
+        z-index: 11; 
+    }
+
+    /* 2. Hintergrundfarben für die fixierte Spalte */
+    .mobile-dashboard-table td:first-child { background-color: var(--bg-card) !important; }
+    
+    /* Explizite Vererbung der Zeilenfarben auf die fixierte Zelle */
+    .tr-office .mobile-dashboard-table td:first-child   { background-color: var(--st-office-bg) !important; color: var(--st-office-txt) !important; }
+    .tr-home .mobile-dashboard-table td:first-child     { background-color: var(--st-home-bg) !important;   color: var(--st-home-txt) !important; }
+    .tr-sick .mobile-dashboard-table td:first-child     { background-color: var(--st-sick-bg) !important;   color: var(--st-sick-txt) !important; }
+    .tr-vacation .mobile-dashboard-table td:first-child { background-color: var(--st-vacation-bg) !important; color: var(--st-vacation-txt) !important; }
+    .tr-holiday .mobile-dashboard-table td:first-child  { background-color: var(--st-holiday-bg) !important;  color: var(--st-holiday-txt) !important; }
+    .tr-weekend .mobile-dashboard-table td:first-child  { background-color: var(--bg-tertiary) !important; }
+
+    /* 3. Dropdown Bereinigung (Nur Icon sichtbar) */
+    /* Wir entfernen Button-Styles und Pfeile */
+    .mobile-dashboard-table td:first-child .list-icon-btn {
+        width: 100% !important;
+        display: block !important;
+    }
+    .mobile-dashboard-table td:first-child .list-icon-btn button {
+        border: none !important;
+        background: transparent !important;
+        padding: 8px 0 !important; /* Große Klickfläche */
+        width: 100% !important;
+        box-shadow: none !important;
+    }
+    /* Dropdown Pfeil ausblenden (Bootstrap ::after Pseudo-Element) */
+    .mobile-dashboard-table td:first-child .dropdown-toggle::after {
+        display: none !important; 
+    }
+    
+    /* Das Datum unter dem Icon */
+    .mobile-dashboard-table td:first-child div.small {
+        font-size: 0.6rem !important;
+        margin-top: -4px;
+        font-weight: 700;
+        opacity: 0.8;
+    }
+
+    /* 4. Uhrzeiten & Inputs (Lesbarkeit) */
+    .mobile-dashboard-table .table-input { 
+        font-size: 0.85rem !important;
+        padding: 4px 0 !important;
+        text-align: center !important;
+        /* Leichter Hintergrund, damit man das Inputfeld sieht */
+        background: rgba(255,255,255,0.5) !important; 
+        border-radius: 4px;
+        min-width: 55px !important; 
+        border: none !important;
+    }
+    [data-bs-theme="dark"] .mobile-dashboard-table .table-input {
+        background: rgba(0,0,0,0.3) !important;
+    }
+    
+    /* Layout Korrekturen Dashboard: Unnötiges ausblenden */
+    .mobile-dashboard-table .bi-clock, 
+    .mobile-dashboard-table .input-group-text,
+    .mobile-dashboard-table .list-spacer-start,
+    .mobile-dashboard-table .list-spacer-end { 
+        display: none !important; 
+    }
+    
+    /* Footer Abstand */
     #settingsApp + .app-footer { margin-bottom: 120px !important; }
 }
