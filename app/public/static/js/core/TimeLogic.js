@@ -95,13 +95,16 @@ class TimeLogic {
      * NEU: Berechnet Monats-Aggregate inkl. Überstundenpauschale
      * Iteriert vom 1. bis Heute (oder Monatsende)
      */
+    /**
+     * Berechnet Monats-Aggregate inkl. Überstundenpauschale
+     * Iteriert vom 1. bis Heute (für Ist-Werte) und analysiert den ganzen Monat (für Forecast)
+     */
     static calculateMonthAggregates(currentDateObj, entries, holidaysMap, settings, currentBlocks = []) {
         let glzSum = parseFloat(settings.correction || 0);
         let flatrateCapMin = (parseFloat(settings.overtimeFlatrate || 0) * 60);
         let flatrateUsedMin = 0;
         let todayConsume = 0;
         
-        // Hilfsfunktion für ISO Datum
         const formatIso = (d) => {
             return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         };
@@ -112,35 +115,28 @@ class TimeLogic {
         let yesterdayGlz = 0;
         let currentGlz = 0;
         
-        // Loop durch den Monat
+        // Loop durch den Monat (bis Heute) für GLZ Berechnung
         for(let d = 1; d <= daysInMonth; d++) {
             let date = new Date(currentDateObj.getFullYear(), currentDateObj.getMonth(), d);
             let iso = formatIso(date);
             
-            // Stopp, wenn Zukunft
+            // Stopp, wenn Zukunft (für GLZ Verlauf)
             if (date > new Date()) break; 
 
             let isToday = (iso === todayStr);
             let dayStats = { saldoMin: 0 };
             let status = null;
 
-            // --- 1. Status & Stats ermitteln ---
+            // Status & Stats ermitteln
             if (isToday && currentBlocks) {
-                // Für Heute nehmen wir die Live-Blöcke
                 let wd = date.getDay();
                 if (wd !== 0 && wd !== 6) {
-                     // Check ob heute Feiertag ist, obwohl wir Blöcke haben (z.B. Arbeiten am Feiertag)
                      if(holidaysMap[iso]) status = 'F';
-                     
-                     // Wenn kein Status, dann berechnen wir die Zeiten
-                     if(!status) { 
-                        dayStats = this.calculateDayStats(currentBlocks, settings, false);
-                     }
+                     if(!status) dayStats = this.calculateDayStats(currentBlocks, settings, false);
                 }
             } else {
-                // Historische Daten aus Cache
                 let wd = date.getDay();
-                if(wd !== 0 && wd !== 6) { // Mo-Fr
+                if(wd !== 0 && wd !== 6) { 
                     let entry = entries.find(e => e.date === iso);
                     let isHol = !!holidaysMap[iso];
                     status = (entry && entry.status) ? entry.status : (isHol ? 'F' : null);
@@ -152,24 +148,15 @@ class TimeLogic {
                 }
             }
 
-            // --- 2. PAUSCHALEN LOGIK ---
+            // PAUSCHALEN LOGIK (Ist-Stand)
             let dailySaldo = dayStats.saldoMin;
             let absorbed = 0;
 
             if (['F', 'U', 'K'].includes(status)) {
-                // NEU: SAP Logik für F/U/K (Dynamisch)
-                // Wir berechnen den Tagesanteil der Pauschale (Pauschale / 22 Tage)
-                // Beispiel: 10h / 22 = 0,45h = 27 Min
                 let flatrateTotal = parseFloat(settings.overtimeFlatrate || 0);
-                
-                // Nur rechnen, wenn eine Pauschale eingestellt ist
                 if (flatrateTotal > 0) {
-                    // SAP RUNDUNGS-LOGIK:
-                    // Wir müssen den Tageswert erst auf 2 Stellen runden (z.B. 0.45),
-                    // bevor wir ihn in Minuten wandeln. Sonst summieren sich Rundungsfehler (1.26 vs 1.25).
                     let dailyRaw = flatrateTotal / 22;
                     let dailyRounded = parseFloat(dailyRaw.toFixed(2));
-                    
                     let deduction = dailyRounded * 60; 
                     
                     let space = flatrateCapMin - flatrateUsedMin;
@@ -179,29 +166,51 @@ class TimeLogic {
                     }
                 }
             } else if (dailySaldo > 0) {
-                // Normale Arbeitslogik: Überstunden füllen den Topf
                 let space = flatrateCapMin - flatrateUsedMin;
                 if (space > 0) {
                     absorbed = Math.min(dailySaldo, space);
                     flatrateUsedMin += absorbed;
-                    dailySaldo -= absorbed; // Diese Zeit fehlt nun auf dem GLZ Konto
+                    dailySaldo -= absorbed; 
                 }
             }
             
-            // --- 3. GLZ Summieren ---
+            // GLZ Summieren
             if (iso < todayStr) {
                 glzSum += (dailySaldo / 60);
                 yesterdayGlz = glzSum;
             } else if (isToday) {
-                // Heute rechnen wir F/U/K auch schon an, falls der Status schon gesetzt ist
                 currentGlz = glzSum + (dailySaldo / 60);
                 todayConsume = absorbed;
             }
         }
         
-        // Fallback für Monatswechsel-Ansicht
         if (todayStr.substring(0,7) !== formatIso(currentDateObj).substring(0,7)) {
              currentGlz = glzSum;
+        }
+
+        // --- NEU: Forecast für ÜP-Reduktion (Ganzer Monat) ---
+        let flatrateReductionMin = 0;
+        let flatrateTotal = parseFloat(settings.overtimeFlatrate || 0);
+        
+        if (flatrateTotal > 0) {
+            let dailyRaw = flatrateTotal / 22;
+            let dailyRounded = parseFloat(dailyRaw.toFixed(2));
+            
+            // Wir scannen nochmal den ganzen Monat nach F/U/K
+            for(let d = 1; d <= daysInMonth; d++) {
+                let date = new Date(currentDateObj.getFullYear(), currentDateObj.getMonth(), d);
+                let wd = date.getDay();
+                if (wd === 0 || wd === 6) continue;
+
+                let iso = formatIso(date);
+                let entry = entries.find(e => e.date === iso);
+                let isHol = !!holidaysMap[iso];
+                let status = (entry && entry.status) ? entry.status : (isHol ? 'F' : null);
+
+                if (['F', 'U', 'K'].includes(status)) {
+                    flatrateReductionMin += (dailyRounded * 60);
+                }
+            }
         }
 
         return {
@@ -209,7 +218,9 @@ class TimeLogic {
             glzCurrent: currentGlz,
             flatrateUsed: flatrateUsedMin / 60,
             flatrateTotal: flatrateCapMin / 60,
-            todayConsume: todayConsume / 60
+            todayConsume: todayConsume / 60,
+            // NEU: Gesamte Reduktion für den Monat
+            flatrateReduction: flatrateReductionMin / 60 
         };
     }
 

@@ -82,7 +82,6 @@
 
     </div>
 </div>
-</div>
 
 <div class="widget-card" v-if="!isNonWorkDay">
     <div class="widget-header">📊 Tages-Fazit</div>
