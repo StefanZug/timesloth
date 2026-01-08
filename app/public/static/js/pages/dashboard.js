@@ -8,7 +8,8 @@ createApp({
             currentDateObj: new Date(),
             viewMode: localStorage.getItem('viewMode') || 'day',
             dayStatus: null,
-            dayComment: '', 
+            dayComment: '',
+            expandedNoteIso: null,
             blocks: [], 
             entriesCache: [],
             holidaysMap: {},
@@ -27,7 +28,7 @@ createApp({
             calc: { sapMissing: null, absentDays: 0, planHours: 8.0 },
             tempCorrection: 0,
             lastScrollTime: 0,
-            vacationStats: { used: 0, total: 25, dates: [], sickDates: [], yearHolidays: {} }
+            vacationStats: { used: 0, total: 25, dates: [], sickDates: [], yearHolidays: {}, notes: {} }
         }
     },
     watch: {
@@ -234,6 +235,7 @@ createApp({
                 this.vacationStats.dates = res.data.dates;
                 this.vacationStats.sickDates = res.data.sick_dates || []; 
                 this.vacationStats.yearHolidays = res.data.holidays || {};
+                this.vacationStats.notes = res.data.notes || {};
                 this.vacationStats.total = this.settings.vacationDays || 25;
             } catch(e) { console.error(e); }
         },
@@ -241,24 +243,51 @@ createApp({
             const year = this.currentDateObj.getFullYear();
             const date = new Date(year, monthIndex, 1);
             const days = [];
-            
+                
             let firstDay = date.getDay(); 
             let isoStart = (firstDay === 0) ? 6 : firstDay - 1; 
-
+                
             for(let i=0; i<isoStart; i++) {
                 days.push({ isEmpty: true });
             }
-
+        
             while(date.getMonth() === monthIndex) {
                 const iso = this.formatIsoDate(date);
                 const wd = date.getDay();
+                
+                const isHol = !!this.vacationStats.yearHolidays[iso];
+                const isVac = this.vacationStats.dates.includes(iso);
+                const isSick = this.vacationStats.sickDates.includes(iso);
+                
+                // --- TOOLTIP LOGIK ---
+                let tooltipParts = [];
+                // 1. Datum
+                tooltipParts.push(date.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }));
+                
+                // 2. Status-Info
+                if (isHol) {
+                     tooltipParts.push(this.vacationStats.yearHolidays[iso]); // Name des Feiertags
+                } else if (isVac) {
+                    tooltipParts.push("Urlaub");
+                } else if (isSick) {
+                    tooltipParts.push("Krank");
+                }
+                
+                // 3. Eigene Notiz anhängen (z.B. "Kroatien")
+                if (this.vacationStats.notes[iso]) {
+                    tooltipParts.push(`(${this.vacationStats.notes[iso]})`);
+                }
+                
+                const tooltipStr = tooltipParts.join(' ');
+            
                 days.push({
                     iso: iso, day: date.getDate(),
                     isEmpty: false,
                     isWeekend: (wd === 0 || wd === 6),
-                    isHoliday: !!this.vacationStats.yearHolidays[iso],
-                    isVacation: this.vacationStats.dates.includes(iso),
-                    isSick: this.vacationStats.sickDates.includes(iso)
+                    isHoliday: isHol,
+                    isVacation: isVac,
+                    isSick: isSick,
+                    tooltip: tooltipStr // Das nutzen wir im Template
                 });
                 date.setDate(date.getDate() + 1);
             }
@@ -495,7 +524,81 @@ createApp({
             if(!confirm("Möchtest du wirklich alle Einträge für diesen Monat löschen?")) return;
             try { await axios.post('/api/reset_month', { month: this.isoMonth }); this.loadMonthData(); } 
             catch(e) { console.error(e); alert("Fehler: " + (e.response?.data?.error || "Unbekannt")); }
-        }
+        },
+        // NEU: Markdown rendern (Sicher!)
+        renderMarkdown(text) {
+            if (!text) return '';
+            // marked parst MD -> HTML, DOMPurify säubert es (XSS Schutz)
+            return DOMPurify.sanitize(marked.parse(text));
+        },
+
+        // NEU: Toolbar-Funktion (Fett, Kursiv, Liste...)
+        insertMarkdown(type, event) {
+            // Findet das Textarea Element
+            const textarea = event.target.closest('.widget-card, td').querySelector('textarea');
+            if (!textarea) return;
+
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const before = text.substring(0, start);
+            const selection = text.substring(start, end);
+            const after = text.substring(end);
+
+            let newText = '';
+            let cursorOffset = 0;
+
+            switch (type) {
+                case 'bold':
+                    newText = `${before}**${selection || 'Fett'}**${after}`;
+                    cursorOffset = selection ? 2 : 6; // Cursor positionieren
+                    break;
+                case 'italic':
+                    newText = `${before}_${selection || 'Kursiv'}_${after}`;
+                    cursorOffset = selection ? 1 : 7;
+                    break;
+                case 'list':
+                    // Check ob wir am Anfang einer neuen Zeile sind
+                    const prefix = (before.length > 0 && before.slice(-1) !== '\n') ? '\n' : '';
+                    newText = `${before}${prefix}- ${selection || 'Listenpunkt'}${after}`;
+                    cursorOffset = prefix.length + 2; 
+                    break;
+                case 'h3':
+                    const prefixH = (before.length > 0 && before.slice(-1) !== '\n') ? '\n' : '';
+                    newText = `${before}${prefixH}### ${selection || 'Überschrift'}${after}`;
+                    cursorOffset = prefixH.length + 4;
+                    break;
+            }
+
+            // Wert setzen und Event feuern damit Vue es merkt
+            textarea.value = newText;
+            textarea.dispatchEvent(new Event('input'));
+            
+            // Fokus zurück und Cursor setzen
+            textarea.focus();
+            /* Kleiner Timeout für Cursor-Setzung nötig */
+            setTimeout(() => {
+                textarea.selectionStart = textarea.selectionEnd = start + selection.length + cursorOffset; 
+            }, 0);
+            
+            // Falls es in der Tagesansicht ist -> AutoSave triggern
+            if(this.viewMode === 'day') {
+                this.dayComment = newText;
+                this.triggerAutoSave();
+            } else {
+                // In Monatsansicht -> Update Logic
+                // (Das passiert automatisch durch v-model, aber wir müssen den richtigen Tag finden)
+            }
+        },
+
+        // NEU: Fix für das Aufklappen in der Monatsansicht
+        toggleExpandNote(day) {
+            if (this.expandedNoteIso === day.iso) {
+                this.expandedNoteIso = null; // Zuklappen
+            } else {
+                this.expandedNoteIso = day.iso; // Aufklappen
+            }
+        },
     },
     mounted() {
         window.addEventListener('resize', () => { this.isDesktop = window.innerWidth >= 992; });

@@ -549,3 +549,26 @@ td input.text-truncate {
 td input.text-truncate:hover {
     background-color: rgba(0,0,0,0.02) !important;
 }
+
+/* FIX: Überschrift Abstand */
+.label-fix-padding {
+    padding-left: 4px;
+    margin-bottom: 6px;
+}
+
+/* MARKDOWN STYLING */
+.markdown-preview {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-main);
+}
+.markdown-preview p { margin-bottom: 0.5rem; }
+.markdown-preview ul, .markdown-preview ol { padding-left: 1.2rem; margin-bottom: 0.5rem; }
+.markdown-preview h1, .markdown-preview h2, .markdown-preview h3 { 
+    font-size: 1rem; font-weight: bold; margin-top: 0.5rem; margin-bottom: 0.25rem; 
+    border-bottom: 1px solid var(--border-color);
+}
+/* WICHTIG: Damit Zeilenumbrüche auch ohne Markdown funktionieren */
+.markdown-preview {
+    white-space: pre-wrap; 
+}

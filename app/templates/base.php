@@ -9,11 +9,14 @@
     
     <link href="/static/css/bootstrap.css" rel="stylesheet">
     <link href="/static/css/bootstrap-icons.css" rel="stylesheet">
-    <link href="/static/css/custom.css?v=0.1.7.0" rel="stylesheet">
+    <link href="/static/css/custom.css" rel="stylesheet">
     
     <script src="/static/js/bootstrap.js"></script>
     <script src="/static/js/vue.js"></script>
     <script src="/static/js/axios.js"></script>
+    
+    <script src="/static/js/marked.min.js"></script>
+    <script src="/static/js/purify.min.js"></script>
 
     <script>
     let theme = localStorage.getItem('theme');

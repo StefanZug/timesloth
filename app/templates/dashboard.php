@@ -10,6 +10,7 @@
     <div class="row g-4">
         
         <div class="col-12 col-lg-3 order-1 order-lg-1 sticky-column" v-show="isDesktop || viewMode === 'day'">
+            
             <div class="widget-card">
                 <div class="widget-header"><span>📅 Tages-Planung</span><button class="btn btn-sm btn-link text-muted p-0" @click="jumpToToday()">Heute</button></div>
                 <div class="widget-body">
@@ -48,9 +49,24 @@
                     </div>
                     <div v-else class="alert text-center mt-3 shadow-sm border mb-0" :class="statusAlertClass"><h6 class="m-0">[[ getStatusText(dayStatus) ]]</h6></div>
                 </div>
+                
                 <div class="mt-3 pt-3 border-top">
-                        <label class="form-label small text-muted fw-bold text-uppercase">Tages-Notizen</label>
-                        <textarea class="form-control form-control-sm" rows="3" v-model="dayComment" placeholder="Na? Was haben wir heute gemacht?" @input="triggerAutoSave"></textarea>
+                    <div class="d-flex justify-content-between align-items-center label-fix-padding mb-1">
+                        <label class="form-label small text-muted fw-bold text-uppercase m-0">Tages-Notizen</label>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-light border" @click="insertMarkdown('bold', $event)" title="Fett"><i class="bi bi-type-bold"></i></button>
+                            <button class="btn btn-light border" @click="insertMarkdown('italic', $event)" title="Kursiv"><i class="bi bi-type-italic"></i></button>
+                            <button class="btn btn-light border" @click="insertMarkdown('list', $event)" title="Liste"><i class="bi bi-list-ul"></i></button>
+                            <button class="btn btn-light border" @click="insertMarkdown('h3', $event)" title="Überschrift"><i class="bi bi-type-h3"></i></button>
+                        </div>
+                    </div>
+                    <textarea class="form-control form-control-sm font-monospace" 
+                              rows="5" 
+                              v-model="dayComment" 
+                              placeholder="Unterstützt Markdown (*, **, -)" 
+                              @input="triggerAutoSave"></textarea>
+                    
+                    <div v-if="dayComment" class="mt-2 p-2 bg-body-tertiary rounded border markdown-preview" v-html="renderMarkdown(dayComment)"></div>
                 </div>
             </div>
 
@@ -190,30 +206,47 @@
                                         <div class="btn-xs-status btn-status-sm st-k" :class="{active: day.status === 'K'}" @click.stop="quickToggle(day, 'K')">K</div>
                                     </div>
                                 </td>
-                                <td style="min-width: 200px;">
-                                    <div class="d-flex align-items-center gap-2" v-if="!day.isExpanded">
-                                        <input type="text" 
+                                
+                                <td style="min-width: 250px;">
+                                    <div v-if="expandedNoteIso !== day.iso" class="d-flex align-items-start gap-2">
+                                        <div v-if="day.comment" 
+                                             class="flex-grow-1 text-truncate p-1 rounded cursor-pointer markdown-preview" 
+                                             style="background: transparent; height: 30px; overflow: hidden;"
+                                             @click="toggleExpandNote(day)"
+                                             v-html="renderMarkdown(day.comment)">
+                                        </div>
+                                        
+                                        <input v-else 
+                                               type="text" 
                                                class="form-control form-control-sm border-0 bg-transparent p-0 text-truncate" 
-                                               style="font-size: 0.85rem;" 
                                                v-model.lazy="day.comment" 
                                                :placeholder="day.placeholder" 
-                                               :title="day.comment" 
                                                @change="updateComment(day)">
-                                        <button class="btn btn-sm btn-link text-muted p-0" @click="day.isExpanded = true" title="Großes Feld öffnen">
+
+                                        <button class="btn btn-sm btn-link text-muted p-0" @click="toggleExpandNote(day)" title="Großes Feld öffnen">
                                             <i class="bi bi-arrows-expand"></i>
                                         </button>
                                     </div>
 
-                                    <div class="d-flex align-items-start gap-2" v-else>
-                                        <textarea class="form-control form-control-sm" 
-                                                  rows="3" 
-                                                  style="font-size: 0.85rem;" 
+                                    <div v-else class="position-relative bg-card shadow-sm p-2 rounded border" style="z-index: 10;">
+                                        
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-light border" @click="insertMarkdown('bold', $event)"><i class="bi bi-type-bold"></i></button>
+                                                <button class="btn btn-light border" @click="insertMarkdown('list', $event)"><i class="bi bi-list-ul"></i></button>
+                                            </div>
+                                            <button class="btn btn-sm btn-link text-muted p-0" @click="toggleExpandNote(day)" title="Zuklappen">
+                                                <i class="bi bi-arrows-collapse"></i>
+                                            </button>
+                                        </div>
+
+                                        <textarea class="form-control form-control-sm font-monospace mb-2" 
+                                                  rows="4" 
                                                   v-model.lazy="day.comment" 
                                                   @change="updateComment(day)"
                                                   placeholder="Notiz..."></textarea>
-                                        <button class="btn btn-sm btn-link text-muted p-0" @click="day.isExpanded = false" title="Zuklappen">
-                                            <i class="bi bi-arrows-collapse"></i>
-                                        </button>
+                                                  
+                                        <div v-if="day.comment" class="p-2 bg-body-tertiary rounded border markdown-preview small" v-html="renderMarkdown(day.comment)"></div>
                                     </div>
                                 </td>
                             </tr>
@@ -224,6 +257,7 @@
         </div>
 
         <div class="col-12 col-lg-3 order-2 order-lg-3 sticky-column">
+            
             <div class="widget-card">
                 <div class="widget-header">
                     <span><i class="bi bi-buildings-fill"></i> Büro-Quote</span>
@@ -335,7 +369,10 @@
                                         <div class="day-header">Mo</div><div class="day-header">Di</div><div class="day-header">Mi</div><div class="day-header">Do</div><div class="day-header">Fr</div><div class="day-header text-danger">Sa</div><div class="day-header text-danger">So</div>
                                     </div>
                                     <div class="calendar-grid">
-                                        <div v-for="d in getDaysInMonth(m-1)" :key="d.iso" class="day-box" :class="getDayClass(d)" @click="toggleVacationInCalendar(d)" :title="d.iso + (d.isHoliday ? ' (Feiertag)' : '')">
+                                        <div v-for="d in getDaysInMonth(m-1)" :key="d.iso" class="day-box" 
+                                             :class="getDayClass(d)" 
+                                             @click="toggleVacationInCalendar(d)" 
+                                             :title="d.tooltip">
                                             [[ d.day ]]
                                         </div>
                                     </div>
