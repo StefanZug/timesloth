@@ -16,18 +16,18 @@ Write-Host " - Bootstrap: $($deps.bootstrap)"
 $VendorDir = "app/public/static/vendor"
 $JsDir = "$VendorDir/js"
 $CssDir = "$VendorDir/css"
-# FIX: Fonts müssen UNTERHALB von CSS liegen, damit relative Pfade stimmen
+# Fonts müssen UNTERHALB von CSS liegen, damit relative Pfade stimmen
 $FontDir = "$VendorDir/css/fonts" 
 
-# Alte Verzeichnisse aufräumen (optional, aber sauberer)
+# Alte Verzeichnisse aufräumen
 if (Test-Path "$VendorDir/fonts") { Remove-Item -Recurse -Force "$VendorDir/fonts" }
 
 New-Item -ItemType Directory -Force -Path $JsDir | Out-Null
 New-Item -ItemType Directory -Force -Path $CssDir | Out-Null
 New-Item -ItemType Directory -Force -Path $FontDir | Out-Null
 
-# 3. Download Funktion
-function Download-File {
+# 3. Download Funktion (Umbenannt zu Save-Asset für PS-Konformität)
+function Save-Asset {
     param ($Url, $Dest)
     $FileName = Split-Path $Dest -Leaf
     Write-Host "Downloading $FileName..." -NoNewline
@@ -45,23 +45,23 @@ function Download-File {
 # 4. Downloads
 
 # Vue
-Download-File "https://cdn.jsdelivr.net/npm/vue@$($deps.vue)/dist/vue.global.prod.js" "$JsDir/vue.js"
+Save-Asset "https://cdn.jsdelivr.net/npm/vue@$($deps.vue)/dist/vue.global.prod.js" "$JsDir/vue.js"
 
 # Axios
-Download-File "https://cdn.jsdelivr.net/npm/axios@$($deps.axios)/dist/axios.min.js" "$JsDir/axios.js"
+Save-Asset "https://cdn.jsdelivr.net/npm/axios@$($deps.axios)/dist/axios.min.js" "$JsDir/axios.js"
 
 # Bootstrap
-Download-File "https://cdn.jsdelivr.net/npm/bootstrap@$($deps.bootstrap)/dist/js/bootstrap.bundle.min.js" "$JsDir/bootstrap.js"
-Download-File "https://cdn.jsdelivr.net/npm/bootstrap@$($deps.bootstrap)/dist/css/bootstrap.min.css" "$CssDir/bootstrap.css"
+Save-Asset "https://cdn.jsdelivr.net/npm/bootstrap@$($deps.bootstrap)/dist/js/bootstrap.bundle.min.js" "$JsDir/bootstrap.js"
+Save-Asset "https://cdn.jsdelivr.net/npm/bootstrap@$($deps.bootstrap)/dist/css/bootstrap.min.css" "$CssDir/bootstrap.css"
 
 # Bootstrap Icons
 $bsIconVer = $deps.'bootstrap-icons'
-Download-File "https://cdn.jsdelivr.net/npm/bootstrap-icons@$bsIconVer/font/bootstrap-icons.min.css" "$CssDir/bootstrap-icons.css"
-Download-File "https://cdn.jsdelivr.net/npm/bootstrap-icons@$bsIconVer/font/fonts/bootstrap-icons.woff2" "$FontDir/bootstrap-icons.woff2"
-Download-File "https://cdn.jsdelivr.net/npm/bootstrap-icons@$bsIconVer/font/fonts/bootstrap-icons.woff" "$FontDir/bootstrap-icons.woff"
+Save-Asset "https://cdn.jsdelivr.net/npm/bootstrap-icons@$bsIconVer/font/bootstrap-icons.min.css" "$CssDir/bootstrap-icons.css"
+Save-Asset "https://cdn.jsdelivr.net/npm/bootstrap-icons@$bsIconVer/font/fonts/bootstrap-icons.woff2" "$FontDir/bootstrap-icons.woff2"
+Save-Asset "https://cdn.jsdelivr.net/npm/bootstrap-icons@$bsIconVer/font/fonts/bootstrap-icons.woff" "$FontDir/bootstrap-icons.woff"
 
 # Marked & Purify
-Download-File "https://cdn.jsdelivr.net/npm/marked@$($deps.marked)/marked.min.js" "$JsDir/marked.min.js"
-Download-File "https://cdn.jsdelivr.net/npm/dompurify@$($deps.dompurify)/dist/purify.min.js" "$JsDir/purify.min.js"
+Save-Asset "https://cdn.jsdelivr.net/npm/marked@$($deps.marked)/marked.min.js" "$JsDir/marked.min.js"
+Save-Asset "https://cdn.jsdelivr.net/npm/dompurify@$($deps.dompurify)/dist/purify.min.js" "$JsDir/purify.min.js"
 
 Write-Host "`n✅ Assets aktualisiert. Jetzt commiten & pushen!" -ForegroundColor Cyan
