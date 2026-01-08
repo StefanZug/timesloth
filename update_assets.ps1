@@ -61,7 +61,7 @@ Save-Asset "https://cdn.jsdelivr.net/npm/bootstrap-icons@$bsIconVer/font/fonts/b
 Save-Asset "https://cdn.jsdelivr.net/npm/bootstrap-icons@$bsIconVer/font/fonts/bootstrap-icons.woff" "$FontDir/bootstrap-icons.woff"
 
 # Marked & Purify
-Save-Asset "https://cdn.jsdelivr.net/npm/marked@$($deps.marked)/marked.min.js" "$JsDir/marked.min.js"
+Save-Asset "https://cdn.jsdelivr.net/npm/marked@$($deps.marked)/lib/marked.umd.min.js" "$JsDir/marked.min.js"
 Save-Asset "https://cdn.jsdelivr.net/npm/dompurify@$($deps.dompurify)/dist/purify.min.js" "$JsDir/purify.min.js"
 
 Write-Host "`n✅ Assets aktualisiert. Jetzt commiten & pushen!" -ForegroundColor Cyan
