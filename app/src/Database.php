@@ -1,16 +1,41 @@
 <?php
-function get_db() {
-    static $pdo;
-    if (!$pdo) {
+class Database {
+    // Statische Variable speichert die EINE Instanz
+    private static $instance = null;
+    private $pdo;
+
+    // Der Konstruktor ist "private", damit niemand "new Database()" rufen kann.
+    private function __construct() {
         $dir = dirname(DB_PATH);
         if (!is_dir($dir)) mkdir($dir, 0777, true);
 
         $dsn = 'sqlite:' . DB_PATH;
-        $pdo = new PDO($dsn);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        $this->pdo = new PDO($dsn);
+        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         
-        // 1. Tabellen erstellen
+        // Tabellen initialisieren
+        $this->initTables();
+    }
+
+    // Zugriffspunkt von außen
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new Database();
+        }
+        return self::$instance;
+    }
+
+    // Gibt das PDO Objekt zurück
+    public function getConnection() {
+        return $this->pdo;
+    }
+
+    // Migrationen & Tabellen-Erstellung ausgelagert
+    private function initTables() {
+        $pdo = $this->pdo;
+        
+        // 1. Tabellen
         $pdo->exec("CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
@@ -28,6 +53,7 @@ function get_db() {
             data TEXT, 
             status TEXT, 
             comment TEXT,
+            status_note TEXT,
             UNIQUE(user_id, date_str)
         )");
         
@@ -45,24 +71,17 @@ function get_db() {
             name TEXT
         )");
 
-        // 2. MIGRATION: Spalten prüfen und hinzufügen falls sie fehlen (für Updates)
+        // 2. Migrationen (Spalten prüfen)
         $cols = $pdo->query("PRAGMA table_info(users)")->fetchAll(PDO::FETCH_COLUMN, 1);
         if (!in_array('is_active', $cols)) {
             $pdo->exec("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1");
         }
-        // NEU: Spalte für Status-Notizen in entries hinzufügen
-        $entryCols = $pdo->query("PRAGMA table_info(entries)")->fetchAll(PDO::FETCH_COLUMN, 1);
-        if (!in_array('status_note', $entryCols)) {
-            // SQLite Befehl zum Hinzufügen einer Spalte
-            $pdo->exec("ALTER TABLE entries ADD COLUMN status_note TEXT");
-        }
         if (!in_array('pw_last_changed', $cols)) {
             $pdo->exec("ALTER TABLE users ADD COLUMN pw_last_changed DATETIME");
-            // Setze initiales Datum für bestehende User
             $pdo->exec("UPDATE users SET pw_last_changed = CURRENT_TIMESTAMP WHERE pw_last_changed IS NULL");
         }
-
-        // 3. Admin Check
+        
+        // 3. Default Admin
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = 'admin'");
         $stmt->execute();
         if ($stmt->fetchColumn() == 0) {
@@ -70,9 +89,7 @@ function get_db() {
             $pdo->exec("INSERT INTO users (username, password_hash, is_admin, pw_last_changed) VALUES ('admin', '$hash', 1, CURRENT_TIMESTAMP)");
         }
         
-        // 4. CLEANUP: Alte Logs löschen (1% Chance bei jedem Page Load oder fix hier)
-        // Wir machen es einfach hier beim Verbindungsaufbau - ist performant genug bei SQLite
+        // 4. Cleanup Logs (bei Verbindung)
         $pdo->exec("DELETE FROM login_log WHERE timestamp < date('now', '-30 days')");
     }
-    return $pdo;
 }

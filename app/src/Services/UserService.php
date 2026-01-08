@@ -2,9 +2,8 @@
 class UserService {
     
     public function updateSettings($userId, $newSettings) {
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         
-        // Aktuelle Settings holen und mergen
         $stmt = $db->prepare("SELECT settings FROM users WHERE id = ?");
         $stmt->execute([$userId]);
         $current = json_decode($stmt->fetchColumn() ?: '{}', true);
@@ -17,7 +16,6 @@ class UserService {
         $stmtUpd = $db->prepare("UPDATE users SET settings = ? WHERE id = ?");
         $stmtUpd->execute([$newJson, $userId]);
         
-        // Session updaten, damit kein Re-Login nötig ist
         if(isset($_SESSION['user'])) {
             $_SESSION['user']['settings'] = $newJson;
         }

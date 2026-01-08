@@ -8,24 +8,14 @@ ini_set('log_errors', 1);
 define('APP_ROOT', dirname(__DIR__));
 define('DB_PATH', getenv('DB_FOLDER') . '/timesloth.sqlite');
 
-// 2. Includes
-require_once APP_ROOT . '/src/db.php';
-require_once APP_ROOT . '/src/Services/EntryService.php';
-require_once APP_ROOT . '/src/Services/UserService.php';
-require_once APP_ROOT . '/src/Services/AdminService.php';
-
-require_once APP_ROOT . '/src/Router.php';
-require_once APP_ROOT . '/src/Controllers/BaseController.php';
-require_once APP_ROOT . '/src/Controllers/AuthController.php';
-require_once APP_ROOT . '/src/Controllers/PageController.php';
-require_once APP_ROOT . '/src/Controllers/ApiController.php';
-require_once APP_ROOT . '/src/Controllers/AdminController.php';
+// 2. Core Dependencies
+require_once APP_ROOT . '/src/Autoloader.php'; // Der neue Magier 🪄
 
 // 3. Routing
-$router = new Router();
+$router = new Router(); // Autoloader findet 'Router' in /src/Router.php
 
 // Auth Pages
-$router->get('/login', 'AuthController', 'showLogin');
+$router->get('/login', 'AuthController', 'showLogin'); // Findet 'AuthController' in /src/Controllers/
 $router->post('/login', 'AuthController', 'login');
 $router->get('/logout', 'AuthController', 'logout');
 $router->post('/change_password', 'AuthController', 'changePassword', true);
@@ -34,7 +24,7 @@ $router->post('/change_password', 'AuthController', 'changePassword', true);
 $router->get('/', 'PageController', 'dashboard', true);
 $router->get('/dashboard', 'PageController', 'dashboard', true);
 $router->get('/settings', 'PageController', 'settings', true);
-$router->get('/admin', 'PageController', 'admin', true, true); // Admin only
+$router->get('/admin', 'PageController', 'admin', true, true);
 
 // User API (Protected)
 $router->get('/api/get_entries', 'ApiController', 'getEntries', true);

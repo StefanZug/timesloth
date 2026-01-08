@@ -2,7 +2,7 @@
 class AdminService {
     
     public function createUser($username, $password, $isAdmin) {
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         $cleanUser = strtolower(trim($username));
         
         $stmt = $db->prepare("SELECT id FROM users WHERE username = ?");
@@ -21,7 +21,7 @@ class AdminService {
     public function deleteUser($targetId, $currentUserId) {
         if ($targetId == $currentUserId) { throw new Exception('Nicht selbst löschen'); }
         
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         $db->prepare("DELETE FROM entries WHERE user_id = ?")->execute([$targetId]);
         $db->prepare("DELETE FROM login_log WHERE user_id = ?")->execute([$targetId]);
         $db->prepare("DELETE FROM users WHERE id = ?")->execute([$targetId]);
@@ -32,7 +32,7 @@ class AdminService {
     public function toggleActive($targetId, $currentUserId) {
         if ($targetId == $currentUserId) { throw new Exception('Nicht selbst deaktivieren'); }
         
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("UPDATE users SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END WHERE id = ?");
         $stmt->execute([$targetId]);
         
@@ -47,7 +47,7 @@ class AdminService {
         
         $hash = password_hash($newPw, PASSWORD_BCRYPT);
         
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("UPDATE users SET password_hash = ?, pw_last_changed = CURRENT_TIMESTAMP WHERE id = ?");
         $stmt->execute([$hash, $targetId]);
         
@@ -55,7 +55,7 @@ class AdminService {
     }
 
     public function getUserLogs($userId) {
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("SELECT timestamp, ip_address, user_agent FROM login_log WHERE user_id = ? ORDER BY timestamp DESC LIMIT 10");
         $stmt->execute([$userId]);
         $logs = $stmt->fetchAll();
@@ -63,6 +63,7 @@ class AdminService {
         foreach($logs as &$log) {
             $ua = $log['user_agent'];
             $platform = 'Unbekannt';
+            // Simple Erkennung
             if (preg_match('/windows|win32/i', $ua)) $platform = 'Windows';
             elseif (preg_match('/android/i', $ua)) $platform = 'Android';
             elseif (preg_match('/iphone|ipad|ios/i', $ua)) $platform = 'iOS';
@@ -81,7 +82,7 @@ class AdminService {
     }
 
     public function addHoliday($date, $name) {
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         try {
             $stmt = $db->prepare("INSERT INTO global_holidays (date_str, name) VALUES (?, ?)");
             $stmt->execute([$date, $name]);
@@ -90,7 +91,7 @@ class AdminService {
     }
 
     public function deleteHoliday($id) {
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         $db->prepare("DELETE FROM global_holidays WHERE id = ?")->execute([$id]);
         return ['status' => 'Deleted'];
     }
@@ -98,27 +99,15 @@ class AdminService {
     public function getSystemStats() {
         $dbPath = DB_PATH;
         $size = 0;
-        
-        // FIX: filesize mit @ unterdrücken, falls Permissions fehlen, und clearstatcache nutzen
         if (file_exists($dbPath)) {
             clearstatcache(true, $dbPath);
             $size = @filesize($dbPath) ?: 0;
         }
         
-        $logs = 0;
-        $entries = 0;
-        $users = 0;
-
-        try {
-            $db = get_db();
-            // FIX: Explizite Casts und Fehlerbehandlung bei Queries
-            $logs = (int)$db->query("SELECT COUNT(*) FROM login_log")->fetchColumn();
-            $entries = (int)$db->query("SELECT COUNT(*) FROM entries")->fetchColumn();
-            $users = (int)$db->query("SELECT COUNT(*) FROM users")->fetchColumn();
-        } catch (Exception $e) {
-            // Fehler still loggen, damit die API nicht 500 wirft
-            error_log("Admin Stats Error: " . $e->getMessage());
-        }
+        $db = Database::getInstance()->getConnection();
+        $logs = (int)$db->query("SELECT COUNT(*) FROM login_log")->fetchColumn();
+        $entries = (int)$db->query("SELECT COUNT(*) FROM entries")->fetchColumn();
+        $users = (int)$db->query("SELECT COUNT(*) FROM users")->fetchColumn();
 
         return [
             'db_size_bytes' => $size,
@@ -129,7 +118,7 @@ class AdminService {
     }
 
     public function clearOldLogs() {
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         $db->exec("DELETE FROM login_log WHERE timestamp < date('now', '-30 days')");
         $db->exec("VACUUM"); 
         return ['status' => 'Cleaned'];

@@ -9,7 +9,7 @@ class AuthController extends BaseController {
         $username = strtolower(trim($_POST['username'] ?? ''));
         $password = $_POST['password'] ?? '';
         
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
         $stmt->execute([$username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -24,7 +24,6 @@ class AuthController extends BaseController {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user'] = $user;
             
-            // Log schreiben
             $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'];
             $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'Unbekannt';
             $stmtLog = $db->prepare("INSERT INTO login_log (user_id, ip_address, user_agent, timestamp) VALUES (?, ?, ?, ?)");
@@ -44,7 +43,7 @@ class AuthController extends BaseController {
 
     public function changePassword() {
         $data = $this->getPostData();
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         
         $stmt = $db->prepare("SELECT password_hash FROM users WHERE id = ?");
         $stmt->execute([$_SESSION['user_id']]);

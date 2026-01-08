@@ -2,7 +2,7 @@
 class EntryService {
     
     public function getMonthEntries($userId, $month) {
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         
         $stmt = $db->prepare("SELECT * FROM entries WHERE user_id = ? AND date_str LIKE ?");
         $stmt->execute([$userId, "$month%"]);
@@ -15,7 +15,7 @@ class EntryService {
                 'blocks' => json_decode($row['data']),
                 'status' => $row['status'],
                 'comment' => $row['comment'],
-                'status_note' => $row['status_note'] ?? '' // NEU: Status-Notiz laden
+                'status_note' => $row['status_note'] ?? ''
             ];
         }
         
@@ -40,9 +40,8 @@ class EntryService {
     }
 
     public function saveEntry($userId, $data) {
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         
-        // NEU: status_note ins SQL Statement aufgenommen
         $stmt = $db->prepare("INSERT INTO entries (user_id, date_str, data, status, comment, status_note) 
                               VALUES (:uid, :date, :data, :status, :comment, :status_note)
                               ON CONFLICT(user_id, date_str) DO UPDATE SET
@@ -54,7 +53,7 @@ class EntryService {
             ':data' => json_encode($data['blocks']),
             ':status' => $data['status'],
             ':comment' => $data['comment'] ?? '',
-            ':status_note' => $data['status_note'] ?? '' // NEU: Status-Notiz speichern
+            ':status_note' => $data['status_note'] ?? ''
         ]);
         
         return ['status' => 'Saved'];
@@ -64,7 +63,7 @@ class EntryService {
         if (strlen($month) !== 7) { 
             throw new Exception('Invalid month format'); 
         }
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("DELETE FROM entries WHERE user_id = ? AND date_str LIKE ?");
         $stmt->execute([$userId, "$month%"]);
         
@@ -72,10 +71,8 @@ class EntryService {
     }
 
     public function getYearStats($userId, $year) {
-        $db = get_db();
+        $db = Database::getInstance()->getConnection();
         
-        // 1. Hole ALLE Einträge dieses Jahres (egal welcher Status)
-        // Wir brauchen status, status_note UND comment
         $stmt = $db->prepare("SELECT date_str, status, status_note, comment FROM entries WHERE user_id = ? AND date_str LIKE ?");
         $stmt->execute([$userId, "$year%"]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -90,10 +87,8 @@ class EntryService {
             $d = $row['date_str'];
             $status = $row['status'];
             
-            // Status zuordnen
             if ($status === 'U') {
                 $vacationDates[] = $d;
-                // Urlaubstage zählen (ohne Wochenende)
                 $dt = new DateTime($d);
                 if ($dt->format('N') < 6) $usedCount++;
             }
@@ -104,12 +99,9 @@ class EntryService {
                 $userHolidayDates[] = $d;
             }
             
-            // --- LOGIK FÜR NOTIZEN ---
-            // Priorität: 1. Status-Notiz (z.B. "Kroatien") -> 2. Tages-Kommentar (z.B. "Wartung")
             $rawText = !empty($row['status_note']) ? $row['status_note'] : $row['comment'];
             
             if (!empty($rawText)) {
-                // Text bereinigen und kürzen (max 50 Zeichen für Tooltip)
                 $cleanText = trim(str_replace(["\r", "\n"], " ", $rawText));
                 if (mb_strlen($cleanText) > 50) {
                     $cleanText = mb_substr($cleanText, 0, 47) . '...';
@@ -118,7 +110,6 @@ class EntryService {
             }
         }
 
-        // 2. Globale Feiertage laden & mergen
         $stmtHol = $db->prepare("SELECT date_str, name FROM global_holidays WHERE date_str LIKE ?");
         $stmtHol->execute(["$year%"]);
         $holidays = $stmtHol->fetchAll(PDO::FETCH_ASSOC);
@@ -128,7 +119,6 @@ class EntryService {
 
         foreach($userHolidayDates as $fDate) {
             if(!isset($holidayMap[$fDate])) {
-                // Eigener Feiertag: Nimm Notiz oder Standardtext
                 $holidayMap[$fDate] = $notes[$fDate] ?? "Persönlich";
             }
         }
