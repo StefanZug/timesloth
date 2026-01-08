@@ -164,7 +164,7 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
 
 @media (max-width: 991px) {
     
-    /* --- 1. ALLGEMEINE TABELLEN (Admin, Settings) --- */
+    /* --- 1. ALLGEMEINE TABELLEN --- */
     table.table { 
         width: 100%; 
         border-collapse: separate; 
@@ -175,21 +175,21 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
         padding: 6px 4px !important;
         font-size: 0.8rem !important;
         vertical-align: middle;
-        white-space: normal;      /* Text darf umbrechen */
-        word-break: break-word;   /* Lange Wörter brechen um */
+        white-space: normal;      
+        word-break: break-word;   
     }
 
     /* ============================================================
        NUR FÜR DASHBOARD TABELLE (.mobile-dashboard-table)
        ============================================================ */
     
-    /* Zellen im Dashboard dürfen NICHT umbrechen (für kompakten Look) */
+    /* Kompaktheit erzwingen */
     .mobile-dashboard-table td, 
     .mobile-dashboard-table th {
         white-space: nowrap !important;
     }
 
-    /* --- A. Die FIXIERTE erste Spalte (Datum/Icon) --- */
+    /* --- A. Die FIXIERTE erste Spalte (Datum) --- */
     .mobile-dashboard-table td:first-child, 
     .mobile-dashboard-table th:first-child { 
         position: sticky; 
@@ -203,7 +203,7 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
         border-right: 2px solid var(--border-color); 
         padding: 0 !important;
         text-align: center !important;
-        overflow: visible; /* Wichtig damit Dropdown raus kann */
+        overflow: hidden; /* Hier kein Overflow mehr nötig */
     }
     
     .mobile-dashboard-table th:first-child { 
@@ -211,11 +211,9 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
         z-index: 11; 
     }
 
-    /* --- B. Farben für die fixierte Spalte (Jetzt mit hoher Priorität!) --- */
-    /* Standard Hintergrund (Weiß/Dunkel) */
+    /* --- B. Farben für die fixierte Spalte --- */
     .mobile-dashboard-table td:first-child { background-color: var(--bg-card) !important; }
     
-    /* Spezifische Farben (Überschreiben Standard) */
     table.mobile-dashboard-table tbody tr.tr-office td:first-child   { background-color: var(--st-office-bg) !important; color: var(--st-office-txt) !important; }
     table.mobile-dashboard-table tbody tr.tr-home td:first-child     { background-color: var(--st-home-bg) !important;   color: var(--st-home-txt) !important; }
     table.mobile-dashboard-table tbody tr.tr-sick td:first-child     { background-color: var(--st-sick-bg) !important;   color: var(--st-sick-txt) !important; }
@@ -223,28 +221,29 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
     table.mobile-dashboard-table tbody tr.tr-holiday td:first-child  { background-color: var(--st-holiday-bg) !important;  color: var(--st-holiday-txt) !important; }
     table.mobile-dashboard-table tbody tr.tr-weekend td:first-child  { background-color: var(--bg-tertiary) !important; }
 
-    /* --- C. Dropdown Bereinigung (Pfeil weg, Platz sparen) --- */
-    .mobile-dashboard-table td:first-child .list-icon-btn,
-    .mobile-dashboard-table td:first-child .dropdown {
+    /* --- C. Dropdown Bereinigung (Zweite Spalte!) --- */
+    /* Icon Button auf volle Breite */
+    .mobile-dashboard-table .list-icon-btn,
+    .mobile-dashboard-table .dropdown {
         width: 100% !important;
         display: block !important;
     }
-    .mobile-dashboard-table td:first-child button[data-bs-toggle="dropdown"] {
+    .mobile-dashboard-table button[data-bs-toggle="dropdown"] {
         border: none !important;
         background: transparent !important;
-        padding: 8px 0 !important; /* Große Klickfläche, kein seitliches Padding */
+        padding: 8px 0 !important; 
         width: 100% !important;
         box-shadow: none !important;
         position: relative;
     }
-    /* Das ist der Killer für den Pfeil: */
-    .mobile-dashboard-table td:first-child button[data-bs-toggle="dropdown"]::after {
+    /* Pfeil (Caret) GLOBAL in dieser Tabelle ausblenden */
+    .mobile-dashboard-table button[data-bs-toggle="dropdown"]::after {
         display: none !important; 
         content: none !important;
         border: none !important;
     }
     
-    /* Datum unter dem Icon */
+    /* Datum-Schrift (Spalte 1) */
     .mobile-dashboard-table td:first-child div.small {
         font-size: 0.6rem !important;
         margin-top: -4px;
@@ -252,20 +251,38 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
         opacity: 0.8;
     }
 
-    /* --- D. Uhrzeiten-Inputs (Lesbarkeit) --- */
+    /* --- D. Uhrzeiten-Inputs (Der native Time-Picker Fix) --- */
     .mobile-dashboard-table .table-input { 
-        font-size: 0.9rem !important; /* Etwas größer */
+        font-size: 0.9rem !important; 
         padding: 4px 0 !important;
         text-align: center !important;
         
-        /* Hartes Weiß mit schwarzer Schrift für maximalen Kontrast */
+        /* WICHTIG: Überschreibt iOS/Android Native Styles */
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+        
+        /* Hartes Weiß mit schwarzer Schrift */
         background-color: #ffffff !important; 
         color: #000000 !important;
-        border: 1px solid #ccc !important;
-        border-radius: 4px;
+        border: 1px solid rgba(0,0,0,0.2) !important;
+        border-radius: 4px !important; /* Eckig statt Pille */
         
-        min-width: 60px !important; /* Mehr Platz */
+        min-width: 60px !important;
         opacity: 1 !important;
+    }
+    
+    /* Versteckt das kleine Uhr-Icon in Chrome/Android im Input */
+    .mobile-dashboard-table .table-input::-webkit-calendar-picker-indicator {
+        display: none !important;
+        -webkit-appearance: none !important;
+    }
+
+    /* Dark Mode Support für Inputs */
+    [data-bs-theme="dark"] .mobile-dashboard-table .table-input {
+        background-color: #212529 !important;
+        border-color: #495057 !important;
+        color: #fff !important;
     }
     
     /* --- E. Ausblenden von Desktop-Elementen --- */
