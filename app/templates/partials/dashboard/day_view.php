@@ -40,7 +40,7 @@
     <div class="mt-4 pt-3 border-top">
         
         <div class="d-flex justify-content-between align-items-center mb-2 px-1">
-            <h6 class="m-0 fw-bold text-uppercase text-muted" style="font-size: 0.8rem; letter-spacing: 0.05em;">
+            <h6 class="m-0 fw-bold text-uppercase text-muted header-label-small">
                 📝 Tages-Notizen
             </h6>
             

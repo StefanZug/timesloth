@@ -1,6 +1,6 @@
 <div class="widget-card">
     <div class="widget-header d-flex justify-content-between align-items-center">
-        <span>🏢 Büro-Quote</span>
+        <span>🏢 Vor-Ort-Anwesenheit</span>
         
         <button class="btn btn-sm btn-link text-decoration-none p-0 fs-6" data-bs-toggle="modal" data-bs-target="#calcModal" title="Büro-Rechner öffnen">
             🧮
@@ -19,12 +19,19 @@
         </div>
 
         <div class="d-flex justify-content-between text-muted small mt-1" v-if="quota.deduction > 0">
-            <span>Reduktion Soll (F/U/K):</span>
+            <span>Reduktion (F/U/K):</span>
             <span class="text-danger">-[[ formatNum(quota.deduction) ]]h</span>
         </div>
 
-        <div class="alert alert-light border mt-3 mb-0 p-2 d-flex align-items-center gap-2" v-if="quota.needed > 0"><i class="bi bi-info-circle text-primary"></i><div style="font-size: 0.8rem; line-height: 1.2;">Du musst noch <strong>[[ formatNum(quota.needed) ]]h</strong> ins Büro.</div></div>
-        <div class="alert alert-success border mt-3 mb-0 p-2 d-flex align-items-center gap-2" v-else><i class="bi bi-check-circle-fill text-success"></i><div style="font-size: 0.8rem; line-height: 1.2;">Quote erfüllt! 🥳</div></div>
+        <div class="alert alert-light border mt-3 mb-0 p-2 d-flex align-items-center gap-2" v-if="quota.needed > 0">
+            <i class="bi bi-info-circle text-primary"></i>
+            <div class="text-compact-alert">Du musst noch <strong>[[ formatNum(quota.needed) ]]h</strong> im Büro absitzen.</div>
+        </div>
+
+        <div class="alert alert-success border mt-3 mb-0 p-2 d-flex align-items-center gap-2" v-else>
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <div class="text-compact-alert">Quote erfüllt! 🥳</div>
+        </div>
     </div>
 </div>
 

@@ -413,3 +413,17 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
     td .d-flex.mt-1 .btn { width: 100% !important; flex: 1 !important; }
     .list-spacer-start, .list-spacer-end { display: none !important; }
 }
+
+/* --- HELPER CLASSES (No Inline Styles!) --- */
+
+/* Für die kleinen Überschriften in Widgets (z.B. Tages-Notizen) */
+.header-label-small {
+    font-size: 0.8rem !important;
+    letter-spacing: 0.05em !important;
+}
+
+/* Für kompakten Text in Alerts (z.B. "Du musst noch...") */
+.text-compact-alert {
+    font-size: 0.8rem;
+    line-height: 1.2;
+}
