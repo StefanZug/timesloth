@@ -89,7 +89,11 @@ class EntryService {
             }
         }
 
-        // 2. Hole EIGENE Feiertage ('F'), die der User gesetzt hat (z.B. 6.1.)
+        $stmtK = $db->prepare("SELECT date_str FROM entries WHERE user_id = ? AND status = 'K' AND date_str LIKE ?");
+        $stmtK->execute([$userId, "$year%"]);
+        $sickDates = $stmtK->fetchAll(PDO::FETCH_COLUMN);
+
+        // 2. Hole EIGENE Feiertage ('F'), die der User gesetzt hat
         $stmtF = $db->prepare("SELECT date_str FROM entries WHERE user_id = ? AND status = 'F' AND date_str LIKE ?");
         $stmtF->execute([$userId, "$year%"]);
         $userHolidayDates = $stmtF->fetchAll(PDO::FETCH_COLUMN);
@@ -112,6 +116,7 @@ class EntryService {
         return [
             'used' => $usedCount, 
             'dates' => $vacationDates, 
+            'sick_dates' => $sickDates,
             'holidays' => $holidayMap
         ];
     }

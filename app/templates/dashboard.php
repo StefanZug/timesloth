@@ -52,26 +52,73 @@
 
             <div class="widget-card" v-if="!isNonWorkDay">
                 <div class="widget-header">📊 Tages-Fazit</div>
-                <div class="widget-body text-center">
+                <div class="widget-body text-center d-flex flex-column h-100">
+                    
                     <div class="row g-2 mb-2">
-                        <div class="col-6"><div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center"><small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">SAP (Netto)</small><span class="fs-5 fw-bold text-primary">[[ formatH(totals.sapTime) ]]</span></div></div>
-                        <div class="col-6"><div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center"><small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">CATS</small><span class="fs-5 fw-bold">[[ formatH(totals.catsTime) ]]</span></div></div>
-                    </div>
-                    <div v-if="prediction.target !== '--:--'" class="row g-2 mb-3">
-                        <div class="col-6"><div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center"><small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">Gehen (Soll)</small><div class="fs-5 fw-bold" :class="prediction.reached ? 'text-success' : 'text-primary'">[[ prediction.target ]] <i v-if="prediction.reached" class="bi bi-check-lg"></i></div></div></div>
-                        <div class="col-6"><div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center"><small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">Max (10h)</small><div class="fs-5 fw-bold text-danger">[[ prediction.max ]]</div></div></div>
-                    </div>
-                    <div v-if="totals.pause > 0" class="badge bg-warning text-dark mb-2"><i class="bi bi-cup-hot"></i> Pause: -[[ totals.pause ]]m</div>
-                    <div class="border-top pt-2 mt-2">
-                        <div class="d-flex justify-content-between align-items-center mb-1"><span class="text-muted small">Saldo Vortag:</span><span class="fw-bold" :class="balanceStats.yesterday >= 0 ? 'text-success' : 'text-danger'">[[ formatNum(balanceStats.yesterday) ]] h</span></div>
-                        <div class="d-flex justify-content-between align-items-center"><span class="text-muted small fw-bold">Saldo Aktuell:</span><span class="fw-bold fs-5" :class="balanceStats.current >= 0 ? 'text-success' : 'text-danger'">[[ formatNum(balanceStats.current) ]] h</span></div>
-                        
-                        <div v-if="flatrateStats.today > 0" class="text-center mt-2 small text-muted">
-                            <i class="bi bi-box-seam"></i> Davon in Pauschale: <span class="fw-bold text-body">[[ formatNum(flatrateStats.today) ]] h</span>
+                        <div class="col-6">
+                            <div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center">
+                                <small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">SAP (Netto)</small>
+                                <span class="fs-5 fw-bold text-primary font-monospace">[[ formatH(totals.sapTime) ]]</span>
+                            </div>
                         </div>
-
-                        <div class="text-center mt-2"><button class="btn btn-sm btn-link text-decoration-none text-muted p-0" style="font-size: 0.75rem;" @click="openCorrectionModal"><i class="bi bi-pencil-square me-1"></i> Start-Saldo: <strong>[[ formatNum(settings.correction) ]] h</strong></button></div>
+                        <div class="col-6">
+                            <div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center">
+                                <small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">CATS</small>
+                                <span class="fs-5 fw-bold font-monospace">[[ formatH(totals.catsTime) ]]</span>
+                            </div>
+                        </div>
                     </div>
+                    
+                    <div v-if="prediction.target !== '--:--'" class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center position-relative">
+                                <small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">Gehen (Soll)</small>
+                                <div class="d-flex align-items-center justify-content-center w-100 position-relative">
+                                    <div class="fs-5 fw-bold font-monospace" :class="prediction.reached ? 'text-success' : 'text-primary'">
+                                        [[ prediction.target ]]
+                                    </div>
+                                    <i v-if="prediction.reached" class="bi bi-check-lg text-success position-absolute end-0" style="font-size: 1.2rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center">
+                                <small class="d-block text-muted text-uppercase fw-bold" style="font-size:0.65rem">Max (10h)</small>
+                                <div class="fs-5 fw-bold text-danger font-monospace">[[ prediction.max ]]</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="totals.pause > 0" class="badge bg-warning text-dark mb-3 align-self-center"><i class="bi bi-cup-hot"></i> Pause: -[[ totals.pause ]]m</div>
+                    
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center mb-1 border-bottom pb-2">
+                            <span class="text-muted small">Saldo Vortag</span>
+                            <span class="fw-bold font-monospace" :class="balanceStats.yesterday >= 0 ? 'text-success' : 'text-danger'">
+                                [[ formatNum(balanceStats.yesterday) ]]<small class="text-muted ms-1">h</small>
+                            </span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-end pt-1">
+                            <span class="fw-bold text-body">Saldo Aktuell</span>
+                            <span class="fs-4 fw-bold font-monospace lh-1" :class="balanceStats.current >= 0 ? 'text-success' : 'text-danger'">
+                                [[ formatNum(balanceStats.current) ]]<small class="text-muted fs-6 ms-1">h</small>
+                            </span>
+                        </div>
+                        
+                        <div v-if="flatrateStats.today > 0" class="text-end mb-2">
+                            <small class="text-muted fst-italic" style="font-size: 0.75rem;">
+                                (davon [[ formatNum(flatrateStats.today) ]]h in Pauschale <i class="bi bi-box-seam"></i>)
+                            </small>
+                        </div>
+                        <div v-else class="mb-3"></div> <div class="border-top pt-2 mt-2 text-start">
+                            <button class="btn btn-sm btn-link text-decoration-none text-muted p-0 d-flex align-items-center gap-2" style="font-size: 0.8rem;" @click="openCorrectionModal">
+                                <i class="bi bi-pencil-square"></i> 
+                                <span>Start-Saldo korrigieren...</span>
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -150,7 +197,7 @@
         <div class="col-12 col-lg-3 order-2 order-lg-3 sticky-column">
             <div class="widget-card">
                 <div class="widget-header">
-                    <span class="text-primary"><i class="bi bi-buildings-fill"></i> Büro-Quote</span>
+                    <span><i class="bi bi-buildings-fill"></i> Büro-Quote</span>
                     <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="modal" data-bs-target="#calcModal"><i class="bi bi-calculator"></i></button>
                 </div>
                 <div class="widget-body">

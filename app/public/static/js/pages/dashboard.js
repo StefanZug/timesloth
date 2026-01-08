@@ -26,7 +26,7 @@ createApp({
             calc: { sapMissing: null, absentDays: 0, planHours: 8.0 },
             tempCorrection: 0,
             lastScrollTime: 0,
-            vacationStats: { used: 0, total: 25, dates: [], yearHolidays: {} }
+            vacationStats: { used: 0, total: 25, dates: [], sickDates: [], yearHolidays: {} }
         }
     },
     watch: {
@@ -194,7 +194,8 @@ createApp({
                 const year = this.currentDateObj.getFullYear();
                 const res = await axios.get(`/api/get_year_stats?year=${year}`);
                 this.vacationStats.used = res.data.used;
-                this.vacationStats.dates = res.data.dates; 
+                this.vacationStats.dates = res.data.dates;
+                this.vacationStats.sickDates = res.data.sick_dates || []; 
                 this.vacationStats.yearHolidays = res.data.holidays || {};
                 this.vacationStats.total = this.settings.vacationDays || 25;
             } catch(e) { console.error(e); }
@@ -219,7 +220,8 @@ createApp({
                     isEmpty: false,
                     isWeekend: (wd === 0 || wd === 6),
                     isHoliday: !!this.vacationStats.yearHolidays[iso],
-                    isVacation: this.vacationStats.dates.includes(iso)
+                    isVacation: this.vacationStats.dates.includes(iso),
+                    isSick: this.vacationStats.sickDates.includes(iso)
                 });
                 date.setDate(date.getDate() + 1);
             }
@@ -228,6 +230,7 @@ createApp({
         getDayClass(d) {
             if (d.isEmpty) return 'day-empty';
             if (d.isVacation) return 'day-vacation';
+            if (d.isSick) return 'day-sick';
             if (d.isHoliday) return 'day-holiday';
             if (d.isWeekend) return 'day-weekend';
             return '';

@@ -493,3 +493,29 @@ td.text-center.fw-bold, .widget-body .fs-5 {
         display: none !important; /* Weg damit auf Mobile, mehr Platz für Button */
     }
 }
+
+
+/* =========================================
+   FIX: Kalender Farben (Urlaub & Krank)
+   ========================================= */
+
+/* 1. Urlaub im LIGHT MODE auf Gelb zwingen 
+   (Standard war hier Braun, wir wollen aber das Gelb aus dem Darkmode) */
+[data-bs-theme="light"] .day-vacation {
+    background-color: #f59e0b !important; /* Ein kräftiges Gold-Gelb */
+    color: #fff !important;
+    border: none !important;
+}
+
+/* 2. Neue Klasse für Krankheitstage (Rot) 
+   Gilt für Light & Dark Mode gleich */
+.day-sick {
+    background-color: #dc3545 !important; /* Bootstrap Danger Red */
+    color: white !important;
+    border: none;
+}
+/* Hover-Effekt für Krank-Tage */
+.day-sick:hover {
+    background-color: #bb2d3b !important;
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3) !important;
+}
