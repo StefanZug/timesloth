@@ -247,21 +247,28 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
     white-space: pre-wrap; 
 }
 
-/* Listen Kompakt */
+/* FIX: Aggressiver Reset für Listen */
 .markdown-preview ul, .markdown-preview ol { 
+    margin-top: 0;
     margin-bottom: 0.5rem; 
     padding-left: 1.2rem; 
 }
+
 .markdown-preview li { 
-    margin-bottom: 0; 
+    margin: 0 !important; 
+    padding: 0 !important;
+    line-height: 1.4; /* Etwas kompakterer Zeilenabstand */
 }
-/* Fix für Abstände: Margin von P entfernen */
+
+/* Der wichtigste Fix: Absätze IN Listen killen */
 .markdown-preview li p { 
     margin: 0 !important; 
+    padding: 0 !important;
+    display: inline; /* Verhindert Block-Abstände komplett */
 }
 .markdown-preview p { margin-bottom: 0.5rem; }
 
-/* Überschriften: Dezent */
+/* Überschriften */
 .markdown-preview h1, .markdown-preview h2, .markdown-preview h3 { 
     font-weight: 700; 
     margin-top: 0.75rem; 
@@ -277,27 +284,20 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
     color: var(--text-muted); 
     letter-spacing: 0.5px;
 }
-/* Erster Titel ohne Abstand nach oben */
-.markdown-preview > h1:first-child,
-.markdown-preview > h2:first-child,
-.markdown-preview > h3:first-child {
-    margin-top: 0;
-}
+.markdown-preview > *:first-child { margin-top: 0; }
 
 /* View Container */
 .note-view-container {
-    min-height: 60px;
-    padding: 8px 10px;
+    min-height: 80px; /* Etwas höher, da es jetzt ein eigenes Widget ist */
+    padding: 10px;
     border: 1px solid transparent; 
     border-radius: var(--sloth-radius);
     cursor: text;
     transition: all 0.2s;
-    /* Hintergrund wird jetzt über die Klasse bg-body-tertiary gesteuert,
-       aber wir geben ihm im Dark Mode eine Nuance */
 }
 .note-view-container:hover {
-    border-color: var(--border-color); /* Rahmen beim Hover */
-    background-color: rgba(0,0,0,0.05); /* Noch etwas dunkler beim Hover */
+    border-color: var(--border-color);
+    background-color: rgba(0,0,0,0.05);
 }
 [data-bs-theme="dark"] .note-view-container:hover {
     background-color: rgba(255,255,255,0.05);

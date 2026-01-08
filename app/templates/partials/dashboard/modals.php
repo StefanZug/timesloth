@@ -3,10 +3,10 @@
         <div class="modal-content shadow">
             <div class="modal-header border-bottom-0 pb-0"><h5 class="modal-title fw-bold">🧮 Büro-Planer</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <div class="mb-3"><label class="form-label small fw-bold">Offene Büro-Stunden (laut SAP)</label><div class="input-group"><input type="number" step="0.01" class="form-control" v-model.number="calc.sapMissing"><span class="input-group-text">h</span></div></div>
-                <div class="mb-3"><label class="form-label small fw-bold d-flex justify-content-between"><span>Abwesenheit (Krank/Urlaub)</span><span class="text-success" v-if="calcDeduction > 0">- [[ formatNum(calcDeduction) ]] h</span></label><input type="number" step="1" class="form-control" v-model.number="calc.absentDays" placeholder="Tage"><div class="form-text small">Tage, die noch nicht in SAP verbucht sind.</div></div>
+                <div class="mb-3"><label class="form-label small fw-bold">Offene-Vor-Ort-Anwheit (laut SAP)</label><div class="input-group"><input type="number" step="0.01" class="form-control" v-model.number="calc.sapMissing"><span class="input-group-text">h</span></div></div>
+                <div class="mb-3"><label class="form-label small fw-bold d-flex justify-content-between"><span>Abwesenheit (F/U/K)</span><span class="text-success" v-if="calcDeduction > 0">- [[ formatNum(calcDeduction) ]] h</span></label><input type="number" step="1" class="form-control" v-model.number="calc.absentDays" placeholder="Tage"><div class="form-text small">Tage, die noch nicht in SAP verbucht sind.</div></div>
                 <div class="mb-4"><label class="form-label small fw-bold d-flex justify-content-between"><span>Geplante Bürozeit pro Tag</span><span class="text-primary">[[ formatNum(calc.planHours) ]] h</span></label><input type="range" class="form-range" min="4" max="10" step="0.25" v-model.number="calc.planHours"></div>
-                <div class="alert alert-primary text-center border-0 shadow-sm mb-0"><small class="text-uppercase text-muted text-xs">Du musst noch ins Büro für:</small><div class="fs-2 fw-bold mt-1">[[ formatNum(calcResult) ]] <span class="fs-6 fw-normal text-muted">Tage</span></div></div>
+                <div class="alert alert-primary text-center border-0 shadow-sm mb-0"><small class="text-uppercase text-muted text-xs">Du musst im Büro noch:</small><div class="fs-2 fw-bold mt-1">[[ formatNum(calcResult) ]] <span class="fs-6 fw-normal text-muted">Tage absitzen.</span></div></div>
             </div>
         </div>
     </div>

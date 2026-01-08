@@ -1,5 +1,8 @@
 <div class="widget-card">
-    <div class="widget-header"><span>📅 Tages-Planung</span><button class="btn btn-sm btn-link text-muted p-0" @click="jumpToToday()">Heute</button></div>
+    <div class="widget-header">
+        <span>📅 Tages-Planung</span>
+        <button class="btn btn-sm btn-link text-muted p-0" @click="jumpToToday()" title="Springe zu Heute">Heute</button>
+    </div>
     <div class="widget-body">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <button class="btn btn-outline-secondary btn-sm rounded-circle" @click="shiftDay(-1)"><i class="bi bi-chevron-left"></i></button>
@@ -36,33 +39,31 @@
         </div>
         <div v-else class="alert text-center mt-3 shadow-sm border mb-0" :class="statusAlertClass"><h6 class="m-0">[[ getStatusText(dayStatus) ]]</h6></div>
     </div>
-    
-    <div class="mt-4 pt-3 border-top">
-        
-        <div class="d-flex justify-content-between align-items-center mb-2 px-1">
-            <h6 class="m-0 fw-bold text-uppercase text-muted header-label-small">
-                📝 Tages-Notizen
-            </h6>
-            
-            <button v-if="!isEditingNote" class="btn btn-sm btn-link text-muted p-0" @click="isEditingNote = true" title="Bearbeiten">
-                <i class="bi bi-pencil-square"></i>
-            </button>
-            
-            <div v-else class="btn-group btn-group-sm animate-fade">
-                <button class="btn btn-light border" @click="insertMarkdown('bold', $event)" title="Fett"><i class="bi bi-type-bold"></i></button>
-                <button class="btn btn-light border" @click="insertMarkdown('italic', $event)" title="Kursiv"><i class="bi bi-type-italic"></i></button>
-                <button class="btn btn-light border" @click="insertMarkdown('list', $event)" title="Liste"><i class="bi bi-list-ul"></i></button>
-                <button class="btn btn-light border" @click="insertMarkdown('h3', $event)" title="Überschrift"><i class="bi bi-type-h3"></i></button>
-            </div>
-        </div>
+</div>
 
+<div class="widget-card">
+    <div class="widget-header d-flex justify-content-between align-items-center">
+        <span>📝 Tages-Notizen</span>
+        
+        <div v-if="isEditingNote" class="btn-group btn-group-sm animate-fade">
+            <button class="btn btn-sm btn-link text-muted p-0 me-2" @click="insertMarkdown('bold', $event)" title="Fett"><i class="bi bi-type-bold"></i></button>
+            <button class="btn btn-sm btn-link text-muted p-0 me-2" @click="insertMarkdown('italic', $event)" title="Kursiv"><i class="bi bi-type-italic"></i></button>
+            <button class="btn btn-sm btn-link text-muted p-0 me-2" @click="insertMarkdown('list', $event)" title="Liste"><i class="bi bi-list-ul"></i></button>
+            <button class="btn btn-sm btn-link text-muted p-0" @click="insertMarkdown('h3', $event)" title="Überschrift"><i class="bi bi-type-h3"></i></button>
+        </div>
+        <button v-else class="btn btn-sm btn-link text-muted p-0" @click="isEditingNote = true" title="Bearbeiten">
+            <i class="bi bi-pencil-square"></i>
+        </button>
+    </div>
+    
+    <div class="widget-body">
         <div v-if="!isEditingNote" 
              class="note-view-container bg-body-tertiary" 
              @click="isEditingNote = true">
             
             <div v-if="dayComment" class="markdown-preview" v-html="renderMarkdown(dayComment)"></div>
-            <div v-else class="note-placeholder small d-flex align-items-center gap-2">
-                <i class="bi bi-pen"></i> Hier klicken für Notizen...
+            <div v-else class="note-placeholder small d-flex align-items-center gap-2 justify-content-center h-100">
+                <i class="bi bi-pen"></i> Notiz hinzufügen...
             </div>
         </div>
 
@@ -75,13 +76,10 @@
                       @input="triggerAutoSave">
             </textarea>
             
-            <div v-if="dayComment" class="p-3 bg-body-tertiary rounded border markdown-preview mb-2" v-html="renderMarkdown(dayComment)"></div>
-
             <button class="btn btn-sm btn-primary w-100" @click="isEditingNote = false">
                 <i class="bi bi-check-lg"></i> Fertig
             </button>
         </div>
-
     </div>
 </div>
 
@@ -107,7 +105,7 @@
         <div v-if="prediction.target !== '--:--'" class="row g-2 mb-3">
             <div class="col-6">
                 <div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center position-relative">
-                    <small class="d-block text-muted text-uppercase fw-bold text-2xs">Gehen (Soll)</small>
+                    <small class="d-block text-muted text-uppercase fw-bold text-2xs">Gehen Soll ([[ formatNum(settings.sollStunden) ]]h)</small>
                     <div class="d-flex align-items-center justify-content-center w-100 position-relative">
                         <div class="fs-5 fw-bold font-monospace" :class="prediction.reached ? 'text-success' : 'text-primary'">
                             [[ prediction.target ]]
@@ -118,7 +116,7 @@
             </div>
             <div class="col-6">
                 <div class="p-2 bg-body-tertiary rounded border h-100 d-flex flex-column justify-content-center">
-                    <small class="d-block text-muted text-uppercase fw-bold text-2xs">Max (10h)</small>
+                    <small class="d-block text-muted text-uppercase fw-bold text-2xs">Gehen Max. (10h)</small>
                     <div class="fs-5 fw-bold text-danger font-monospace">[[ prediction.max ]]</div>
                 </div>
             </div>
