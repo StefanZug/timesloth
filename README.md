@@ -52,7 +52,7 @@ User können in den Einstellungen eine monatliche Pauschale (z.B. 10h) hinterleg
 * **Minusstunden:** Diese reduzieren das Gleitzeitkonto *sofort*. Die Pauschale schützt nicht vor Abzügen, sie "frisst" nur die Plusstunden.
 * **Fairness-Regel (F/U/K):** Wer abwesend ist, kann die Pauschale nicht aktiv "abarbeiten". Daher wird an Tagen mit Status **F**, **U** oder **K** automatisch der durchschnittliche Tagesanteil der Pauschale dem Topf gutgeschrieben.
   * *Formel:* `Monatspauschale / 22 Arbeitstage` (z.B. bei 10h = 0,45h Gutschrift).
-  * *Hinweis:* Diese Gutschrift füllt nur den Pauschalen-Topf, sie erhöht **nicht** das Gleitzeitkonto (der Tagessaldo bleibt bei 0h).
+* **SAP-Kompatible Rundung:** Um exakte Übereinstimmung mit SAP-Abrechnungen zu gewährleisten, rechnet TimeSloth an dieser Stelle "absichtlich ungenau". Der Tagesanteil wird auf **2 Nachkommastellen abgerundet** (z.B. 0,45h), bevor er summiert wird. Das verhindert, dass sich mathematisch korrekte, aber in SAP nicht existierende Nachkommastellen zu einer Minute Differenz aufsummieren.
 
 ---
 

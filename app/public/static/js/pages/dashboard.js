@@ -392,7 +392,9 @@ createApp({
                 this.saveState = 'saved';
                 setTimeout(() => { if(this.saveState === 'saved') this.saveState = 'idle'; }, 1000);
                 
-                if (status === 'U' || oldStatus === 'U') this.fetchVacationStats();
+                if (['F', 'U', 'K'].includes(status) || ['F', 'U', 'K'].includes(oldStatus)) {
+                    this.fetchVacationStats();
+                }
                 
             } catch(e) { 
                 console.error(e);

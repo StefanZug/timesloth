@@ -164,8 +164,13 @@ class TimeLogic {
                 
                 // Nur rechnen, wenn eine Pauschale eingestellt ist
                 if (flatrateTotal > 0) {
-                    // Berechnung: (Stunden / 22 Tage) * 60 Minuten
-                    let deduction = (flatrateTotal / 22) * 60; 
+                    // SAP RUNDUNGS-LOGIK:
+                    // Wir müssen den Tageswert erst auf 2 Stellen runden (z.B. 0.45),
+                    // bevor wir ihn in Minuten wandeln. Sonst summieren sich Rundungsfehler (1.26 vs 1.25).
+                    let dailyRaw = flatrateTotal / 22;
+                    let dailyRounded = parseFloat(dailyRaw.toFixed(2));
+                    
+                    let deduction = dailyRounded * 60; 
                     
                     let space = flatrateCapMin - flatrateUsedMin;
                     if (space > 0) {
