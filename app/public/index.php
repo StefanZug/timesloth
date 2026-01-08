@@ -1,91 +1,58 @@
 <?php
-// WICHTIG: Zeitzone sofort setzen
+// 1. Setup
 date_default_timezone_set('Europe/Vienna');
-
 session_start();
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
 define('APP_ROOT', dirname(__DIR__));
-define('TEMPLATE_PATH', APP_ROOT . '/templates');
 define('DB_PATH', getenv('DB_FOLDER') . '/timesloth.sqlite');
 
+// 2. Includes
 require_once APP_ROOT . '/src/db.php';
-require_once APP_ROOT . '/src/auth.php';
-require_once APP_ROOT . '/src/api.php';
+require_once APP_ROOT . '/src/Services/EntryService.php';
+require_once APP_ROOT . '/src/Services/UserService.php';
+require_once APP_ROOT . '/src/Services/AdminService.php';
 
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$method = $_SERVER['REQUEST_METHOD'];
+require_once APP_ROOT . '/src/Router.php';
+require_once APP_ROOT . '/src/Controllers/BaseController.php';
+require_once APP_ROOT . '/src/Controllers/AuthController.php';
+require_once APP_ROOT . '/src/Controllers/PageController.php';
+require_once APP_ROOT . '/src/Controllers/ApiController.php';
+require_once APP_ROOT . '/src/Controllers/AdminController.php';
 
-// --- API (JSON) ---
-if (str_starts_with($uri, '/api/')) {
-    header('Content-Type: application/json');
-    if (!is_logged_in()) { http_response_code(401); echo json_encode(['error' => 'Unauthorized']); exit; }
+// 3. Routing
+$router = new Router();
 
-    if ($uri === '/api/get_entries') { api_get_entries(); }
-    elseif ($uri === '/api/save_entry' && $method === 'POST') { api_save_entry(); }
-    elseif ($uri === '/api/settings' && $method === 'POST') { api_save_settings(); }
-    elseif ($uri === '/api/reset_month' && $method === 'POST') { api_reset_month(); }
-    // NEU: Year Stats Route
-    elseif ($uri === '/api/get_year_stats') { 
-        require_once APP_ROOT . '/src/Services/EntryService.php';
-        $service = new EntryService();
-        $year = $_GET['year'] ?? date('Y');
-        echo json_encode($service->getYearStats($_SESSION['user']['id'], $year));
-    }
-    else { http_response_code(404); echo json_encode(['error' => 'Not found']); }
-    exit;
-}
+// Auth Pages
+$router->get('/login', 'AuthController', 'showLogin');
+$router->post('/login', 'AuthController', 'login');
+$router->get('/logout', 'AuthController', 'logout');
+$router->post('/change_password', 'AuthController', 'changePassword', true);
 
-// --- ADMIN API ---
-if (str_starts_with($uri, '/admin/')) {
-    if (!is_logged_in()) { http_response_code(401); exit; }
-    
-    if ($method === 'POST' && $uri === '/admin/create_user') { api_admin_create_user(); exit; }
-    if ($method === 'POST' && $uri === '/admin/holiday') { api_admin_add_holiday(); exit; }
-    if ($uri === '/admin/stats') { api_admin_stats(); exit; }
-    if ($method === 'POST' && $uri === '/admin/cleanup') { api_admin_cleanup(); exit; }
-    
-    if (preg_match('#^/admin/delete_user/(\d+)$#', $uri, $m)) { api_admin_delete_user($m[1]); exit; }
-    if (preg_match('#^/admin/holiday/(\d+)$#', $uri, $m) && $method === 'DELETE') { api_admin_delete_holiday($m[1]); exit; }
-    if (preg_match('#^/admin/toggle_active/(\d+)$#', $uri, $m) && $method === 'POST') { api_admin_toggle_active($m[1]); exit; }
-    if (preg_match('#^/admin/user_logs/(\d+)$#', $uri, $m)) { api_admin_user_logs($m[1]); exit; }
-    if (preg_match('#^/admin/reset_password/(\d+)$#', $uri, $m) && $method === 'POST') { api_admin_reset_pw($m[1]); exit; }
-}
+// App Pages (Protected)
+$router->get('/', 'PageController', 'dashboard', true);
+$router->get('/dashboard', 'PageController', 'dashboard', true);
+$router->get('/settings', 'PageController', 'settings', true);
+$router->get('/admin', 'PageController', 'admin', true, true); // Admin only
 
-// --- AUTH PAGES ---
-if ($uri === '/login') {
-    if ($method === 'POST') { handle_login(); }
-    else { render_view('login', ['hide_nav' => true]); }
-    exit;
-}
-if ($uri === '/logout') { logout(); exit; }
-if ($uri === '/change_password' && $method === 'POST') { api_change_password(); exit; }
+// User API (Protected)
+$router->get('/api/get_entries', 'ApiController', 'getEntries', true);
+$router->post('/api/save_entry', 'ApiController', 'saveEntry', true);
+$router->post('/api/reset_month', 'ApiController', 'resetMonth', true);
+$router->get('/api/get_year_stats', 'ApiController', 'getYearStats', true);
+$router->post('/api/settings', 'ApiController', 'updateSettings', true);
 
-// --- APP PAGES ---
-if (!is_logged_in()) { header('Location: /login'); exit; }
+// Admin API (Admin only)
+$router->post('/admin/create_user', 'AdminController', 'createUser', true, true);
+$router->post('/admin/delete_user/(\d+)', 'AdminController', 'deleteUser', true, true);
+$router->post('/admin/toggle_active/(\d+)', 'AdminController', 'toggleActive', true, true);
+$router->post('/admin/reset_password/(\d+)', 'AdminController', 'resetPassword', true, true);
+$router->get('/admin/user_logs/(\d+)', 'AdminController', 'getUserLogs', true, true);
+$router->post('/admin/holiday', 'AdminController', 'addHoliday', true, true);
+$router->delete('/admin/holiday/(\d+)', 'AdminController', 'deleteHoliday', true, true);
+$router->get('/admin/stats', 'AdminController', 'stats', true, true);
+$router->post('/admin/cleanup', 'AdminController', 'cleanup', true, true);
 
-if ($uri === '/' || $uri === '/dashboard') {
-    render_view('dashboard', ['user' => $_SESSION['user']]);
-} elseif ($uri === '/settings') {
-    $logs = get_login_logs($_SESSION['user']['id']);
-    render_view('settings', ['user' => $_SESSION['user'], 'logs' => $logs]);
-} elseif ($uri === '/admin') {
-    if(!($_SESSION['user']['is_admin'] ?? false)) { header('Location: /'); exit; }
-    
-    $db = get_db();
-    $users = $db->query("SELECT * FROM users ORDER BY username")->fetchAll();
-    $holidays = $db->query("SELECT * FROM global_holidays ORDER BY date_str")->fetchAll();
-    
-    render_view('admin', ['user' => $_SESSION['user'], 'users' => $users, 'holidays' => $holidays]);
-} else {
-    header('Location: /');
-}
-
-function render_view($template, $data = []) {
-    extract($data);
-    ob_start();
-    include TEMPLATE_PATH . "/$template.php";
-    $content = ob_get_clean();
-    include TEMPLATE_PATH . '/base.php';
-}
+// 4. Run
+$router->run();
