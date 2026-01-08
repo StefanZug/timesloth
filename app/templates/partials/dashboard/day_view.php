@@ -37,17 +37,16 @@
         <div v-else class="alert text-center mt-3 shadow-sm border mb-0" :class="statusAlertClass"><h6 class="m-0">[[ getStatusText(dayStatus) ]]</h6></div>
     </div>
     
-    <div class="mt-3 pt-3 border-top">
-        
-        <div class="d-flex justify-content-between align-items-center mb-2 px-1">
-            <label class="form-label small text-muted fw-bold text-uppercase m-0">
-                <i class="bi bi-journal-text me-1"></i> Tages-Notizen
-            </label>
+    <div class="mt-4"> <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <span class="text-uppercase fw-bold text-primary" style="font-size: 0.8rem; letter-spacing: 0.05em;">
+                <i class="bi bi-journal-text me-2"></i>Tages-Notizen
+            </span>
             
             <button v-if="!isEditingNote" class="btn btn-sm btn-link text-muted p-0" @click="isEditingNote = true" title="Bearbeiten">
                 <i class="bi bi-pencil-square"></i>
             </button>
-             <div v-else class="btn-group btn-group-sm animate-fade">
+            
+            <div v-else class="btn-group btn-group-sm animate-fade">
                 <button class="btn btn-light border" @click="insertMarkdown('bold', $event)" title="Fett"><i class="bi bi-type-bold"></i></button>
                 <button class="btn btn-light border" @click="insertMarkdown('italic', $event)" title="Kursiv"><i class="bi bi-type-italic"></i></button>
                 <button class="btn btn-light border" @click="insertMarkdown('list', $event)" title="Liste"><i class="bi bi-list-ul"></i></button>
@@ -74,7 +73,7 @@
                       @input="triggerAutoSave">
             </textarea>
             
-            <div v-if="dayComment" class="p-2 bg-body-tertiary rounded border markdown-preview mb-2" v-html="renderMarkdown(dayComment)"></div>
+            <div v-if="dayComment" class="p-3 bg-body-tertiary rounded border markdown-preview mb-2" v-html="renderMarkdown(dayComment)"></div>
 
             <button class="btn btn-sm btn-primary w-100" @click="isEditingNote = false">
                 <i class="bi bi-check-lg"></i> Fertig
@@ -82,6 +81,7 @@
         </div>
 
     </div>
+</div>
 </div>
 
 <div class="widget-card" v-if="!isNonWorkDay">

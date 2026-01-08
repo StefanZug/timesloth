@@ -242,53 +242,66 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
 /* Markdown Styles & Note UI */
 .markdown-preview { 
     font-size: 0.9rem; 
-    line-height: 1.5; 
+    line-height: 1.4; /* Etwas kompakter */
     color: var(--text-main); 
     white-space: pre-wrap; 
 }
 
-/* FIX: Abstände in Listen radikal entfernen */
+/* FIX: Listen komplett kompakt machen */
 .markdown-preview ul, .markdown-preview ol { 
     margin-bottom: 0.5rem; 
-    padding-left: 1.2rem; 
+    padding-left: 1.4rem; 
 }
-.markdown-preview li { margin-bottom: 0.1rem; }
-.markdown-preview li p { margin: 0 !important; } /* Das ist der Killer-Fix für den großen Abstand */
+.markdown-preview li { 
+    margin-bottom: 0; /* Kein Abstand zwischen Punkten */
+}
+/* Der wichtigste Fix: Absätze IN Listen killen */
+.markdown-preview li p { 
+    margin: 0 !important; 
+    display: inline-block; /* Verhindert Block-Umbruch-Probleme */
+}
 .markdown-preview p { margin-bottom: 0.5rem; }
 
-/* Überschriften */
-.markdown-preview h1, .markdown-preview h2 { 
-    font-size: 1.1rem; font-weight: bold; margin-top: 0.75rem; margin-bottom: 0.25rem; 
-    border-bottom: 1px solid var(--border-color); 
+/* Überschriften: Sauber & Ohne Linien */
+.markdown-preview h1, .markdown-preview h2, .markdown-preview h3 { 
+    font-weight: 700; 
+    margin-top: 1rem; 
+    margin-bottom: 0.25rem; 
+    border-bottom: none; /* Keine Linien mehr! */
+    line-height: 1.2;
 }
+.markdown-preview h1 { font-size: 1.2rem; color: var(--text-main); }
+.markdown-preview h2 { font-size: 1.1rem; color: var(--text-main); }
 .markdown-preview h3 { 
-    font-size: 0.9rem; font-weight: bold; margin-top: 0.5rem; margin-bottom: 0.25rem; 
-    text-transform: uppercase; color: var(--text-muted); border-bottom: none;
+    font-size: 0.9rem; 
+    text-transform: uppercase; 
+    color: var(--text-muted); 
+    letter-spacing: 0.5px;
+}
+/* Der erste Titel soll nicht so viel Abstand nach oben haben */
+.markdown-preview > h1:first-child,
+.markdown-preview > h2:first-child,
+.markdown-preview > h3:first-child {
+    margin-top: 0;
 }
 
-/* Neuer View-Mode Container */
+/* View Mode Container Styling */
 .note-view-container {
     min-height: 60px;
-    padding: 10px;
-    border: 1px solid transparent;
+    padding: 8px 12px; /* Mehr Padding innen */
+    border: 1px solid transparent; /* Platzhalter Border gegen Springen */
     border-radius: var(--sloth-radius);
     cursor: text;
-    transition: background 0.2s, border-color 0.2s;
+    transition: all 0.2s;
 }
 .note-view-container:hover {
     background-color: var(--bg-tertiary);
-    border-color: var(--border-color);
+    border-color: var(--border-color); /* Rahmen nur beim Hover */
 }
 .note-placeholder {
     color: var(--text-muted);
     font-style: italic;
     opacity: 0.7;
-}
-textarea.font-monospace {
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
-    line-height: 1.5;
-    background-color: var(--bg-card);
-    color: var(--text-main);
 }
 
 /* Calendar Grid */
