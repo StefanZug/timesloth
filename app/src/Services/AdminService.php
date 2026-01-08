@@ -1,41 +1,40 @@
 <?php
 class AdminService {
     
+    private $userRepo;
+    private $entryRepo;
+    private $logRepo;
+    private $holidayRepo;
+
+    public function __construct() {
+        $this->userRepo = new UserRepository();
+        $this->entryRepo = new EntryRepository();
+        $this->logRepo = new LogRepository();
+        $this->holidayRepo = new HolidayRepository();
+    }
+
+    // ... (createUser, deleteUser, toggleActive, resetUserPassword bleiben gleich) ...
+    // Ich kürze hier ab, die Methoden oben bleiben unverändert!
+
     public function createUser($username, $password, $isAdmin) {
-        $db = Database::getInstance()->getConnection();
         $cleanUser = strtolower(trim($username));
-        
-        $stmt = $db->prepare("SELECT id FROM users WHERE username = ?");
-        $stmt->execute([$cleanUser]);
-        if($stmt->fetch()) { throw new Exception('User existiert schon'); }
-        
+        if($this->userRepo->findByUsername($cleanUser)) { throw new Exception('User existiert schon'); }
         $hash = password_hash($password, PASSWORD_BCRYPT);
-        $adminFlag = $isAdmin ? 1 : 0;
-        
-        $stmtIns = $db->prepare("INSERT INTO users (username, password_hash, is_admin, pw_last_changed) VALUES (?, ?, ?, CURRENT_TIMESTAMP)");
-        $stmtIns->execute([$cleanUser, $hash, $adminFlag]);
-        
+        $this->userRepo->create($cleanUser, $hash, $isAdmin);
         return ['status' => 'Created'];
     }
 
     public function deleteUser($targetId, $currentUserId) {
         if ($targetId == $currentUserId) { throw new Exception('Nicht selbst löschen'); }
-        
-        $db = Database::getInstance()->getConnection();
-        $db->prepare("DELETE FROM entries WHERE user_id = ?")->execute([$targetId]);
-        $db->prepare("DELETE FROM login_log WHERE user_id = ?")->execute([$targetId]);
-        $db->prepare("DELETE FROM users WHERE id = ?")->execute([$targetId]);
-        
+        $this->entryRepo->deleteAllByUser($targetId); 
+        $this->logRepo->deleteByUser($targetId);
+        $this->userRepo->delete($targetId);
         return ['status' => 'Deleted'];
     }
 
     public function toggleActive($targetId, $currentUserId) {
         if ($targetId == $currentUserId) { throw new Exception('Nicht selbst deaktivieren'); }
-        
-        $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare("UPDATE users SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END WHERE id = ?");
-        $stmt->execute([$targetId]);
-        
+        $this->userRepo->toggleActive($targetId);
         return ['status' => 'Toggled'];
     }
 
@@ -44,55 +43,27 @@ class AdminService {
         $randomWord = $words[array_rand($words)];
         $randomNumber = rand(1000, 9999);
         $newPw = $randomWord . $randomNumber;
-        
         $hash = password_hash($newPw, PASSWORD_BCRYPT);
-        
-        $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare("UPDATE users SET password_hash = ?, pw_last_changed = CURRENT_TIMESTAMP WHERE id = ?");
-        $stmt->execute([$hash, $targetId]);
-        
+        $this->userRepo->updatePassword($targetId, $hash);
         return ['new_password' => $newPw];
     }
 
     public function getUserLogs($userId) {
-        $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare("SELECT timestamp, ip_address, user_agent FROM login_log WHERE user_id = ? ORDER BY timestamp DESC LIMIT 10");
-        $stmt->execute([$userId]);
-        $logs = $stmt->fetchAll();
+        $logs = $this->logRepo->getLatestByUser($userId, 10);
         
-        foreach($logs as &$log) {
-            $ua = $log['user_agent'];
-            $platform = 'Unbekannt';
-            // Simple Erkennung
-            if (preg_match('/windows|win32/i', $ua)) $platform = 'Windows';
-            elseif (preg_match('/android/i', $ua)) $platform = 'Android';
-            elseif (preg_match('/iphone|ipad|ios/i', $ua)) $platform = 'iOS';
-            elseif (preg_match('/macintosh|mac os x/i', $ua)) $platform = 'Mac';
-            elseif (preg_match('/linux/i', $ua)) $platform = 'Linux';
-            
-            $browser = 'Unbekannt';
-            if (preg_match('/firefox/i', $ua)) $browser = 'Firefox';
-            elseif (preg_match('/edg/i', $ua)) $browser = 'Edge';
-            elseif (preg_match('/chrome|crios/i', $ua)) $browser = 'Chrome';
-            elseif (preg_match('/safari/i', $ua)) $browser = 'Safari';
-            
-            $log['browser_short'] = "$platform / $browser";
-        }
-        return $logs;
+        // NEU: Nutzung des Helpers statt inline Logik
+        return UserAgentHelper::parseList($logs);
     }
 
     public function addHoliday($date, $name) {
-        $db = Database::getInstance()->getConnection();
         try {
-            $stmt = $db->prepare("INSERT INTO global_holidays (date_str, name) VALUES (?, ?)");
-            $stmt->execute([$date, $name]);
-            return ['status' => 'Created', 'id' => $db->lastInsertId()];
+            $id = $this->holidayRepo->add($date, $name);
+            return ['status' => 'Created', 'id' => $id];
         } catch(Exception $e) { throw new Exception('Datum existiert schon'); }
     }
 
     public function deleteHoliday($id) {
-        $db = Database::getInstance()->getConnection();
-        $db->prepare("DELETE FROM global_holidays WHERE id = ?")->execute([$id]);
+        $this->holidayRepo->delete($id);
         return ['status' => 'Deleted'];
     }
 
@@ -104,10 +75,9 @@ class AdminService {
             $size = @filesize($dbPath) ?: 0;
         }
         
-        $db = Database::getInstance()->getConnection();
-        $logs = (int)$db->query("SELECT COUNT(*) FROM login_log")->fetchColumn();
-        $entries = (int)$db->query("SELECT COUNT(*) FROM entries")->fetchColumn();
-        $users = (int)$db->query("SELECT COUNT(*) FROM users")->fetchColumn();
+        $logs = $this->logRepo->count();
+        $entries = $this->entryRepo->count(); 
+        $users = $this->userRepo->count();
 
         return [
             'db_size_bytes' => $size,
@@ -118,9 +88,7 @@ class AdminService {
     }
 
     public function clearOldLogs() {
-        $db = Database::getInstance()->getConnection();
-        $db->exec("DELETE FROM login_log WHERE timestamp < date('now', '-30 days')");
-        $db->exec("VACUUM"); 
+        $this->logRepo->cleanupOldLogs();
         return ['status' => 'Cleaned'];
     }
 }

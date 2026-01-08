@@ -7,7 +7,8 @@ spl_autoload_register(function ($className) {
         APP_ROOT . '/src/',
         APP_ROOT . '/src/Controllers/',
         APP_ROOT . '/src/Services/',
-        APP_ROOT . '/src/Repositories/'
+        APP_ROOT . '/src/Repositories/',
+        APP_ROOT . '/src/Helpers/'
     ];
 
     // Wir schauen in jedem Ordner nach

@@ -39,4 +39,13 @@ class EntryRepository {
         $stmt = $this->db->prepare("DELETE FROM entries WHERE user_id = ? AND date_str LIKE ?");
         return $stmt->execute([$userId, "$month%"]);
     }
+
+    public function deleteAllByUser($userId) {
+        $stmt = $this->db->prepare("DELETE FROM entries WHERE user_id = ?");
+        return $stmt->execute([$userId]);
+    }
+
+    public function count() {
+        return (int)$this->db->query("SELECT COUNT(*) FROM entries")->fetchColumn();
+    }
 }

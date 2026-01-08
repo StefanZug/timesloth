@@ -1,21 +1,26 @@
 <?php
 class UserService {
     
+    private $userRepo;
+
+    public function __construct() {
+        $this->userRepo = new UserRepository();
+    }
+    
     public function updateSettings($userId, $newSettings) {
-        $db = Database::getInstance()->getConnection();
+        // Alte Settings laden
+        $current = $this->userRepo->getSettings($userId);
         
-        $stmt = $db->prepare("SELECT settings FROM users WHERE id = ?");
-        $stmt->execute([$userId]);
-        $current = json_decode($stmt->fetchColumn() ?: '{}', true);
-        
+        // Mergen
         foreach($newSettings as $k => $v) { 
             $current[$k] = $v; 
         }
         $newJson = json_encode($current);
         
-        $stmtUpd = $db->prepare("UPDATE users SET settings = ? WHERE id = ?");
-        $stmtUpd->execute([$newJson, $userId]);
+        // Speichern
+        $this->userRepo->updateSettings($userId, $newJson);
         
+        // Session Update
         if(isset($_SESSION['user'])) {
             $_SESSION['user']['settings'] = $newJson;
         }
