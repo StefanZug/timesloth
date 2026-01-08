@@ -232,63 +232,85 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
 .note-popup { position: relative; z-index: 100; min-width: 300px; }
 .note-preview-closed { border: 1px solid transparent; border-radius: 4px; padding: 2px 6px; }
 .note-preview-closed:hover { border-color: var(--border-color); background-color: rgba(0,0,0,0.02); }
+/* --- FIX 1: Stärkerer Rand für Tabellen-Inputs --- */
 .table-input-note {
-    border: 1px solid var(--border-color) !important; background-color: var(--bg-body);
-    border-radius: 4px; padding: 2px 6px !important; transition: all 0.2s;
+    /* Statt var(--border-color) nehmen wir einen transparenten Schwarzton.
+       Das sieht auf Weiß gut aus UND auf bunten Zeilen (Grün/Rot). */
+    border: 1px solid rgba(0, 0, 0, 0.2) !important; 
+    background-color: var(--bg-body);
+    border-radius: 4px; 
+    padding: 2px 6px !important; 
+    transition: all 0.2s;
 }
-.table-input-note:hover { border-color: var(--sloth-primary) !important; background-color: var(--bg-card); }
-.table-input-note:focus { border-color: var(--sloth-primary) !important; box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.15); }
+
+/* Im Dark Mode nehmen wir einen transparenten Weißton */
+[data-bs-theme="dark"] .table-input-note {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.table-input-note:hover { 
+    border-color: var(--sloth-primary) !important; 
+    background-color: var(--bg-card); 
+}
+.table-input-note:focus { 
+    border-color: var(--sloth-primary) !important; 
+    box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.15); 
+}
 
 /* Markdown Styles & Note UI */
 .markdown-preview { 
     font-size: 0.9rem; 
-    line-height: 1.5; 
+    line-height: 1.4; 
     color: var(--text-main); 
     white-space: pre-wrap; 
 }
 
-/* FIX: Aggressiver Reset für Listen */
+/* --- FIX: Listen Abstände --- */
+
+/* 1. Der Container der Liste (ul/ol) */
 .markdown-preview ul, .markdown-preview ol { 
-    margin-top: 0;
+    margin-top: 0 !important;    /* Zwingend: Kein Abstand nach oben! */
     margin-bottom: 0.5rem; 
     padding-left: 1.2rem; 
 }
 
+/* 2. Die einzelnen Listenpunkte (li) */
 .markdown-preview li { 
     margin: 0 !important; 
     padding: 0 !important;
-    line-height: 1.4; /* Etwas kompakterer Zeilenabstand */
+    line-height: 1.4;
 }
 
-/* Der wichtigste Fix: Absätze IN Listen killen */
+/* 3. Absätze INNERHALB von Listen (marked.js macht das oft) */
 .markdown-preview li p { 
     margin: 0 !important; 
     padding: 0 !important;
-    display: inline; /* Verhindert Block-Abstände komplett */
+    display: inline; /* Verhindert Umbrüche */
 }
-.markdown-preview p { margin-bottom: 0.5rem; }
 
-/* Überschriften */
+/* 4. Normale Absätze (Text vor der Liste) */
+.markdown-preview p { 
+    margin-bottom: 0.25rem; /* Abstand nach unten verringert (vorher 0.5) */
+}
+
+
+/* --- Überschriften --- */
 .markdown-preview h1, .markdown-preview h2, .markdown-preview h3 { 
     font-weight: 700; 
     margin-top: 0.75rem; 
-    margin-bottom: 0.25rem; 
+    margin-bottom: 0.25rem; /* Sehr kleiner Abstand zur nächsten Zeile/Liste */
     border-bottom: none; 
     line-height: 1.2;
 }
-.markdown-preview h1 { font-size: 1.1rem; color: var(--text-main); }
-.markdown-preview h2 { font-size: 1rem; color: var(--text-main); }
-.markdown-preview h3 { 
-    font-size: 0.85rem; 
-    text-transform: uppercase; 
-    color: var(--text-muted); 
-    letter-spacing: 0.5px;
-}
-.markdown-preview > *:first-child { margin-top: 0; }
 
-/* View Container */
+/* Ganz oben kein Abstand */
+.markdown-preview > *:first-child { 
+    margin-top: 0 !important; 
+}
+
+/* --- View Container (Hintergrund) --- */
 .note-view-container {
-    min-height: 80px; /* Etwas höher, da es jetzt ein eigenes Widget ist */
+    min-height: 80px;
     padding: 10px;
     border: 1px solid transparent; 
     border-radius: var(--sloth-radius);

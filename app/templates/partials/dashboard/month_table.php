@@ -79,8 +79,8 @@
                                     :placeholder="day.placeholder" 
                                     @change="updateComment(day)">
 
-                            <button class="btn btn-sm btn-link text-muted p-0" @click="toggleExpandNote(day)" title="Großes Feld öffnen">
-                                <i class="bi bi-arrows-expand"></i>
+                            <button class="btn btn-sm btn-link text-muted p-0" @click="toggleExpandNote(day)" title="Bearbeiten">
+                                <i class="bi bi-pencil-square"></i>
                             </button>
                         </div>
 
