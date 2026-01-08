@@ -16,7 +16,11 @@ Write-Host " - Bootstrap: $($deps.bootstrap)"
 $VendorDir = "app/public/static/vendor"
 $JsDir = "$VendorDir/js"
 $CssDir = "$VendorDir/css"
-$FontDir = "$VendorDir/fonts"
+# FIX: Fonts müssen UNTERHALB von CSS liegen, damit relative Pfade stimmen
+$FontDir = "$VendorDir/css/fonts" 
+
+# Alte Verzeichnisse aufräumen (optional, aber sauberer)
+if (Test-Path "$VendorDir/fonts") { Remove-Item -Recurse -Force "$VendorDir/fonts" }
 
 New-Item -ItemType Directory -Force -Path $JsDir | Out-Null
 New-Item -ItemType Directory -Force -Path $CssDir | Out-Null
@@ -28,7 +32,6 @@ function Download-File {
     $FileName = Split-Path $Dest -Leaf
     Write-Host "Downloading $FileName..." -NoNewline
     try {
-        # Versionsnummern bereinigen (z.B. "^3.4.0" -> "3.4.0")
         $CleanUrl = $Url -replace '\^', '' 
         Invoke-WebRequest -Uri $CleanUrl -OutFile $Dest
         Write-Host " OK" -ForegroundColor Green
@@ -39,7 +42,7 @@ function Download-File {
     }
 }
 
-# 4. Downloads (Dynamisch basierend auf package.json)
+# 4. Downloads
 
 # Vue
 Download-File "https://cdn.jsdelivr.net/npm/vue@$($deps.vue)/dist/vue.global.prod.js" "$JsDir/vue.js"
@@ -51,8 +54,7 @@ Download-File "https://cdn.jsdelivr.net/npm/axios@$($deps.axios)/dist/axios.min.
 Download-File "https://cdn.jsdelivr.net/npm/bootstrap@$($deps.bootstrap)/dist/js/bootstrap.bundle.min.js" "$JsDir/bootstrap.js"
 Download-File "https://cdn.jsdelivr.net/npm/bootstrap@$($deps.bootstrap)/dist/css/bootstrap.min.css" "$CssDir/bootstrap.css"
 
-# Bootstrap Icons (Achtung: Eigener Key in package.json nötig, json key darf kein Bindestrich haben, wir mappen es)
-# Zugriff auf Property mit Bindestrich in PowerShell:
+# Bootstrap Icons
 $bsIconVer = $deps.'bootstrap-icons'
 Download-File "https://cdn.jsdelivr.net/npm/bootstrap-icons@$bsIconVer/font/bootstrap-icons.min.css" "$CssDir/bootstrap-icons.css"
 Download-File "https://cdn.jsdelivr.net/npm/bootstrap-icons@$bsIconVer/font/fonts/bootstrap-icons.woff2" "$FontDir/bootstrap-icons.woff2"
