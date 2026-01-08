@@ -30,7 +30,7 @@
     --st-office-bg: #dcfce7;   --st-office-txt: #14532d;
     --st-home-bg: #e0f2fe;     --st-home-txt: #0c4a6e;
     --st-sick-bg: #fee2e2;     --st-sick-txt: #7f1d1d;
-    --st-vacation-bg: #fef3c7; --st-vacation-txt: #78350f; /* Fixed: vacation bg var name unified */
+    --st-vacation-bg: #fef3c7; --st-vacation-txt: #78350f;
     --st-holiday-bg: #f3f4f6;  --st-holiday-txt: #374151;
     
     --bs-primary: var(--sloth-primary);
@@ -77,7 +77,7 @@ body {
 a { text-decoration: none; color: var(--sloth-primary); }
 a:hover { color: var(--sloth-primary-hover); }
 
-/* Text Utilities */
+/* Helpers */
 .text-muted { color: var(--text-muted) !important; }
 .text-subtle { color: var(--text-subtle) !important; font-size: 0.85em; }
 .fw-bold { font-weight: 600 !important; }
@@ -86,17 +86,20 @@ a:hover { color: var(--sloth-primary-hover); }
 .bg-body-tertiary { background-color: var(--bg-tertiary) !important; }
 .lh-1 { line-height: 1 !important; }
 
-/* Size Utilities (replacing inline styles) */
+/* Font Size Helpers */
 .text-xs { font-size: 0.7rem !important; }
 .text-2xs { font-size: 0.65rem !important; }
 .text-3xs { font-size: 0.6rem !important; }
 .icon-lg { font-size: 1.2rem; }
-.w-icon-btn { width: 36px; } /* Standard dropdown button width */
+.w-icon-btn { width: 36px; }
+
+/* Custom Widget Helpers */
+.header-label-small { font-size: 0.8rem !important; letter-spacing: 0.05em !important; }
+.text-compact-alert { font-size: 0.8rem; line-height: 1.2; }
 
 /* =========================================
-   3. COMPONENTS
+   3. COMPONENTS (Cards, Forms, Progress)
    ========================================= */
-/* Cards */
 .widget-card { 
     background-color: var(--bg-card); 
     border: 1px solid var(--border-color);
@@ -113,7 +116,7 @@ a:hover { color: var(--sloth-primary-hover); }
 }
 .widget-body { padding: 16px; }
 
-/* Inputs & Forms */
+/* Form Controls */
 .form-control, .form-select {
     background-color: var(--bg-card); border: 1px solid var(--border-color);
     color: var(--text-main); border-radius: 8px; padding: 0.5rem 0.75rem;
@@ -122,6 +125,10 @@ a:hover { color: var(--sloth-primary-hover); }
     background-color: var(--bg-card); border-color: var(--sloth-primary);
     color: var(--text-main); box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.15);
 }
+textarea.font-monospace {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
+    line-height: 1.5; background-color: var(--bg-card); color: var(--text-main);
+}
 
 .btn-dashed {
     border: 2px dashed var(--border-color); background: transparent; color: var(--text-muted);
@@ -129,16 +136,7 @@ a:hover { color: var(--sloth-primary-hover); }
 }
 .btn-dashed:hover { border-color: var(--sloth-primary); color: var(--sloth-primary); background-color: var(--bg-tertiary); }
 
-/* Avatars */
-.avatar-circle {
-    width: 36px; height: 36px; border-radius: 50%;
-    background-color: var(--sloth-primary); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 1rem; border: 2px solid var(--bg-card);
-}
-.avatar-sm { width: 28px; height: 28px; font-size: 0.8rem; } /* Admin User List */
-
-/* Status Buttons (F, U, K) */
+/* Status Buttons */
 .btn-xs-status {
     border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center;
     border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-muted);
@@ -148,7 +146,6 @@ a:hover { color: var(--sloth-primary-hover); }
 .st-f.active { background: var(--st-holiday-txt); color: var(--bg-card); border-color: transparent; }
 .st-u.active { background: var(--st-vacation-txt); color: #fff; border-color: transparent; }
 .st-k.active { background: var(--st-sick-txt); color: #fff; border-color: transparent; }
-
 .btn-status-lg { width: 50px; height: 40px; font-size: 1rem; }
 .btn-status-sm { width: 24px; height: 24px; font-size: 0.7rem; }
 
@@ -157,12 +154,20 @@ a:hover { color: var(--sloth-primary-hover); }
 .progress-bar-sloth { height: 100%; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); background-color: green; }
 .progress-bar-sloth.bg-warning { background-color: var(--bs-warning) !important; }
 .progress-bar-sloth.bg-secondary { background-color: var(--sloth-primary) !important; opacity: 0.6; }
-
 .progress-h-sm { height: 6px; }
 .progress-h-md { height: 10px; }
 
+/* Avatars */
+.avatar-circle {
+    width: 36px; height: 36px; border-radius: 50%;
+    background-color: var(--sloth-primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1rem; border: 2px solid var(--bg-card);
+}
+.avatar-sm { width: 28px; height: 28px; font-size: 0.8rem; }
+
 /* =========================================
-   4. TABLES & LISTS
+   4. TABLES & INPUTS
    ========================================= */
 .table { --bs-table-bg: transparent; color: var(--text-main); border-color: var(--border-color); }
 thead th {
@@ -179,12 +184,12 @@ td { border-bottom: 1px solid var(--border-color); }
 .tr-holiday { background-color: var(--st-holiday-bg) !important; color: var(--st-holiday-txt) !important; }
 .tr-weekend { background-color: var(--bg-tertiary) !important; color: var(--text-muted) !important; }
 
-/* Border Indicators */
+/* Indicators */
 .type-office { border-left: 4px solid var(--st-office-txt) !important; }
 .type-home { border-left: 4px solid var(--st-home-txt) !important; }
 .type-doctor { border-left: 4px solid var(--st-sick-txt) !important; }
 
-/* Table Inputs */
+/* Table Time Inputs */
 .table-input, 
 input[type="text"].form-control-sm.text-center {
     font-family: var(--font-mono) !important; letter-spacing: -0.5px; font-weight: 600;
@@ -201,6 +206,7 @@ input[type="text"].form-control-sm.text-center {
 }
 input[type=time]::-webkit-datetime-edit-second-field { display: none; }
 
+/* Duration Badge */
 .duration-badge { 
     display: inline-block; background-color: rgba(0,0,0,0.03) !important;
     border: 1px solid transparent !important; color: var(--text-muted) !important;
@@ -210,54 +216,40 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
 }
 [data-bs-theme="dark"] .duration-badge { background-color: rgba(255,255,255,0.05) !important; }
 
-/* Table Spacing Utilities */
+/* Note Input in Month Table (THE FIX for Green Rows) */
+.table-input-note {
+    /* Fast undurchsichtiges Weiß/Schwarz für perfekten Kontrast */
+    background-color: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+    color: #000 !important; /* Immer schwarz auf weißem Grund */
+    border-radius: 4px; 
+    padding: 2px 6px !important; 
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+[data-bs-theme="dark"] .table-input-note {
+    background-color: rgba(30, 30, 30, 0.85) !important; /* Fast schwarz */
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important; /* Weißer Text */
+}
+.table-input-note:hover, .table-input-note:focus {
+    background-color: var(--bg-card) !important; /* Volle Deckkraft beim Hover */
+    border-color: var(--sloth-primary) !important;
+    box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.15);
+}
+
+/* Table Layout Helpers */
 .col-min-date { min-width: 80px; }
 .col-min-time { min-width: 180px; }
 .col-min-note { min-width: 250px; }
-
-/* List Icons */
 .list-icon-btn { width: 24px; }
 .list-remove-btn { font-size: 1rem; line-height: 1; padding: 0; margin-left: 0.25rem; }
 .list-spacer-start { width: 24px; flex-shrink: 0; }
 .list-spacer-end { width: 20px; flex-shrink: 0; }
 
 /* =========================================
-   5. SPECIFIC VIEWS & ELEMENTS
+   5. MARKDOWN & NOTES (Consolidated Fix)
    ========================================= */
-/* Save Indicator */
-.save-indicator-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
-.save-blob { width: 40px; height: 40px; }
-
-/* Note Popup (Month View) */
-.note-popup { position: relative; z-index: 100; min-width: 300px; }
-.note-preview-closed { border: 1px solid transparent; border-radius: 4px; padding: 2px 6px; }
-.note-preview-closed:hover { border-color: var(--border-color); background-color: rgba(0,0,0,0.02); }
-/* --- FIX 1: Stärkerer Rand für Tabellen-Inputs --- */
-.table-input-note {
-    /* Statt var(--border-color) nehmen wir einen transparenten Schwarzton.
-       Das sieht auf Weiß gut aus UND auf bunten Zeilen (Grün/Rot). */
-    border: 1px solid rgba(0, 0, 0, 0.2) !important; 
-    background-color: var(--bg-body);
-    border-radius: 4px; 
-    padding: 2px 6px !important; 
-    transition: all 0.2s;
-}
-
-/* Im Dark Mode nehmen wir einen transparenten Weißton */
-[data-bs-theme="dark"] .table-input-note {
-    border-color: rgba(255, 255, 255, 0.2) !important;
-}
-
-.table-input-note:hover { 
-    border-color: var(--sloth-primary) !important; 
-    background-color: var(--bg-card); 
-}
-.table-input-note:focus { 
-    border-color: var(--sloth-primary) !important; 
-    box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.15); 
-}
-
-/* Markdown Styles & Note UI */
 .markdown-preview { 
     font-size: 0.9rem; 
     line-height: 1.4; 
@@ -265,57 +257,51 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
     white-space: pre-wrap; 
 }
 
-/* --- FIX: Listen Abstände --- */
-
-/* 1. Der Container der Liste (ul/ol) */
+/* LISTS: Aggressive Reset for Compactness */
 .markdown-preview ul, .markdown-preview ol { 
-    margin-top: 0 !important;    /* Zwingend: Kein Abstand nach oben! */
+    margin-top: 0 !important; 
     margin-bottom: 0.5rem; 
     padding-left: 1.2rem; 
 }
-
-/* 2. Die einzelnen Listenpunkte (li) */
 .markdown-preview li { 
     margin: 0 !important; 
     padding: 0 !important;
-    line-height: 1.4;
+    line-height: 1.35; /* Kompakter Zeilenabstand */
 }
-
-/* 3. Absätze INNERHALB von Listen (marked.js macht das oft) */
+/* No margins for paragraphs inside lists */
 .markdown-preview li p { 
     margin: 0 !important; 
     padding: 0 !important;
-    display: inline; /* Verhindert Umbrüche */
+    display: inline; 
 }
-
-/* 4. Normale Absätze (Text vor der Liste) */
+/* Normal paragraphs */
 .markdown-preview p { 
-    margin-bottom: 0.25rem; /* Abstand nach unten verringert (vorher 0.5) */
+    margin-bottom: 0.25rem; 
 }
 
-
-/* --- Überschriften --- */
+/* HEADINGS: Clean & Minimal */
 .markdown-preview h1, .markdown-preview h2, .markdown-preview h3 { 
     font-weight: 700; 
     margin-top: 0.75rem; 
-    margin-bottom: 0.25rem; /* Sehr kleiner Abstand zur nächsten Zeile/Liste */
+    margin-bottom: 0.25rem; 
     border-bottom: none; 
     line-height: 1.2;
 }
-
-/* Ganz oben kein Abstand */
-.markdown-preview > *:first-child { 
-    margin-top: 0 !important; 
+.markdown-preview h1 { font-size: 1.1rem; color: var(--text-main); }
+.markdown-preview h2 { font-size: 1rem; color: var(--text-main); }
+.markdown-preview h3 { 
+    font-size: 0.85rem; text-transform: uppercase; 
+    color: var(--text-muted); letter-spacing: 0.5px;
 }
+.markdown-preview > *:first-child { margin-top: 0 !important; }
 
-/* --- View Container (Hintergrund) --- */
+/* View Container */
 .note-view-container {
     min-height: 80px;
     padding: 10px;
     border: 1px solid transparent; 
     border-radius: var(--sloth-radius);
-    cursor: text;
-    transition: all 0.2s;
+    cursor: text; transition: all 0.2s;
 }
 .note-view-container:hover {
     border-color: var(--border-color);
@@ -324,12 +310,22 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
 [data-bs-theme="dark"] .note-view-container:hover {
     background-color: rgba(255,255,255,0.05);
 }
+.note-placeholder { color: var(--text-muted); font-style: italic; opacity: 0.7; }
 
-.note-placeholder {
-    color: var(--text-muted);
-    font-style: italic;
-    opacity: 0.7;
-}
+/* =========================================
+   6. ANIMATIONS & SPECIFIC VIEWS
+   ========================================= */
+/* Animations */
+.animate-fade { animation: fadeInUp 0.5s ease-out forwards; opacity: 0; transform: translateY(10px); }
+@keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+.spin-animation { animation: slothSpin 3s ease-in-out; }
+@keyframes slothSpin { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.5); } 100% { transform: rotate(360deg) scale(1); } }
+
+/* Sleepy Eyes */
+#sloth-lids { display: block !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+.lid-top, .lid-bottom { position: absolute; left: 0; width: 100%; height: 0; background-color: var(--text-main); transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0.95; }
+.lid-top { top: 0; } .lid-bottom { bottom: 0; }
+.eyes-closed .lid-top, .eyes-closed .lid-bottom { height: 51%; }
 
 /* Calendar Grid */
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 5px; }
@@ -340,7 +336,7 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
     background: var(--bg-body); border: 1px solid var(--border-color); 
 }
 .day-box:hover:not(.day-empty) { border-color: var(--sloth-primary); box-shadow: 0 0 0 2px rgba(var(--bs-primary-rgb), 0.2); z-index: 1; }
-.day-vacation { background-color: #f59e0b !important; color: white !important; border:none !important; } /* Fix: Yellow in Light Mode */
+.day-vacation { background-color: #f59e0b !important; color: white !important; border:none !important; }
 [data-bs-theme="dark"] .day-vacation { background-color: var(--st-vacation-txt) !important; }
 .day-sick { background-color: #dc3545 !important; color: white !important; border: none; }
 .day-sick:hover { background-color: #bb2d3b !important; box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3) !important; }
@@ -359,93 +355,57 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
     .mobile-only-switcher { display: none !important; }
 }
 
-/* Base Layout Specifics */
+/* Misc Layout */
 .navbar-sticky { position: sticky; top: 0; z-index: 1050; }
 .footer-separator { width: 1px; height: 16px; background: var(--border-color); }
 .app-footer { text-align: center; color: var(--text-subtle); font-size: 0.8rem; margin-top: auto; width: 100%; position: relative; padding-bottom: 2rem; }
 .footer-actions { display: inline-flex; align-items: center; gap: 15px; background: var(--bg-card); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 .sloth-logo-nav { cursor: pointer; border-radius: 50%; width: 42px; height: auto; }
-
-/* Login */
 .login-container { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .sloth-logo-lg { height: 140px; width: auto; cursor: pointer; }
 .login-card { width: 100%; max-width: 360px; animation-delay: 0.1s; }
-
-/* Admin */
 .log-table-wrapper { max-height: 150px; }
 .holiday-table-wrapper { max-height: 400px; }
 .table-th-small { font-size: 0.75rem; }
-
-/* Settings */
 .settings-container { max-width: 700px; }
 .sloth-game-area { min-height: 24px; }
 .settings-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 1rem; background: var(--bg-card); border-top: 1px solid var(--border-color); z-index: 1020; box-shadow: 0 -4px 12px rgba(0,0,0,0.1); }
 #settingsApp + .app-footer { margin-bottom: 80px !important; position: relative; z-index: 1021; }
+.save-indicator-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+.save-blob { width: 40px; height: 40px; }
 
-/* Animations */
-.animate-fade { animation: fadeInUp 0.5s ease-out forwards; opacity: 0; transform: translateY(10px); }
-@keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
-.spin-animation { animation: slothSpin 3s ease-in-out; }
-@keyframes slothSpin { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.5); } 100% { transform: rotate(360deg) scale(1); } }
-#sloth-lids { display: block !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
-.lid-top, .lid-bottom { position: absolute; left: 0; width: 100%; height: 0; background-color: var(--text-main); transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0.95; }
-.lid-top { top: 0; } .lid-bottom { bottom: 0; }
-.eyes-closed .lid-top, .eyes-closed .lid-bottom { height: 51%; }
+/* Note Popup (Month View) */
+.note-popup { position: relative; z-index: 100; min-width: 300px; }
+.note-preview-closed { border: 1px solid transparent; border-radius: 4px; padding: 2px 6px; }
+.note-preview-closed:hover { border-color: var(--border-color); background-color: rgba(0,0,0,0.02); }
 
 /* =========================================
-   6. MOBILE OVERRIDES
+   7. MOBILE OVERRIDES
    ========================================= */
 .view-switcher { background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 20px; padding: 4px; display: inline-flex; }
 .view-btn { border: none; background: transparent; padding: 6px 16px; border-radius: 16px; color: var(--text-muted); font-size: 0.9rem; transition: all 0.2s; }
 .view-btn.active { background: var(--bg-card); color: var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-weight: 600; }
 
 @media (max-width: 991px) {
-    /* Sticky Date Column */
     table.table { border-collapse: separate; border-spacing: 0; min-width: 800px !important; }
     td:first-child, th:first-child { position: sticky; left: 0; z-index: 10; background-color: var(--bg-card) !important; border-right: 2px solid var(--border-color); max-width: 80px; padding-left: 0.5rem !important; }
     th:first-child { background-color: var(--bg-tertiary) !important; z-index: 11; }
-    
-    /* Hide specific desktop elements */
     .bi-clock, .input-group-text { display: none !important; }
-    
-    /* Input sizing */
     .table-input { flex: 0 0 auto !important; width: 75px !important; min-width: 75px !important; padding: 4px 0 !important; font-size: 0.95rem !important; }
     .duration-badge { flex: 0 0 auto !important; width: 55px !important; min-width: 55px !important; }
     .list-remove-btn { flex: 0 0 auto !important; width: 32px !important; height: 32px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin-left: 0.5rem !important; }
     .list-remove-btn i { font-size: 1.2rem !important; }
     td:last-child input { min-width: 150px; }
-
-    /* Spacing fixes */
     .gap-1 { gap: 0.1rem !important; }
     .list-icon-btn { width: 20px !important; }
-    
-    /* Settings Footer Space */
     #settingsApp + .app-footer { margin-bottom: 120px !important; }
-
-    /* Day View Mobile Fixes */
     .widget-body .card .card-body { padding-left: 6px !important; padding-right: 6px !important; gap: 2px !important; }
     .widget-body .card .card-body input.form-control { min-width: 0 !important; flex: 1 1 auto !important; font-size: 0.9rem !important; padding: 4px 0 !important; }
     .widget-body .card .card-body .btn.ms-auto { flex: 0 0 32px !important; width: 32px !important; height: 32px !important; margin-left: 4px !important; display: flex !important; align-items: center !important; justify-content: center !important; }
-
-    /* Month View Mobile Fixes */
     td .d-flex.mb-2 { flex-wrap: nowrap !important; gap: 2px !important; }
     .table-input { min-width: 0 !important; width: 100% !important; flex: 1 !important; font-size: 0.8rem !important; padding: 0 !important; height: 28px !important; text-align: center !important; }
     .list-icon-btn, .list-remove-btn { flex: 0 0 24px !important; width: 24px !important; justify-content: center !important; }
     td .d-flex.mt-1 { width: 100% !important; display: flex !important; }
     td .d-flex.mt-1 .btn { width: 100% !important; flex: 1 !important; }
     .list-spacer-start, .list-spacer-end { display: none !important; }
-}
-
-/* --- HELPER CLASSES (No Inline Styles!) --- */
-
-/* Für die kleinen Überschriften in Widgets (z.B. Tages-Notizen) */
-.header-label-small {
-    font-size: 0.8rem !important;
-    letter-spacing: 0.05em !important;
-}
-
-/* Für kompakten Text in Alerts (z.B. "Du musst noch...") */
-.text-compact-alert {
-    font-size: 0.8rem;
-    line-height: 1.2;
 }
