@@ -145,14 +145,24 @@ createApp({
 
             while (date.getMonth() === month) {
                 let iso = this.formatIsoDate(date);
+                
+                // Daten holen
                 let entry = this.entriesCache.find(e => e.date === iso);
                 let holidayName = this.holidaysMap[iso];
+                
+                // Status ermitteln: Eintrag gewinnt vor globalem Feiertag
                 let status = entry ? entry.status : (holidayName ? 'F' : null);
+                
+                // Blöcke kopieren (Deep Copy)
                 let blocks = (entry && entry.blocks) ? JSON.parse(JSON.stringify(entry.blocks)) : [];
                 
+                // Stats berechnen (nur wenn wir arbeiten, also kein Status gesetzt ist)
                 let stats = { sapMin: 0 };
-                if(entry && !status) stats = TimeLogic.calculateDayStats(blocks, this.settings, false);
+                if(entry && !status) {
+                    stats = TimeLogic.calculateDayStats(blocks, this.settings, false);
+                }
 
+                // Icons prüfen
                 let hasOffice = false; let hasHome = false;
                 if(blocks) blocks.forEach(b => {
                     if((b.start && b.start.length>=3) || (b.end && b.end.length>=3)) {
@@ -161,14 +171,40 @@ createApp({
                     }
                 });
 
+                // --- NEUE LOGIK: Platzhalter Text bestimmen ---
+                let placeholderText = '';
+                
+                if (date.getDay() === 0 || date.getDay() === 6) {
+                    // Am Wochenende den Wochentag anzeigen
+                    placeholderText = date.toLocaleDateString('de-DE', { weekday: 'long' });
+                } 
+                else if (entry && entry.status_note) {
+                    // Priorität 1: Hat der User "Kroatien" oder "Zahnarzt" eingetragen?
+                    placeholderText = entry.status_note;
+                }
+                else if (holidayName) {
+                    // Priorität 2: Ist es ein Feiertag? (Dann Name vom Admin)
+                    placeholderText = holidayName;
+                }
+
                 days.push({
-                    iso: iso, dateNum: date.getDate(),
+                    iso: iso, 
+                    dateNum: date.getDate(),
                     dayShort: date.toLocaleDateString('de-DE', { weekday: 'short' }),
-                    kw: this.getKw(date), status: status, sapTime: stats.sapMin, blocks: blocks,
+                    kw: this.getKw(date), 
+                    status: status, 
+                    sapTime: stats.sapMin, 
+                    blocks: blocks,
                     isWeekend: (date.getDay()===0 || date.getDay()===6),
-                    isToday: (iso === todayIso), hasOffice: hasOffice, hasHome: hasHome,
-                    comment: entry ? entry.comment : '', placeholder: (date.getDay()===0||date.getDay()===6) ? date.toLocaleDateString('de-DE', { weekday: 'long' }) : (holidayName || '')
+                    isToday: (iso === todayIso), 
+                    hasOffice: hasOffice, 
+                    hasHome: hasHome,
+                    
+                    // Hier binden wir die Daten:
+                    comment: entry ? entry.comment : '', 
+                    placeholder: placeholderText // Das landet grau im Input-Feld
                 });
+                
                 date.setDate(date.getDate() + 1);
             }
             return days;

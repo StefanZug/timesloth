@@ -50,6 +50,12 @@ function get_db() {
         if (!in_array('is_active', $cols)) {
             $pdo->exec("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1");
         }
+        // NEU: Spalte für Status-Notizen in entries hinzufügen
+        $entryCols = $pdo->query("PRAGMA table_info(entries)")->fetchAll(PDO::FETCH_COLUMN, 1);
+        if (!in_array('status_note', $entryCols)) {
+            // SQLite Befehl zum Hinzufügen einer Spalte
+            $pdo->exec("ALTER TABLE entries ADD COLUMN status_note TEXT");
+        }
         if (!in_array('pw_last_changed', $cols)) {
             $pdo->exec("ALTER TABLE users ADD COLUMN pw_last_changed DATETIME");
             // Setze initiales Datum für bestehende User

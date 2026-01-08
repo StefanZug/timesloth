@@ -14,7 +14,8 @@ class EntryService {
                 'date' => $row['date_str'],
                 'blocks' => json_decode($row['data']),
                 'status' => $row['status'],
-                'comment' => $row['comment']
+                'comment' => $row['comment'],
+                'status_note' => $row['status_note'] ?? '' // NEU: Status-Notiz laden
             ];
         }
         
@@ -40,17 +41,20 @@ class EntryService {
 
     public function saveEntry($userId, $data) {
         $db = get_db();
-        $stmt = $db->prepare("INSERT INTO entries (user_id, date_str, data, status, comment) 
-                              VALUES (:uid, :date, :data, :status, :comment)
+        
+        // NEU: status_note ins SQL Statement aufgenommen
+        $stmt = $db->prepare("INSERT INTO entries (user_id, date_str, data, status, comment, status_note) 
+                              VALUES (:uid, :date, :data, :status, :comment, :status_note)
                               ON CONFLICT(user_id, date_str) DO UPDATE SET
-                              data = :data, status = :status, comment = :comment");
+                              data = :data, status = :status, comment = :comment, status_note = :status_note");
         
         $stmt->execute([
             ':uid' => $userId,
             ':date' => $data['date'],
             ':data' => json_encode($data['blocks']),
             ':status' => $data['status'],
-            ':comment' => $data['comment'] ?? ''
+            ':comment' => $data['comment'] ?? '',
+            ':status_note' => $data['status_note'] ?? '' // NEU: Status-Notiz speichern
         ]);
         
         return ['status' => 'Saved'];
