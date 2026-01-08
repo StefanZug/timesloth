@@ -38,22 +38,50 @@
     </div>
     
     <div class="mt-3 pt-3 border-top">
-        <div class="d-flex justify-content-between align-items-center label-fix-padding mb-1">
-            <label class="form-label small text-muted fw-bold text-uppercase m-0">Tages-Notizen</label>
-            <div class="btn-group btn-group-sm">
+        
+        <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+            <label class="form-label small text-muted fw-bold text-uppercase m-0">
+                <i class="bi bi-journal-text me-1"></i> Tages-Notizen
+            </label>
+            
+            <button v-if="!isEditingNote" class="btn btn-sm btn-link text-muted p-0" @click="isEditingNote = true" title="Bearbeiten">
+                <i class="bi bi-pencil-square"></i>
+            </button>
+             <div v-else class="btn-group btn-group-sm animate-fade">
                 <button class="btn btn-light border" @click="insertMarkdown('bold', $event)" title="Fett"><i class="bi bi-type-bold"></i></button>
                 <button class="btn btn-light border" @click="insertMarkdown('italic', $event)" title="Kursiv"><i class="bi bi-type-italic"></i></button>
                 <button class="btn btn-light border" @click="insertMarkdown('list', $event)" title="Liste"><i class="bi bi-list-ul"></i></button>
                 <button class="btn btn-light border" @click="insertMarkdown('h3', $event)" title="Überschrift"><i class="bi bi-type-h3"></i></button>
             </div>
         </div>
-        <textarea class="form-control form-control-sm font-monospace" 
-                  rows="5" 
-                  v-model="dayComment" 
-                  placeholder="Unterstützt Markdown (*, **, -)" 
-                  @input="triggerAutoSave"></textarea>
-        
-        <div v-if="dayComment" class="mt-2 p-2 bg-body-tertiary rounded border markdown-preview" v-html="renderMarkdown(dayComment)"></div>
+
+        <div v-if="!isEditingNote" 
+             class="note-view-container" 
+             @click="isEditingNote = true">
+            
+            <div v-if="dayComment" class="markdown-preview" v-html="renderMarkdown(dayComment)"></div>
+            <div v-else class="note-placeholder small d-flex align-items-center gap-2">
+                <i class="bi bi-pen"></i> Hier klicken für Notizen...
+            </div>
+        </div>
+
+        <div v-else class="animate-fade">
+            <textarea class="form-control form-control-sm font-monospace mb-2" 
+                      rows="6" 
+                      ref="noteInput"
+                      v-model="dayComment" 
+                      placeholder="Unterstützt Markdown (*, **, -)" 
+                      @input="triggerAutoSave"
+                      @blur="/* Optional: Automatisch schließen beim Rausklicken */">
+            </textarea>
+            
+            <div v-if="dayComment" class="p-2 bg-body-tertiary rounded border markdown-preview mb-2" v-html="renderMarkdown(dayComment)"></div>
+
+            <button class="btn btn-sm btn-primary w-100" @click="isEditingNote = false">
+                <i class="bi bi-check-lg"></i> Fertig
+            </button>
+        </div>
+
     </div>
 </div>
 

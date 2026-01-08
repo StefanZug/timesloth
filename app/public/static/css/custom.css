@@ -239,27 +239,56 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
 .table-input-note:hover { border-color: var(--sloth-primary) !important; background-color: var(--bg-card); }
 .table-input-note:focus { border-color: var(--sloth-primary) !important; box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.15); }
 
-/* Markdown Styles */
-.markdown-preview { font-size: 0.9rem; line-height: 1.5; color: var(--text-main); white-space: pre-wrap; }
-
-/* FIX 1: Abstände bei Absätzen und Listen normalisieren */
-.markdown-preview p, .markdown-preview ul, .markdown-preview ol { margin-bottom: 0.5rem; }
-
-/* WICHTIG: Wenn ein Absatz IN einer Liste ist -> Kein Abstand nach unten */
-.markdown-preview li p { margin-bottom: 0; }
-.markdown-preview li { margin-bottom: 0.25rem; }
-
-/* FIX 2: Überschriften dezenter gestalten */
-.markdown-preview h1, .markdown-preview h2 { 
-    font-size: 1.1rem; font-weight: bold; margin-top: 0.75rem; margin-bottom: 0.25rem; 
-    border-bottom: 1px solid var(--border-color); /* H1/H2 behalten den Strich als Haupt-Titel */
+/* Markdown Styles & Note UI */
+.markdown-preview { 
+    font-size: 0.9rem; 
+    line-height: 1.5; 
+    color: var(--text-main); 
+    white-space: pre-wrap; 
 }
 
-/* H3 (###) bekommt KEINEN Strich mehr und ist etwas kleiner */
+/* FIX: Abstände in Listen radikal entfernen */
+.markdown-preview ul, .markdown-preview ol { 
+    margin-bottom: 0.5rem; 
+    padding-left: 1.2rem; 
+}
+.markdown-preview li { margin-bottom: 0.1rem; }
+.markdown-preview li p { margin: 0 !important; } /* Das ist der Killer-Fix für den großen Abstand */
+.markdown-preview p { margin-bottom: 0.5rem; }
+
+/* Überschriften */
+.markdown-preview h1, .markdown-preview h2 { 
+    font-size: 1.1rem; font-weight: bold; margin-top: 0.75rem; margin-bottom: 0.25rem; 
+    border-bottom: 1px solid var(--border-color); 
+}
 .markdown-preview h3 { 
-    font-size: 1rem; font-weight: bold; margin-top: 0.5rem; margin-bottom: 0.25rem; 
-    border-bottom: none; /* Strich entfernt! */
-    text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); /* Optional: Etwas "Label"-artiger */
+    font-size: 0.9rem; font-weight: bold; margin-top: 0.5rem; margin-bottom: 0.25rem; 
+    text-transform: uppercase; color: var(--text-muted); border-bottom: none;
+}
+
+/* Neuer View-Mode Container */
+.note-view-container {
+    min-height: 60px;
+    padding: 10px;
+    border: 1px solid transparent;
+    border-radius: var(--sloth-radius);
+    cursor: text;
+    transition: background 0.2s, border-color 0.2s;
+}
+.note-view-container:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+.note-placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+    opacity: 0.7;
+}
+textarea.font-monospace {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
+    line-height: 1.5;
+    background-color: var(--bg-card);
+    color: var(--text-main);
 }
 
 /* Calendar Grid */

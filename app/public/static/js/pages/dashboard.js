@@ -5,6 +5,7 @@ createApp({
     data() {
         return {
             isDesktop: window.innerWidth >= 992,
+            isEditingNote: false,
             currentDateObj: new Date(),
             viewMode: localStorage.getItem('viewMode') || 'day',
             dayStatus: null,
