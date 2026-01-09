@@ -12,7 +12,7 @@ createApp({
             stats: { db_size_bytes: 0, count_entries: 0, count_logs: 0 },
             loading: false,
             
-            newUser: { username: '', password: '', is_admin: false },
+            newUser: { username: '', password: '', is_admin: false, is_cats_user: false },
             newHoliday: { date: '', name: '' }
         }
     },
@@ -77,8 +77,6 @@ createApp({
             } catch(e) { alert("Fehler"); }
         },
 
-        // HIER WAR DER FEHLER: Die leere fetchStats() wurde gelöscht!
-
         async fetchUserLogs(user) {
             if(user.logs) return;
             user.loadingLogs = true;
@@ -122,6 +120,41 @@ createApp({
                 await axios.delete(`/admin/holiday/${id}`);
                 location.reload();
             } catch(e) { alert("Fehler"); }
+        },
+
+        // NEU: Methode für den Switch im Accordion
+        async toggleCats(u) {
+            try {
+                // Wir senden den Request
+                await axios.post(`/admin/toggle_cats/${u.id}`);
+                // UI aktualisieren (invertieren), damit der Switch Feedback gibt
+                u.is_cats_user = !u.is_cats_user;
+            } catch(e) { 
+                alert("Fehler beim Speichern der Berechtigung");
+                // Bei Fehler Switch zurücksetzen (optional, aber sauber)
+                location.reload();
+            }
+        },
+
+        async toggleAdmin(u) {
+            // Optimistisches UI-Update verhindern, wenn man es selbst ist
+            // (Falls du die User-ID irgendwo im JS hast, hier prüfen)
+            
+            if (!confirm(`Soll der User ${u.username} wirklich ${u.is_admin ? 'Rechte verlieren' : 'Admin werden'}?`)) {
+                // Checkbox zurücksetzen durch Neuladen oder manuell
+                location.reload(); 
+                return;
+            }
+
+            try {
+                await axios.post(`/admin/toggle_admin/${u.id}`);
+                // Erfolg: Status im lokalen Objekt umkehren
+                u.is_admin = !u.is_admin; 
+            } catch(e) { 
+                // Fehler anzeigen (z.B. "Du kannst dir selbst nicht die Rechte nehmen")
+                alert(e.response?.data?.error || "Fehler beim Speichern");
+                location.reload(); // Zustand zurücksetzen
+            }
         }
     },
     mounted() {

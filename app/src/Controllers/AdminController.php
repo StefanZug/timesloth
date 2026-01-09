@@ -60,4 +60,41 @@ class AdminController extends BaseController {
     public function cleanup() {
         $this->json($this->adminService->clearOldLogs());
     }
+
+    public function toggleAdmin($id) {
+        $this->ensureAdmin();
+        
+        // SICHERHEIT: Sich selbst die Rechte nehmen verbieten
+        if ($id == $_SESSION['user']['id']) {
+            $this->jsonResponse(['error' => 'Du kannst dir nicht selbst die Admin-Rechte entziehen.'], 400);
+            return;
+        }
+
+        $userRepo = new UserRepository();
+        $userRepo->toggleAdmin($id);
+        $this->jsonResponse(['success' => true]);
+    }
+
+    // NEU
+    public function toggleCats($id) {
+        $this->ensureAdmin(); // Sicherheitscheck
+        $userRepo = new UserRepository();
+        $userRepo->toggleCats($id);
+        $this->jsonResponse(['success' => true]);
+    }
+    
+    // UPDATE create_user (um den neuen Parameter aufzunehmen)
+    public function createUser() {
+        $this->ensureAdmin();
+        $data = $this->getJsonInput();
+        
+        // ... Validierung ...
+        
+        $userRepo = new UserRepository();
+        // Hier den neuen Parameter is_cats_user übergeben
+        $isCats = !empty($data['is_cats_user']); 
+        $userRepo->create($data['username'], password_hash($data['password'], PASSWORD_BCRYPT), $data['is_admin'], $isCats);
+        
+        $this->jsonResponse(['success' => true]);
+    }
 }

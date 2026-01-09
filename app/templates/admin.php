@@ -115,6 +115,38 @@
                                         <i class="bi bi-trash"></i> Löschen
                                     </button>
                                 </div>
+
+                                <div class="bg-body p-3 rounded border mb-3 d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <strong class="d-block"><i class="bi bi-shield-lock-fill text-danger"></i> Administrator</strong>
+                                        <span class="text-muted small">Vollzugriff auf alle Einstellungen</span>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" style="cursor: pointer;" 
+                                               :checked="u.is_admin == 1" 
+                                               :disabled="u.id === currentUser.id"
+                                               @change="toggleAdmin(u)">
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-body p-3 rounded border mb-3 d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <strong class="d-block"><i class="bi bi-github text-warning"></i> CATSloth Zugriff</strong>
+                                        <span class="text-muted small">Darf User Zeiterfassung (CATS) nutzen?</span>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" style="cursor: pointer;" 
+                                               :checked="u.is_cats_user == 1" 
+                                               @change="toggleCats(u)">
+                                    </div>
+                                </div>
+
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" v-model="newUser.is_cats_user">
+                                    <label class="form-check-label">
+                                        <i class="bi bi-github text-warning"></i> CATSloth User
+                                    </label>
+                                </div>
                                 <div v-else class="text-muted small text-center fst-italic">
                                     Du kannst dich nicht selbst bearbeiten.
                                 </div>

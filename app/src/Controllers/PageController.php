@@ -30,4 +30,16 @@ class PageController extends BaseController {
         
         $this->render('admin', ['user' => $_SESSION['user'], 'users' => $users, 'holidays' => $holidays]);
     }
+
+    // --- NEU: CATSloth ---
+    public function catsDashboard() {
+        // Auth Check: Nur wenn CATS berechtigt
+        if (empty($_SESSION['user']['is_cats_user'])) {
+            header('Location: /'); 
+            exit;
+        }
+
+        // Wir nutzen render(), das erledigt das base.php Include automatisch
+        $this->render('cats_dashboard', ['user' => $_SESSION['user']]);
+    }
 }

@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.2.0 (The CATSloth Update)
+
+### Hinzugefügt
+- **CATSloth Modul:** Ein komplett neues Modul für die kaufmännische Projekt-Zeiterfassung (Cross Application Time Sheet).
+    - **Projekte:** Erstellen und Verwalten von SAP-basierten Projekten (PSP-Elemente, Budgets).
+    - **Team-Management:** Dynamische Zuweisung von Usern zu Projekten mit gewichteten Anteilen ("Shares").
+    - **Zeitraum-Logik:** Berücksichtigung von Ein- und Austrittsdaten (User zählt erst ab Beitrittsmonat zum Team).
+    - **Matrix-Ansicht:** Jahresübersicht aller Monate und Mitarbeiter ("Excel-Style") für schnelle Eingaben.
+    - **Transparenz:** "Offene Küche"-Prinzip – Berechtigte User sehen alle Projekte und können für Kollegen buchen.
+- **Admin Features:**
+    - Neuer Switch im Admin-Panel: User zu Administratoren befördern/degradieren (mit Selbstschutz).
+    - Neuer Switch im Admin-Panel: User für CATSloth berechtigen.
+- **Backend Architektur:**
+    - Neuer `CatsCalculationService` zur Kapselung der komplexen Budget-Verteilungs-Logik.
+    - Neue API-Endpunkte unter `/api/cats/*`.
+
+### Geändert
+- **Datenbank:**
+    - Erweiterung der `users` Tabelle um `is_cats_user`.
+    - Neue Tabellen: `cats_projects`, `cats_allocations`, `cats_bookings`.
+    - Optimierung der Lösch-Regeln (`ON DELETE`): TimeSloth-Daten werden bei User-Löschung entfernt, CATS-Finanzdaten bleiben anonymisiert erhalten.
+- **Frontend:**
+    - Admin-Panel UI überarbeitet (Switches im Accordion).
+    - Navigation um das CATSloth-Logo (Katze) erweitert.
+
+### Technisch
+- Einführung von Vue.js Delimiters `[[ ]]` in CATS-Templates zur Vermeidung von Konflikten mit PHP-Tags.
+- Striktere Trennung von Controller-Logik und Template-Rendering.
+
+---
+
 ## 0.1.9 (The Refactoring 3.0)
 **Architecture & Code Quality:**
 - **Controller Pattern:** Einführung einer MVC-ähnlichen Struktur. Die Logik wurde aus der monolithischen `api.php` und `index.php` in dedizierte Controller (`ApiController`, `PageController`, `AdminController`, `AuthController`) verschoben.
@@ -12,7 +43,6 @@
 - **Konsistenz:** Vereinheitlichung von Abständen und Farben durch zentrale CSS-Variablen.
 
 ---
-
 
 ## 0.1.8 (The Notes Update)
 **Features:**

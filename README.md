@@ -7,10 +7,21 @@ TimeSloth ist ein spezialisiertes Zeiterfassungstool, optimiert für komplexe Gl
 
 ⚠️ **Zweck:** Es dient als Planungshilfe zur Kontrolle der Büro-Anwesenheit (Office Quota). Es ersetzt kein SAP, sondern hilft, das SAP-Ziel (Quote) zu erreichen.
 
+Das System besteht aus zwei Hauptmodulen:
+1. TimeSloth: Klassische Arbeitszeiterfassung (Kommen/Gehen).
+2. CATSloth: Kaufmännische Projektzeiterfassung und Budget-Verteilung (v0.2.0+).
+
 ---
 
-## 🚀 Features
+## ✨ Features
 
+# 🕒 TimeSloth (Core)
+Das Herzstück für die tägliche Anwesenheit.
+
+* **One-Click Stempeln:** Einfaches Erfassen von "Kommen", "Gehen" und "Pause".
+* **Monatsübersicht:** Kalenderansicht mit Arbeitszeiten und Pausen.
+* **Urlaubsverwaltung:** Integration von Feiertagen und Abwesenheiten.
+* **Datensparsamkeit:** Löscht man einen User, verschwinden auch alle seine Bewegungsprofile (DSGVO-freundlich).
 * **Responsive Design:** "Mobile First" für Unterwegs, plus mächtiges 3-Spalten-Cockpit für den Desktop.
 * **Smart Input:** Unterstützt Eingaben wie 0800, 8, 08:00. Das UI wurde auf HH:mm optimiert.
 * **Live Prognose:** Zeigt im Dashboard an, wann man gehen darf (Soll) und wann man gehen muss (10h Limit).
@@ -19,6 +30,15 @@ TimeSloth ist ein spezialisiertes Zeiterfassungstool, optimiert für komplexe Gl
 * **Markdown Notizen:** Tages-Notizen und Status-Infos unterstützen Markdown-Formatierung.
 * **Überstundenpauschale:** Automatische Verrechnung einer monatlichen Pauschale (z.B. 10h) vor dem Gleitzeit-Aufbau.
 * **Admin Panel:** Verwaltung von Usern und globalen Feiertagen.
+
+# 🐱 CATSloth (Projekt-Abrechnung)
+Neu in v0.2.0 - Das Modul für interne Verrechnung und SAP-basierte Projekte.
+
+* **Projekte & Budgets:** Verwalten von PSP-Elementen, Aufgaben und Jahresbudgets.
+* **Team-Matrix:** "Excel-Style" Ansicht für den schnellen Monatsabschluss im Team.
+* **Dynamische Anteile:** User können mit Gewichtung (z.B. 50% oder Faktor 1.5) Projekten zugewiesen werden.
+* **Zeitraum-Logik:** Mitarbeiter zählen nur in den Monaten zum Team, in denen sie tatsächlich dabei waren (Eintritts-/Austrittsdatum).
+* **Offene Küche:** Transparente Ansicht – Jeder berechtigte User kann für das Team buchen (z.B. im Meeting).
 
 ---
 
@@ -53,7 +73,7 @@ User können eine monatliche Pauschale (z.B. 10h) hinterlegen.
 
 ---
 
-## 🛠 Tech Stack & Architektur
+## 🛠️ Tech Stack & Architektur
 
 TimeSloth nutzt einen modernen, leichtgewichtigen PHP-Stack mit MVC-ähnlicher Architektur.
 
@@ -66,24 +86,26 @@ TimeSloth nutzt einen modernen, leichtgewichtigen PHP-Stack mit MVC-ähnlicher A
 
 ```
 /app
-  /src
-    /Controllers     # Steuerung (Auth, Api, Page, Admin)
-    /Services        # Geschäftslogik & DB-Queries (EntryService, UserService...)
-    /Router.php      # Zentraler Request-Verteiler
-    /db.php          # Datenbank-Verbindung
-  /templates         # PHP Views
-    /partials        # Wiederverwendbare Komponenten (Dashboard Widgets)
-  /public
-    /static
-      /js            # Vue.js Applikation & Core Logic
-      /css           # Custom Styling (Variables, Theming)
-    index.php        # Entry Point
+  /src
+    /Controllers        # Steuerung (Auth, Api, Page, Admin, Cats)
+    /Services           # Geschäftslogik (EntryService, UserService, CatsCalculationService...)
+    /Repositories       # Datenbank-Zugriff (CatsRepository, UserRepository...)
+    /Router.php         # Zentraler Request-Verteiler
+    /Database.php       # Datenbank-Verbindung (Singleton)
+  /templates            # PHP Views
+    /partials           # Wiederverwendbare Komponenten (Dashboard Widgets)
+    cats_dashboard.php  # CATS Frontend
+  /public
+    /static
+      /js               # Vue.js Applikation (TimeLogic.js, cats.js)
+      /css              # Custom Styling (Variables, Theming)
+    index.php           # Entry Point
 ```
 
 ### Datenfluss
 1. **Request:** Alle Anfragen gehen zentral an `index.php`, welche den `Router.php` initialisiert.
-2. **Routing:** Der Router analysiert die URL und ruft den passenden Controller (z.B. `ApiController`, `PageController`) auf.
-3. **Logic:** Der Controller nutzt Services (z.B. `EntryService`), um Geschäftslogik auszuführen oder Datenbankabfragen zu tätigen.
+2. **Routing:** Der Router analysiert die URL und ruft den passenden Controller (z.B. `ApiController`, `PageController`, `CatsController`) auf.
+3. **Logic:** Der Controller nutzt Services (z.B. `EntryService` oder `CatsCalculationService`), um Geschäftslogik auszuführen oder Datenbankabfragen zu tätigen.
 4. **Response:** Der Controller gibt das Ergebnis zurück – entweder als JSON-Daten (API) oder als gerenderte HTML-View (Frontend).
 
 ---
@@ -92,6 +114,7 @@ TimeSloth nutzt einen modernen, leichtgewichtigen PHP-Stack mit MVC-ähnlicher A
 
 **Table `users`**
 * `id`, `username`, `password_hash`, `is_admin`, `is_active`
+* `is_cats_user` -> Berechtigung für das CATSloth Modul.
 * `settings` (JSON) -> Enthält `percent`, `sollStunden`, `vacationDays`, `overtimeFlatrate` etc.
 * `pw_last_changed` -> Zeitstempel der letzten Passwortänderung.
 
@@ -101,6 +124,23 @@ TimeSloth nutzt einen modernen, leichtgewichtigen PHP-Stack mit MVC-ähnlicher A
 * `status` ('F', 'U', 'K')
 * `comment` (Tages-Notiz, Markdown support)
 * `status_note` (Kurznotiz zum Status, z.B. "Urlaub: Kroatien")
+
+**Table `cats_projects`**
+* `id`, `psp_element`, `customer_name`
+* `task_name` (PS-Aufgabe), `subtask`
+* `yearly_budget_hours`, `start_date`, `end_date`
+* Stammdaten der Projekte. Ersteller wird bei Löschung auf NULL gesetzt.
+
+**Table `cats_allocations`**
+* `project_id`, `user_id`
+* `share_weight` (Gewichtung der Anteile, Default 1.0)
+* `joined_at`, `left_at`(Zeitraum der Projektzugehörigkeit für exakte Berechnung)
+* Verknüpft User mit Projekten.
+
+**Table `cats_bookings`**
+* `project_id`, `user_id`, `month` (YYYY-MM)
+* `hours` (Gebuchte Stunden)
+* Finanzdaten bleiben erhalten (`ON DELETE SET NULL`), auch wenn der User gelöscht wird.
 
 **Table `global_holidays`**
 * `id`, `date_str`, `name`

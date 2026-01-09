@@ -50,8 +50,28 @@ class UserRepository {
         return $stmt->execute([$userId]);
     }
 
+    // Admin-Status umschalten
+    public function toggleAdmin($userId) {
+        // Schutz: Verhindern, dass man den letzten Admin löscht?
+        // Fürs erste reicht es, den Status einfach zu toggeln.
+        $stmt = $this->db->prepare("UPDATE users SET is_admin = CASE WHEN is_admin = 1 THEN 0 ELSE 1 END WHERE id = ?");
+        return $stmt->execute([$userId]);
+    }
+
     public function updatePassword($userId, $hash) {
         $stmt = $this->db->prepare("UPDATE users SET password_hash = ?, pw_last_changed = CURRENT_TIMESTAMP WHERE id = ?");
         return $stmt->execute([$hash, $userId]);
+    }
+
+    // NEU: CATS Status umschalten (wie toggleActive)
+    public function toggleCats($userId) {
+        $stmt = $this->db->prepare("UPDATE users SET is_cats_user = CASE WHEN is_cats_user = 1 THEN 0 ELSE 1 END WHERE id = ?");
+        return $stmt->execute([$userId]);
+    }
+
+    // UPDATE: Create Methode erweitern
+    public function create($username, $hash, $isAdmin, $isCatsUser = 0) { // Neuer Parameter
+        $stmt = $this->db->prepare("INSERT INTO users (username, password_hash, is_admin, is_cats_user, pw_last_changed) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)");
+        return $stmt->execute([$username, $hash, $isAdmin ? 1 : 0, $isCatsUser ? 1 : 0]);
     }
 }

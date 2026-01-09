@@ -43,6 +43,30 @@ $router->post('/admin/holiday', 'AdminController', 'addHoliday', true, true);
 $router->delete('/admin/holiday/(\d+)', 'AdminController', 'deleteHoliday', true, true);
 $router->get('/admin/stats', 'AdminController', 'stats', true, true);
 $router->post('/admin/cleanup', 'AdminController', 'cleanup', true, true);
+$router->post('/admin/toggle_admin/(\d+)', 'AdminController', 'toggleAdmin', true, true);
+$router->post('/admin/toggle_cats/(\d+)', 'AdminController', 'toggleCats', true, true);
+
+// --- CATSloth Frontend ---
+// Ruft PageController->catsDashboard() auf. 
+// "true" am Ende bedeutet: Nur eingeloggte User (Protected).
+$router->get('/cats', 'PageController', 'catsDashboard', true);
+
+// --- CATSloth API (JSON) ---
+// Zugriff auf Projekte
+$router->get('/api/cats/projects', 'CatsController', 'index', true);
+$router->get('/api/cats/project/(\d+)', 'CatsController', 'show', true); // Regex für ID
+$router->post('/api/cats/project', 'CatsController', 'create', true);
+$router->post('/api/cats/project/(\d+)', 'CatsController', 'update', true);
+$router->delete('/api/cats/project/(\d+)', 'CatsController', 'delete', true);
+
+// Zugriff auf Team & Zuweisung
+$router->post('/api/cats/allocation', 'CatsController', 'saveAllocation', true);
+$router->delete('/api/cats/allocation', 'CatsController', 'deleteAllocation', true);
+
+// Zugriff auf Buchungen
+$router->post('/api/cats/booking', 'CatsController', 'saveBooking', true);
+
+$router->get('/api/cats/users', 'CatsController', 'getUsers', true);
 
 // 4. Run
 $router->run();
