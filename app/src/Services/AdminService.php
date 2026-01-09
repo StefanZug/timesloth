@@ -9,10 +9,9 @@ class AdminService {
         $this->userRepo = new UserRepository();
         $this->logRepo = new LogRepository();
         $this->holidayRepo = new HolidayRepository();
-        $this->db = Database::getInstance(); // Für DB-Größe Check
+        $this->db = Database::getInstance();
     }
 
-    // KORRIGIERT: Parameter $isCatsUser hinzugefügt
     public function createUser($username, $plainPassword, $isAdmin, $isCatsUser = false) {
         if (empty($username) || empty($plainPassword)) {
             throw new Exception("Username und Passwort sind Pflichtfelder.");
@@ -41,7 +40,6 @@ class AdminService {
         return $this->userRepo->toggleActive($userId);
     }
 
-    // NEU: Logik aus Controller hierher verschoben
     public function toggleAdmin($userId, $currentAdminId) {
         if ($userId == $currentAdminId) {
             throw new Exception("Du kannst dir nicht selbst die Admin-Rechte entziehen.");
@@ -49,23 +47,19 @@ class AdminService {
         return $this->userRepo->toggleAdmin($userId);
     }
 
-    // NEU
     public function toggleCats($userId) {
         return $this->userRepo->toggleCats($userId);
     }
 
     public function resetUserPassword($userId) {
-        // Generiert ein zufälliges 8-Zeichen Passwort
         $newPw = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 8);
         $hash = password_hash($newPw, PASSWORD_BCRYPT);
-        
         $this->userRepo->updatePassword($userId, $hash);
-        
         return ['new_password' => $newPw];
     }
 
     public function getUserLogs($userId) {
-        return $this->logRepo->findByUser($userId, 10);
+        return $this->logRepo->getLatestByUser($userId, 10);
     }
 
     public function addHoliday($date, $name) {
@@ -80,14 +74,18 @@ class AdminService {
         $dbFile = DB_PATH; 
         $size = file_exists($dbFile) ? filesize($dbFile) : 0;
         
+        // FIX: Echte Zählung statt 0
+        $entryCount = (new EntryRepository())->count();
+        
         return [
             'db_size_bytes' => $size,
-            'count_entries' => 0, // Falls EntryRepo vorhanden: (new EntryRepository())->count()
+            'count_entries' => $entryCount,
             'count_logs' => $this->logRepo->count()
         ];
     }
 
     public function clearOldLogs() {
-        return $this->logRepo->clearOlderThan(30);
+        // FIX: Korrekter Methodenname (cleanupOldLogs statt clearOlderThan)
+        return $this->logRepo->cleanupOldLogs(30);
     }
 }

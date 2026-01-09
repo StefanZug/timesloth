@@ -49,6 +49,17 @@
             </div>
             
             <div class="d-flex align-items-center gap-3">
+                
+                <?php if (!empty($_SESSION['user']['is_cats_user'])): ?>
+                    <a href="/cats" class="btn btn-sm btn-outline-warning d-none d-md-flex align-items-center gap-2 fw-bold border-opacity-50" title="Zum CATSloth Dashboard">
+                        <i class="bi bi-github"></i>
+                        CATS
+                    </a>
+                    <a href="/cats" class="btn btn-sm btn-outline-warning d-flex d-md-none align-items-center justify-content-center border-opacity-50" style="width: 32px; height: 32px; padding: 0;">
+                        <i class="bi bi-github"></i>
+                    </a>
+                <?php endif; ?>
+
                 <div class="dropdown">
                     <div class="avatar-circle cursor-pointer" data-bs-toggle="dropdown">
                         <?= strtoupper(substr($_SESSION['user']['username'], 0, 1)) ?>
@@ -56,6 +67,11 @@
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                         <li><h6 class="dropdown-header">Hallo <?= htmlspecialchars($_SESSION['user']['username']) ?></h6></li>
                         <li><a class="dropdown-item" href="/settings">⚙️ Einstellungen</a></li>
+                        
+                        <?php if (!empty($_SESSION['user']['is_cats_user'])): ?>
+                            <li><a class="dropdown-item" href="/cats">🐱 CATSloth</a></li>
+                        <?php endif; ?>
+                        
                         <?php if (!empty($_SESSION['user']['is_admin'])): ?>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/admin">🛡️ Admin Panel</a></li>

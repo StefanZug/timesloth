@@ -125,7 +125,7 @@
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" style="cursor: pointer;" 
                                                :checked="u.is_admin == 1" 
-                                               :disabled="u.id === currentUser.id"
+                                               :disabled="u.id === currentUserId"
                                                @change="toggleAdmin(u)">
                                     </div>
                                 </div>
