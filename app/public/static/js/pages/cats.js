@@ -5,7 +5,7 @@ createApp({
     data() {
         return {
             projects: [],
-            allUsers: [], // Für das Dropdown im Modal
+            allUsers: [], 
             selectedProjectId: null,
             currentProject: null,
             year: new Date().getFullYear(),
@@ -19,14 +19,18 @@ createApp({
                 subtask: '',
                 info: '',
                 start_date: new Date().toISOString().slice(0, 10),
-                end_date: new Date(new Date().getFullYear(), 11, 31).toISOString().slice(0, 10), // Ende des Jahres
+                end_date: new Date(new Date().getFullYear(), 11, 31).toISOString().slice(0, 10),
                 yearly_budget_hours: 0
             },
             newAllocation: {
                 user_id: null,
                 share_weight: 1.0,
-                joined_at: new Date().toISOString().slice(0, 10)
+                joined_at: new Date().toISOString().slice(0, 10),
+                left_at: null
             },
+            
+            // UI State
+            isEditingAllocation: false, // Damit wir wissen, ob wir editieren oder neu anlegen
             
             // Bootstrap Modal Instanzen
             projectModalInstance: null,
@@ -37,18 +41,21 @@ createApp({
         budgetColor() {
             if (!this.currentProject) return '';
             const left = this.currentProject.budget_left;
-            if (left < 0) return 'text-danger';
+            if (left < 0) return 'text-danger'; // oder 'cats-budget-crit' aus custom.css
             if (left < 20) return 'text-warning';
             return 'text-success';
         }
     },
     mounted() {
         this.loadProjects();
-        this.loadAllUsers(); // Laden wir im Hintergrund für das Modal
+        this.loadAllUsers();
         
-        // Modal Instanzen initialisieren
-        this.projectModalInstance = new bootstrap.Modal(document.getElementById('projectModal'));
-        this.allocationModalInstance = new bootstrap.Modal(document.getElementById('allocationModal'));
+        // Modal Instanzen initialisieren (Safety Check, falls HTML noch lädt)
+        const pModalEl = document.getElementById('projectModal');
+        const aModalEl = document.getElementById('allocationModal');
+        
+        if (pModalEl) this.projectModalInstance = new bootstrap.Modal(pModalEl);
+        if (aModalEl) this.allocationModalInstance = new bootstrap.Modal(aModalEl);
     },
     methods: {
         async loadProjects() {
@@ -62,12 +69,11 @@ createApp({
 
         async loadAllUsers() {
             try {
-                // HIER ist die Zeile, die angepasst werden muss:
+                // Holt simple User-Liste (ID, Username) für Dropdowns
                 const res = await axios.get('/api/cats/users'); 
-                
                 this.allUsers = res.data;
             } catch (e) {
-                console.warn("Konnte User-Liste nicht laden.");
+                console.warn("Konnte User-Liste nicht laden.", e);
             }
         },
 
@@ -84,6 +90,7 @@ createApp({
             }
         },
 
+        // --- BUCHUNGEN ---
         isEligible(user, monthInt) {
             const m = this.pad(monthInt);
             return user.monthly_data[m] && user.monthly_data[m].is_eligible; 
@@ -91,7 +98,9 @@ createApp({
 
         async saveBooking(user, monthInt) {
             const mStr = `${this.year}-${this.pad(monthInt)}`;
-            const hours = parseFloat(user.monthly_data[this.pad(monthInt)].used) || 0;
+            // Falls Input leer/invalid ist, nehmen wir 0
+            let val = user.monthly_data[this.pad(monthInt)].used;
+            const hours = val === '' ? 0 : parseFloat(val);
 
             try {
                 await axios.post('/api/cats/booking', {
@@ -106,7 +115,7 @@ createApp({
             }
         },
 
-        // --- PROJEKT ERSTELLEN ---
+        // --- PROJEKT STEUERUNG ---
         openNewProjectModal() {
             this.projectModalInstance.show();
         },
@@ -115,10 +124,12 @@ createApp({
             try {
                 const res = await axios.post('/api/cats/project', this.newProject);
                 this.projectModalInstance.hide();
-                // Reset Form
+                
+                // Form Reset
                 this.newProject.psp_element = '';
                 this.newProject.customer_name = '';
-                // Reload & Select
+                // ... (weitere Felder bei Bedarf resetten)
+
                 await this.loadProjects();
                 this.selectedProjectId = res.data.id;
                 this.loadProject();
@@ -128,51 +139,74 @@ createApp({
                 this.loading = false;
             }
         },
+        
+        async deleteProject() {
+            if (!this.currentProject) return;
+            const confirmMsg = `ACHTUNG: Soll das Projekt "${this.currentProject.project_info.customer_name}" wirklich gelöscht werden?\n\nAlle Zuweisungen und gebuchten Stunden werden unwiderruflich entfernt!`;
+            
+            if (!confirm(confirmMsg)) return;
+            
+            this.loading = true;
+            try {
+                await axios.delete(`/api/cats/project/${this.selectedProjectId}`);
+                this.currentProject = null;
+                this.selectedProjectId = null;
+                await this.loadProjects();
+            } catch (e) {
+                alert("Fehler beim Löschen: " + e.message);
+            } finally {
+                this.loading = false;
+            }
+        },
 
-        // --- TEAM MANAGEMENT ---
+        // --- TEAM / ALLOCATION ---
         openAllocationModal() {
-            // User-Liste laden falls noch nicht geschehen
-            if(this.allUsers.length === 0) this.loadAllUsers();
+            // Reset für "Neu"
+            this.isEditingAllocation = false;
+            this.newAllocation = {
+                user_id: null,
+                share_weight: 1.0,
+                joined_at: this.currentProject?.project_info?.start_date || new Date().toISOString().slice(0, 10),
+                left_at: null
+            };
             this.allocationModalInstance.show();
         },
+        
+        openEditAllocation(user) {
+            // Modus "Bearbeiten"
+            this.isEditingAllocation = true;
+            this.newAllocation = {
+                user_id: user.user_id,
+                share_weight: user.share_weight,
+                joined_at: user.joined_at,
+                left_at: user.left_at
+            };
+            this.allocationModalInstance.show();
+        },
+
         async addAllocation() {
             if (!this.newAllocation.user_id) return;
             try {
+                // Upsert Logik im Backend (Insert or Update)
                 await axios.post('/api/cats/allocation', {
                     project_id: this.selectedProjectId,
                     ...this.newAllocation
                 });
-                // Reload Project Data (um die Tabelle im Hintergrund zu aktualisieren)
-                await this.loadProject();
-                // Reset Inputs (aber Datum behalten)
-                this.newAllocation.user_id = null;
-                this.newAllocation.share_weight = 1.0;
+                
+                this.allocationModalInstance.hide();
+                await this.loadProject(); // Reload nötig für Neuberechnung der Tabelle
             } catch (e) {
-                alert("Fehler beim Hinzufügen: " + e.message);
+                alert("Fehler beim Speichern: " + e.message);
             }
         },
-        async updateAllocation(member) {
-            try {
-                await axios.post('/api/cats/allocation', {
-                    project_id: this.selectedProjectId,
-                    user_id: member.user_id,
-                    share_weight: member.share_weight,
-                    joined_at: member.joined_at,
-                    left_at: member.left_at
-                });
-                // Kein Full Reload nötig, UI ist schon aktuell durch v-model
-                this.recalcTotals(); // Trigger Neuberechnung Budget
-            } catch (e) {
-                alert("Fehler beim Update: " + e.message);
-            }
-        },
-        async removeAllocation(member) {
-            if(!confirm(`Soll ${member.username} wirklich aus dem Projekt entfernt werden?`)) return;
+
+        async removeAllocation(user) {
+            if(!confirm(`Soll ${user.username} wirklich aus dem Projekt entfernt werden?`)) return;
             try {
                 await axios.delete('/api/cats/allocation', {
-                    data: { // Axios DELETE body workaround
+                    data: { 
                         project_id: this.selectedProjectId,
-                        user_id: member.user_id
+                        user_id: user.user_id
                     }
                 });
                 await this.loadProject();
@@ -196,6 +230,7 @@ createApp({
             }, 0);
         },
         recalcTotals() {
+            // Client-Side Recalculation für flüssiges UI beim Tippen
             let totalUsed = 0;
             this.currentProject.team_stats.forEach(user => {
                 let userSum = 0;
@@ -204,7 +239,7 @@ createApp({
                 totalUsed += userSum;
             });
             this.currentProject.budget_used = totalUsed;
-            this.currentProject.budget_left = this.currentProject.budget_yearly - totalUsed;
+            this.currentProject.budget_left = this.currentProject.project_info.yearly_budget_hours - totalUsed;
         }
     }
 });

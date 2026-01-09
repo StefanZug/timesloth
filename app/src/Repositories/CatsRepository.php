@@ -8,10 +8,9 @@ class CatsRepository {
         $this->pdo = Database::getInstance()->getConnection();
     }
 
-    // --- PROJEKTE (Offene Küche: Alle sehen alles) ---
+    // ... (Andere Methoden bleiben gleich, hier nur der Fix für deleteProject) ...
 
     public function getAllProjects() {
-        // Sortiert nach Startdatum, damit aktuelle Projekte oben stehen
         $stmt = $this->pdo->query("SELECT * FROM cats_projects ORDER BY start_date DESC");
         return $stmt->fetchAll();
     }
@@ -29,15 +28,10 @@ class CatsRepository {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
-            $data['psp_element'], 
-            $data['task_name'], 
-            $data['subtask'], 
-            $data['customer_name'], 
-            $data['info'], 
-            $data['start_date'], 
-            $data['end_date'], 
-            $data['yearly_budget_hours'], 
-            $creatorId
+            $data['psp_element'], $data['task_name'], $data['subtask'], 
+            $data['customer_name'], $data['info'], 
+            $data['start_date'], $data['end_date'], 
+            $data['yearly_budget_hours'], $creatorId
         ]);
         return $this->pdo->lastInsertId();
     }
@@ -58,15 +52,28 @@ class CatsRepository {
     }
     
     public function deleteProject($id) {
-        // Cascade kümmert sich um Allocations und Bookings
-        $stmt = $this->pdo->prepare("DELETE FROM cats_projects WHERE id = ?");
-        $stmt->execute([$id]);
+        // Manuelle Bereinigung, falls Foreign Keys in SQLite deaktiviert sind
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare("DELETE FROM cats_bookings WHERE project_id = ?");
+            $stmt->execute([$id]);
+            
+            $stmt = $this->pdo->prepare("DELETE FROM cats_allocations WHERE project_id = ?");
+            $stmt->execute([$id]);
+            
+            $stmt = $this->pdo->prepare("DELETE FROM cats_projects WHERE id = ?");
+            $stmt->execute([$id]);
+            
+            $this->pdo->commit();
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
     }
 
-    // --- TEAMS & ZUWEISUNGEN (Mit Zeiträumen) ---
-
+    // ... (Restliche Methoden für Allocations und Bookings unverändert lassen) ...
+    
     public function getProjectAllocations($projectId) {
-        // Holt alle User, die jemals dem Projekt zugeordnet waren
         $stmt = $this->pdo->prepare("
             SELECT u.id as user_id, u.username, u.is_active, 
                    a.share_weight, a.joined_at, a.left_at
@@ -80,8 +87,6 @@ class CatsRepository {
     }
 
     public function upsertAllocation($projectId, $userId, $weight, $joinedAt, $leftAt = null) {
-        // Upsert für SQLite: Fügt hinzu oder aktualisiert bestehende Zuweisung
-        // WICHTIG: joined_at ist Pflicht, left_at kann NULL sein
         $stmt = $this->pdo->prepare("
             INSERT INTO cats_allocations (project_id, user_id, share_weight, joined_at, left_at)
             VALUES (?, ?, ?, ?, ?)
@@ -98,8 +103,6 @@ class CatsRepository {
         $stmt->execute([$projectId, $userId]);
     }
 
-    // --- BUCHUNGEN ---
-
     public function getBookingsForYear($projectId, $year) {
         $stmt = $this->pdo->prepare("
             SELECT user_id, month, hours 
@@ -112,11 +115,9 @@ class CatsRepository {
 
     public function saveBooking($projectId, $userId, $month, $hours) {
         if ($hours <= 0) {
-            // 0 Stunden = Eintrag löschen, um DB sauber zu halten
             $this->deleteBooking($projectId, $userId, $month);
             return;
         }
-
         $stmt = $this->pdo->prepare("
             INSERT INTO cats_bookings (project_id, user_id, month, hours)
             VALUES (?, ?, ?, ?)

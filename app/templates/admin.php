@@ -91,6 +91,7 @@
                                     </div>
                                     <div v-else class="text-muted small fst-italic py-1">Keine Logins gefunden.</div>
                                 </div>
+
                                 <div v-if="u.temp_password" class="alert alert-success d-flex align-items-center justify-content-between mt-3 mb-3 animate-fade">
                                     <div class="overflow-hidden">
                                         <small class="d-block text-success-emphasis fw-bold text-xs">NEUES PASSWORT</small>
@@ -116,7 +117,7 @@
                                     </button>
                                 </div>
 
-                                <div class="bg-body p-3 rounded border mb-3 d-flex align-items-center justify-content-between">
+                                <div class="bg-body p-3 rounded border mb-3 mt-3 d-flex align-items-center justify-content-between">
                                     <div>
                                         <strong class="d-block"><i class="bi bi-shield-lock-fill text-danger"></i> Administrator</strong>
                                         <span class="text-muted small">Vollzugriff auf alle Einstellungen</span>
@@ -140,14 +141,8 @@
                                                @change="toggleCats(u)">
                                     </div>
                                 </div>
-
-                                <div class="form-check mt-2">
-                                    <input class="form-check-input" type="checkbox" v-model="newUser.is_cats_user">
-                                    <label class="form-check-label">
-                                        <i class="bi bi-github text-warning"></i> CATSloth User
-                                    </label>
-                                </div>
-                                <div v-else class="text-muted small text-center fst-italic">
+                                
+                                <div v-if="u.id == currentUserId" class="text-muted small text-center fst-italic">
                                     Du kannst dich nicht selbst bearbeiten.
                                 </div>
 
@@ -192,19 +187,32 @@
                 <div class="modal-header"><h5 class="modal-title">Neuen User anlegen</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label>Username</label>
-                        <input type="text" class="form-control" v-model="newUser.username">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" v-model="newUser.username" placeholder="z.B. max.mustermann">
                     </div>
                     <div class="mb-3">
-                        <label>Initial Passwort</label>
-                        <input type="text" class="form-control" v-model="newUser.password">
+                        <label class="form-label">Initial Passwort</label>
+                        <input type="text" class="form-control" v-model="newUser.password" placeholder="Geheim123">
                     </div>
+                    
+                    <hr>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" v-model="newUser.is_admin" id="newAdminCheck">
+                        <label class="form-check-label" for="newAdminCheck">
+                            <i class="bi bi-shield-lock-fill text-danger"></i> Administrator Rechte
+                        </label>
+                    </div>
+
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" v-model="newUser.is_admin">
-                        <label class="form-check-label">Administrator Rechte</label>
+                        <input class="form-check-input" type="checkbox" v-model="newUser.is_cats_user" id="newCatsCheck">
+                        <label class="form-check-label" for="newCatsCheck">
+                            <i class="bi bi-github text-warning"></i> CATSloth User (Projekte)
+                        </label>
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
                     <button class="btn btn-primary" @click="createUser">Anlegen</button>
                 </div>
             </div>

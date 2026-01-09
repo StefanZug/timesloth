@@ -1,4 +1,9 @@
 /* =========================================
+   0. CRITICAL & FIXES
+   ========================================= */
+[v-cloak] { display: none !important; }
+
+/* =========================================
    1. VARIABLES & THEME
    ========================================= */
 :root {
@@ -295,3 +300,10 @@ input[type=time]::-webkit-datetime-edit-second-field { display: none; }
     
     #settingsApp + .app-footer { margin-bottom: 120px !important; }
 }
+
+/* =========================================
+   8. CATS SPECIFIC
+   ========================================= */
+.cats-budget-ok { color: var(--st-office-txt); }
+.cats-budget-warn { color: #f59e0b; }
+.cats-budget-crit { color: var(--st-sick-txt); }
