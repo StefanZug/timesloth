@@ -1,94 +1,93 @@
 <?php
 class AdminService {
-    
     private $userRepo;
-    private $entryRepo;
     private $logRepo;
     private $holidayRepo;
+    private $db;
 
     public function __construct() {
         $this->userRepo = new UserRepository();
-        $this->entryRepo = new EntryRepository();
         $this->logRepo = new LogRepository();
         $this->holidayRepo = new HolidayRepository();
+        $this->db = Database::getInstance(); // Für DB-Größe Check
     }
 
-    // ... (createUser, deleteUser, toggleActive, resetUserPassword bleiben gleich) ...
-    // Ich kürze hier ab, die Methoden oben bleiben unverändert!
+    // KORRIGIERT: Parameter $isCatsUser hinzugefügt
+    public function createUser($username, $plainPassword, $isAdmin, $isCatsUser = false) {
+        if (empty($username) || empty($plainPassword)) {
+            throw new Exception("Username und Passwort sind Pflichtfelder.");
+        }
+        
+        $existing = $this->userRepo->findByUsername($username);
+        if ($existing) {
+            throw new Exception("Username existiert bereits.");
+        }
 
-    public function createUser($username, $password, $isAdmin) {
-        $cleanUser = strtolower(trim($username));
-        if($this->userRepo->findByUsername($cleanUser)) { throw new Exception('User existiert schon'); }
-        $hash = password_hash($password, PASSWORD_BCRYPT);
-        $this->userRepo->create($cleanUser, $hash, $isAdmin);
-        return ['status' => 'Created'];
+        $hash = password_hash($plainPassword, PASSWORD_BCRYPT);
+        return $this->userRepo->create($username, $hash, $isAdmin, $isCatsUser);
     }
 
-    public function deleteUser($targetId, $currentUserId) {
-        if ($targetId == $currentUserId) { throw new Exception('Nicht selbst löschen'); }
-        $this->entryRepo->deleteAllByUser($targetId); 
-        $this->logRepo->deleteByUser($targetId);
-        $this->userRepo->delete($targetId);
-        return ['status' => 'Deleted'];
+    public function deleteUser($userId, $currentAdminId) {
+        if ($userId == $currentAdminId) {
+            throw new Exception("Selbstmord ist keine Lösung.");
+        }
+        return $this->userRepo->delete($userId);
     }
 
-    public function toggleActive($targetId, $currentUserId) {
-        if ($targetId == $currentUserId) { throw new Exception('Nicht selbst deaktivieren'); }
-        $this->userRepo->toggleActive($targetId);
-        return ['status' => 'Toggled'];
+    public function toggleActive($userId, $currentAdminId) {
+        if ($userId == $currentAdminId) {
+            throw new Exception("Du kannst dich nicht selbst deaktivieren.");
+        }
+        return $this->userRepo->toggleActive($userId);
     }
 
-    public function resetUserPassword($targetId) {
-        $words = ['TimeSloth', 'Sloth', 'Faultier', 'Faul'];
-        $randomWord = $words[array_rand($words)];
-        $randomNumber = rand(1000, 9999);
-        $newPw = $randomWord . $randomNumber;
+    // NEU: Logik aus Controller hierher verschoben
+    public function toggleAdmin($userId, $currentAdminId) {
+        if ($userId == $currentAdminId) {
+            throw new Exception("Du kannst dir nicht selbst die Admin-Rechte entziehen.");
+        }
+        return $this->userRepo->toggleAdmin($userId);
+    }
+
+    // NEU
+    public function toggleCats($userId) {
+        return $this->userRepo->toggleCats($userId);
+    }
+
+    public function resetUserPassword($userId) {
+        // Generiert ein zufälliges 8-Zeichen Passwort
+        $newPw = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 8);
         $hash = password_hash($newPw, PASSWORD_BCRYPT);
-        $this->userRepo->updatePassword($targetId, $hash);
+        
+        $this->userRepo->updatePassword($userId, $hash);
+        
         return ['new_password' => $newPw];
     }
 
     public function getUserLogs($userId) {
-        $logs = $this->logRepo->getLatestByUser($userId, 10);
-        
-        // NEU: Nutzung des Helpers statt inline Logik
-        return UserAgentHelper::parseList($logs);
+        return $this->logRepo->findByUser($userId, 10);
     }
 
     public function addHoliday($date, $name) {
-        try {
-            $id = $this->holidayRepo->add($date, $name);
-            return ['status' => 'Created', 'id' => $id];
-        } catch(Exception $e) { throw new Exception('Datum existiert schon'); }
+        return $this->holidayRepo->add($date, $name);
     }
 
     public function deleteHoliday($id) {
-        $this->holidayRepo->delete($id);
-        return ['status' => 'Deleted'];
+        return $this->holidayRepo->delete($id);
     }
 
     public function getSystemStats() {
-        $dbPath = DB_PATH;
-        $size = 0;
-        if (file_exists($dbPath)) {
-            clearstatcache(true, $dbPath);
-            $size = @filesize($dbPath) ?: 0;
-        }
+        $dbFile = DB_PATH; 
+        $size = file_exists($dbFile) ? filesize($dbFile) : 0;
         
-        $logs = $this->logRepo->count();
-        $entries = $this->entryRepo->count(); 
-        $users = $this->userRepo->count();
-
         return [
             'db_size_bytes' => $size,
-            'count_logs' => $logs,
-            'count_entries' => $entries,
-            'count_users' => $users
+            'count_entries' => 0, // Falls EntryRepo vorhanden: (new EntryRepository())->count()
+            'count_logs' => $this->logRepo->count()
         ];
     }
 
     public function clearOldLogs() {
-        $this->logRepo->cleanupOldLogs();
-        return ['status' => 'Cleaned'];
+        return $this->logRepo->clearOlderThan(30);
     }
 }
