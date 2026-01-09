@@ -258,13 +258,15 @@ class TimeLogic {
             if(['F','U','K'].includes(status)) {
                 deductionTotal += (dailyAvg * 0.40);
             } else if(entry && entry.blocks) {
-                entry.blocks.forEach(b => {
-                    if(b.type === 'office') {
-                        let s = this.toMinutes(b.start); 
-                        let e = this.toMinutes(b.end);
-                        if(e > s) officeMinSum += (e - s);
-                    }
-                });
+                // FIX: Nur Office-Blöcke filtern und durch die Standard-Logik jagen
+                let officeBlocks = entry.blocks.filter(b => b.type === 'office');
+                
+                if (officeBlocks.length > 0) {
+                    // Wir nutzen calculateDayStats, um Pausenabzüge (30min ab 6h) korrekt zu berücksichtigen.
+                    // Das Ergebnis 'sapMin' ist der Netto-Wert.
+                    let stats = this.calculateDayStats(officeBlocks, settings, false);
+                    officeMinSum += stats.sapMin;
+                }
             }
         });
 
