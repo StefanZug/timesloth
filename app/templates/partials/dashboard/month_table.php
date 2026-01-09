@@ -88,8 +88,10 @@
                             
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-light border" @click="insertMarkdown('bold', $event)"><i class="bi bi-type-bold"></i></button>
-                                    <button class="btn btn-light border" @click="insertMarkdown('list', $event)"><i class="bi bi-list-ul"></i></button>
+                                    <button class="btn btn-sm btn-link text-muted p-0 me-2" @click="insertMarkdown('bold', $event)" title="Fett"><i class="bi bi-type-bold"></i></button>
+                                    <button class="btn btn-sm btn-link text-muted p-0 me-2" @click="insertMarkdown('italic', $event)" title="Kursiv"><i class="bi bi-type-italic"></i></button>
+                                    <button class="btn btn-sm btn-link text-muted p-0 me-2" @click="insertMarkdown('list', $event)" title="Liste"><i class="bi bi-list-ul"></i></button>
+                                    <button class="btn btn-sm btn-link text-muted p-0" @click="insertMarkdown('h3', $event)" title="Überschrift"><i class="bi bi-type-h3"></i></button>
                                 </div>
                                 <button class="btn btn-sm btn-link text-muted p-0" @click="toggleExpandNote(day)" title="Zuklappen">
                                     <i class="bi bi-arrows-collapse"></i>
